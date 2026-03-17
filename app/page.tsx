@@ -93,7 +93,9 @@ export default function Home() {
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg/95 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="text-gold text-2xl tracking-[0.35em] font-light">VELO</span>
+          <div className="flex items-center">
+            <img src="/logo_velo.png" alt="VELO" className="h-10 w-auto" />
+          </div>
           <div className="flex items-center gap-6">
             <Link href="/fornitori" className="text-muted hover:text-cream text-sm transition-colors tracking-wide">Fornitori</Link>
             <Link href="/vendor" className="text-muted hover:text-cream text-sm transition-colors tracking-wide">Sei un fornitore?</Link>
@@ -196,8 +198,8 @@ export default function Home() {
       <footer className="border-t border-border py-12 px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div>
-            <span className="text-gold text-xl tracking-[0.35em] font-light">VELO</span>
-            <p className="text-muted text-xs mt-1 tracking-widest uppercase">from yes to forever</p>
+            <img src="/logo_velo.png" alt="VELO" className="h-10 w-auto mb-1" />
+            <p className="text-muted text-xs tracking-widest uppercase">from yes to forever</p>
           </div>
           <div className="flex gap-8">
             <Link href="/fornitori" className="text-muted text-sm hover:text-cream transition-colors">Fornitori</Link>

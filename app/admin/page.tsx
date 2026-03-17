@@ -88,7 +88,7 @@ export default function AdminPage() {
     <main className="min-h-screen bg-bg text-cream">
       <nav className="border-b border-border">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-gold text-xl tracking-[0.3em] font-light">VELO Admin</Link>
+          <Link href="/" className="flex items-center"><img src="/logo_velo.png" alt="VELO" className="h-8 w-auto" /></Link>
           <button onClick={() => { supabase.auth.signOut(); setAuthed(false) }} className="text-red text-sm hover:opacity-70 transition-opacity">Esci</button>
         </div>
       </nav>

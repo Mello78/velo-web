@@ -25,7 +25,7 @@ export default async function VendorDetailPage({ params }: { params: { id: strin
     <main className="min-h-screen bg-bg text-cream">
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg/90 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-gold text-xl tracking-[0.3em] font-light">VELO</Link>
+          <Link href="/" className="flex items-center"><img src="/logo_velo.png" alt="VELO" className="h-8 w-auto" /></Link>
           <Link href="/fornitori" className="text-muted hover:text-cream text-sm transition-colors">← Tutti i fornitori</Link>
         </div>
       </nav>
