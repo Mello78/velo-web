@@ -105,7 +105,10 @@ function VendorDashboard({ vendor, onLogout, onUpdate }: { vendor: any, onLogout
     <main className="min-h-screen bg-bg text-cream">
       <nav className="border-b border-border">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center"><img src="/logo_velo.png" alt="VELO" className="h-8 w-auto" /></Link>
+          <Link href="/" className="flex items-center gap-3">
+            <img src="/favicon.png" alt="" className="h-7 w-auto" />
+            <span className="text-gold text-xl tracking-[0.3em] font-light">VELO</span>
+          </Link>
           <div className="flex items-center gap-4">
             <span className="text-muted text-sm hidden sm:block">{vendor.business_name}</span>
             <button onClick={onLogout} className="text-red text-sm hover:opacity-70 transition-opacity">Esci</button>

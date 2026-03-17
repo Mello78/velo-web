@@ -28,7 +28,10 @@ export default async function FornitoriPage({ searchParams }: { searchParams: { 
     <main className="min-h-screen bg-bg text-cream">
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg/90 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center"><img src="/logo_velo.png" alt="VELO" className="h-8 w-auto" /></Link>
+          <Link href="/" className="flex items-center gap-3">
+            <img src="/favicon.png" alt="" className="h-7 w-auto" />
+            <span className="text-gold text-2xl tracking-[0.3em] font-light">VELO</span>
+          </Link>
           <div className="flex items-center gap-6">
             <span className="text-cream text-sm">Fornitori</span>
             <Link href="/vendor" className="text-muted hover:text-cream text-sm transition-colors">Sei un fornitore?</Link>
