@@ -70,12 +70,19 @@ export default async function FornitoriPage({ searchParams }: { searchParams: { 
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((v: any) => (
-              <div key={v.id} className={`bg-dark border rounded-2xl overflow-hidden hover:border-gold/40 transition-colors ${v.featured ? 'border-gold/30' : 'border-border'}`}>
+              <Link key={v.id} href={`/fornitori/${v.id}`} className={`group bg-dark border rounded-2xl overflow-hidden hover:border-gold/40 transition-all hover:-translate-y-0.5 ${v.featured ? 'border-gold/30' : 'border-border'}`}>
                 <div className="h-48 bg-bg flex items-center justify-center relative overflow-hidden">
                   {v.photo1_url ? (
-                    <img src={v.photo1_url} alt={v.name} className="w-full h-full object-cover" />
+                    <img src={v.photo1_url} alt={v.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   ) : (
                     <span className="text-6xl opacity-30">{v.cover_emoji || '📸'}</span>
+                  )}
+                  {/* Overlay + logo */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  {v.logo_url && (
+                    <div className="absolute bottom-3 right-3 w-10 h-10 rounded-lg overflow-hidden border-2 border-bg bg-dark">
+                      <img src={v.logo_url} alt="logo" className="w-full h-full object-cover" />
+                    </div>
                   )}
                   {v.featured && (
                     <span className="absolute top-3 left-3 bg-gold/20 border border-gold/40 text-gold text-xs px-3 py-1 rounded-full">
@@ -86,7 +93,7 @@ export default async function FornitoriPage({ searchParams }: { searchParams: { 
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <h3 className="text-cream font-medium">{v.name}</h3>
+                      <h3 className="text-cream font-medium group-hover:text-gold transition-colors">{v.name}</h3>
                       <p className="text-muted text-xs mt-1">{v.category} · {v.location}, {v.region}</p>
                     </div>
                     {v.verified && (
@@ -99,22 +106,12 @@ export default async function FornitoriPage({ searchParams }: { searchParams: { 
                     {v.price_from && <span className="text-gold text-xs ml-auto">da €{v.price_from}</span>}
                   </div>
                   {v.description && <p className="text-muted text-sm line-clamp-2 mb-4 leading-relaxed">{v.description}</p>}
-                  <div className="flex gap-2">
-                    {v.instagram && (
-                      <a href={`https://instagram.com/${v.instagram.replace('@','')}`} target="_blank" rel="noopener noreferrer"
-                        className="flex-1 border border-border text-muted text-xs py-2 rounded-lg text-center hover:border-gold hover:text-gold transition-colors">
-                        📷 Instagram
-                      </a>
-                    )}
-                    {v.website && (
-                      <a href={`https://${v.website.replace('https://','').replace('http://','')}`} target="_blank" rel="noopener noreferrer"
-                        className="flex-1 border border-border text-muted text-xs py-2 rounded-lg text-center hover:border-gold hover:text-gold transition-colors">
-                        🌐 Sito web
-                      </a>
-                    )}
+                  <div className="flex items-center justify-between pt-2 border-t border-border">
+                    <span className="text-muted text-xs">Vedi profilo completo</span>
+                    <span className="text-gold text-sm">→</span>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 
