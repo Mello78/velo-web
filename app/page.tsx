@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 import { getT } from '@/lib/translations'
 import LangToggle from '@/components/LangToggle'
 
@@ -28,10 +29,9 @@ const featureIcons = [
   <svg key="doc" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="#C9A84C" strokeWidth="1.5"/><path d="M14 2v6h6M9 13h6M9 17h4" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/></svg>,
 ]
 
-export default function Home({ params }: { params?: { locale?: string } }) {
-  // Next.js i18n: locale viene da useRouter lato client o da params server-side
-  // Per le Server Components usiamo le props del layout
-  const locale = (params as any)?.locale || 'it'
+export default function Home() {
+  const cookieStore = cookies()
+  const locale = cookieStore.get('NEXT_LOCALE')?.value || 'it'
   const tr = getT(locale)
 
   return (

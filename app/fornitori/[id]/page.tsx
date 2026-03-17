@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 import { supabase } from '@/lib/supabase'
 import { getT } from '@/lib/translations'
 import LangToggle from '@/components/LangToggle'
@@ -12,9 +13,10 @@ async function getVendor(id: string) {
 export default async function VendorDetailPage({
   params,
 }: {
-  params: { id: string; locale?: string }
+  params: { id: string }
 }) {
-  const locale = (params as any)?.locale || 'it'
+  const cookieStore = cookies()
+  const locale = cookieStore.get('NEXT_LOCALE')?.value || 'it'
   const tr = getT(locale)
   const vendor = await getVendor(params.id)
   if (!vendor) notFound()
