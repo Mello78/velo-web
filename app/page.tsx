@@ -1,73 +1,6 @@
 import Link from 'next/link'
-
-const features = [
-  {
-    title: 'Planning intelligente',
-    desc: 'Checklist personalizzata in base al tipo di cerimonia. Task automatici, scadenze, promemoria dal fornitore.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8">
-        <rect x="4" y="2" width="16" height="20" rx="2" stroke="#C9A84C" strokeWidth="1.5"/>
-        <line x1="8" y1="8" x2="16" y2="8" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="8" y1="12" x2="16" y2="12" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="8" y1="16" x2="12" y2="16" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
-  {
-    title: 'Scadenziario fornitori',
-    desc: 'Ogni fornitore confermato aggiunge automaticamente i propri task al planning con le date calcolate.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8">
-        <circle cx="12" cy="12" r="9" stroke="#C9A84C" strokeWidth="1.5"/>
-        <path d="M12 7v5l3 2" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
-  {
-    title: 'Gestione ospiti',
-    desc: 'RSVP, gruppi, esigenze alimentari, accompagnatori. Export PDF immediato per il catering.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8">
-        <circle cx="9" cy="7" r="3" stroke="#C9A84C" strokeWidth="1.5"/>
-        <path d="M3 20c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/>
-        <circle cx="17" cy="9" r="2" stroke="#C9A84C" strokeWidth="1.5"/>
-        <path d="M21 20c0-2.21-1.79-4-4-4" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
-  {
-    title: 'Budget tracker',
-    desc: 'Tieni traccia di ogni spesa. Impegnato vs pagato. Nessuna sorpresa a fine matrimonio.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8">
-        <rect x="2" y="6" width="20" height="14" rx="2" stroke="#C9A84C" strokeWidth="1.5"/>
-        <path d="M2 10h20" stroke="#C9A84C" strokeWidth="1.5"/>
-        <circle cx="7" cy="15" r="1.5" fill="#C9A84C"/>
-        <circle cx="12" cy="15" r="1.5" fill="#C9A84C"/>
-      </svg>
-    ),
-  },
-  {
-    title: 'Marketplace fornitori',
-    desc: 'Fotografi, fioristi, location, catering. Filtri per zona, prezzo, stile. Chat diretta dall\'app.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="#C9A84C" strokeWidth="1.5"/>
-        <circle cx="12" cy="9" r="2.5" stroke="#C9A84C" strokeWidth="1.5"/>
-      </svg>
-    ),
-  },
-  {
-    title: 'Documenti legali',
-    desc: 'Guida documenti specifica per il tuo paese. 20 nazionalità supportate. Rito civile, religioso, simbolico.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="#C9A84C" strokeWidth="1.5"/>
-        <path d="M14 2v6h6M9 13h6M9 17h4" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
-]
+import { getT } from '@/lib/translations'
+import LangToggle from '@/components/LangToggle'
 
 const regions = ['Toscana', 'Amalfi Coast', 'Lago di Como', 'Langhe & Piemonte', 'Roma & Lazio', 'Puglia', 'Venezia & Veneto', 'Umbria']
 
@@ -78,7 +11,6 @@ function AppleIcon() {
     </svg>
   )
 }
-
 function AndroidIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -87,21 +19,36 @@ function AndroidIcon() {
   )
 }
 
-export default function Home() {
+const featureIcons = [
+  <svg key="planning" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#C9A84C" strokeWidth="1.5"/><line x1="8" y1="8" x2="16" y2="8" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/><line x1="8" y1="12" x2="16" y2="12" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/><line x1="8" y1="16" x2="12" y2="16" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  <svg key="clock" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><circle cx="12" cy="12" r="9" stroke="#C9A84C" strokeWidth="1.5"/><path d="M12 7v5l3 2" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  <svg key="guests" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><circle cx="9" cy="7" r="3" stroke="#C9A84C" strokeWidth="1.5"/><path d="M3 20c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/><circle cx="17" cy="9" r="2" stroke="#C9A84C" strokeWidth="1.5"/><path d="M21 20c0-2.21-1.79-4-4-4" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  <svg key="budget" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><rect x="2" y="6" width="20" height="14" rx="2" stroke="#C9A84C" strokeWidth="1.5"/><path d="M2 10h20" stroke="#C9A84C" strokeWidth="1.5"/><circle cx="7" cy="15" r="1.5" fill="#C9A84C"/><circle cx="12" cy="15" r="1.5" fill="#C9A84C"/></svg>,
+  <svg key="pin" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="#C9A84C" strokeWidth="1.5"/><circle cx="12" cy="9" r="2.5" stroke="#C9A84C" strokeWidth="1.5"/></svg>,
+  <svg key="doc" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="#C9A84C" strokeWidth="1.5"/><path d="M14 2v6h6M9 13h6M9 17h4" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+]
+
+export default function Home({ params }: { params?: { locale?: string } }) {
+  // Next.js i18n: locale viene da useRouter lato client o da params server-side
+  // Per le Server Components usiamo le props del layout
+  const locale = (params as any)?.locale || 'it'
+  const tr = getT(locale)
+
   return (
     <main className="min-h-screen bg-bg text-cream">
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg/95 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/favicon.png" alt="VELO" className="h-8 w-auto" />
+            <img src="/favicon.png" alt="" className="h-8 w-auto" />
             <span className="text-gold text-2xl tracking-[0.3em] font-light">VELO</span>
           </div>
-          <div className="flex items-center gap-6">
-            <Link href="/fornitori" className="text-muted hover:text-cream text-sm transition-colors tracking-wide">Fornitori</Link>
-            <Link href="/vendor" className="text-muted hover:text-cream text-sm transition-colors tracking-wide">Sei un fornitore?</Link>
+          <div className="flex items-center gap-4">
+            <Link href="/fornitori" className="text-muted hover:text-cream text-sm transition-colors tracking-wide">{tr.nav.vendors}</Link>
+            <Link href="/vendor" className="text-muted hover:text-cream text-sm transition-colors tracking-wide">{tr.nav.forVendors}</Link>
+            <LangToggle locale={locale} />
             <a href="#download" className="bg-gold text-bg text-xs font-semibold px-5 py-2.5 rounded-full hover:opacity-90 transition-opacity tracking-wider">
-              SCARICA L&apos;APP
+              {tr.nav.download}
             </a>
           </div>
         </div>
@@ -109,32 +56,25 @@ export default function Home() {
 
       {/* Hero */}
       <section className="relative min-h-[640px] flex items-center overflow-hidden pt-16">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=85')" }}
-        />
+        <div className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=85')" }} />
         <div className="absolute inset-0 bg-gradient-to-r from-bg/90 via-bg/60 to-transparent" />
         <div className="relative max-w-6xl mx-auto px-6 py-24">
           <div className="max-w-[520px]">
-            <p className="text-gold text-xs tracking-[0.35em] uppercase mb-6">Il wedding planner per l&apos;Italia</p>
+            <p className="text-gold text-xs tracking-[0.35em] uppercase mb-6">{tr.hero.label}</p>
             <h1 className="text-6xl md:text-7xl font-light leading-[1.05] mb-6">
-              Dal <span className="text-gold">sì</span><br />a per sempre
+              {tr.hero.title1} <span className="text-gold">sì</span><br />{tr.hero.title2}
             </h1>
-            <p className="text-muted text-lg leading-relaxed mb-10 max-w-md">
-              VELO pianifica ogni dettaglio del tuo matrimonio in Italia.
-              Planning, fornitori, ospiti, budget — tutto in un posto.
-            </p>
+            <p className="text-muted text-lg leading-relaxed mb-10 max-w-md">{tr.hero.desc}</p>
             <div className="flex flex-wrap gap-3" id="download">
               <a href="#" className="flex items-center gap-3 bg-cream text-bg font-semibold px-6 py-3.5 rounded-full hover:opacity-90 transition-opacity">
-                <AppleIcon />
-                <span className="text-sm tracking-wide">App Store</span>
+                <AppleIcon /><span className="text-sm tracking-wide">{tr.hero.appStore}</span>
               </a>
               <a href="#" className="flex items-center gap-3 border border-border text-cream px-6 py-3.5 rounded-full hover:border-gold transition-colors">
-                <AndroidIcon />
-                <span className="text-sm tracking-wide">Google Play</span>
+                <AndroidIcon /><span className="text-sm tracking-wide">{tr.hero.googlePlay}</span>
               </a>
             </div>
-            <p className="text-muted/60 text-xs mt-5 tracking-wide">Gratuita · Nessun abbonamento per le coppie</p>
+            <p className="text-muted/60 text-xs mt-5 tracking-wide">{tr.hero.free}</p>
           </div>
         </div>
       </section>
@@ -142,12 +82,12 @@ export default function Home() {
       {/* Features */}
       <section className="py-24 px-6 border-t border-border">
         <div className="max-w-6xl mx-auto">
-          <p className="text-gold text-xs tracking-[0.35em] uppercase text-center mb-4">Tutto quello che serve</p>
-          <h2 className="text-4xl font-light text-center mb-16">Pianifica senza stress</h2>
+          <p className="text-gold text-xs tracking-[0.35em] uppercase text-center mb-4">{tr.features.label}</p>
+          <h2 className="text-4xl font-light text-center mb-16">{tr.features.title}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((f, i) => (
+            {tr.features.items.map((f, i) => (
               <div key={i} className="bg-dark border border-border rounded-2xl p-6 hover:border-gold/30 transition-colors group">
-                <div className="mb-5 opacity-80 group-hover:opacity-100 transition-opacity">{f.icon}</div>
+                <div className="mb-5 opacity-80 group-hover:opacity-100 transition-opacity">{featureIcons[i]}</div>
                 <h3 className="text-cream font-medium mb-2 tracking-wide">{f.title}</h3>
                 <p className="text-muted text-sm leading-relaxed">{f.desc}</p>
               </div>
@@ -159,39 +99,27 @@ export default function Home() {
       {/* Regions */}
       <section className="py-24 px-6 border-t border-border">
         <div className="max-w-6xl mx-auto text-center">
-          <p className="text-gold text-xs tracking-[0.35em] uppercase mb-4">Destination wedding</p>
-          <h2 className="text-4xl font-light mb-4">Dove volete sposarvi?</h2>
-          <p className="text-muted mb-12">Fornitori selezionati nelle location più belle d&apos;Italia</p>
+          <p className="text-gold text-xs tracking-[0.35em] uppercase mb-4">{tr.regions.label}</p>
+          <h2 className="text-4xl font-light mb-4">{tr.regions.title}</h2>
+          <p className="text-muted mb-12">{tr.regions.desc}</p>
           <div className="flex flex-wrap justify-center gap-3">
             {regions.map((r, i) => (
               <Link key={i} href={`/fornitori?region=${encodeURIComponent(r)}`}
-                className="border border-border rounded-full px-5 py-2 text-sm text-muted hover:border-gold hover:text-gold transition-colors">
-                {r}
-              </Link>
+                className="border border-border rounded-full px-5 py-2 text-sm text-muted hover:border-gold hover:text-gold transition-colors">{r}</Link>
             ))}
           </div>
-          <Link href="/fornitori" className="inline-block mt-10 text-gold text-sm hover:opacity-70 transition-opacity tracking-wide">
-            Vedi tutti i fornitori →
-          </Link>
+          <Link href="/fornitori" className="inline-block mt-10 text-gold text-sm hover:opacity-70 transition-opacity tracking-wide">{tr.regions.cta}</Link>
         </div>
       </section>
 
       {/* Vendor CTA */}
       <section className="py-24 px-6 border-t border-border bg-dark">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-block bg-gold/10 border border-gold/25 rounded-full px-5 py-2 text-xs text-gold tracking-widest uppercase mb-8">
-            Per i professionisti del wedding
-          </div>
-          <h2 className="text-4xl font-light mb-6">Sei un fornitore di matrimoni?</h2>
-          <p className="text-muted text-lg mb-3 leading-relaxed">
-            Entra nella vetrina VELO e raggiungi coppie che stanno pianificando il loro matrimonio in Italia.
-          </p>
-          <p className="text-gold text-sm mb-10 tracking-wide">
-            Primo anno gratuito — poi €20/mese, cancellazione libera
-          </p>
-          <Link href="/vendor" className="inline-flex items-center gap-2 bg-gold text-bg font-semibold px-8 py-4 rounded-full text-sm hover:opacity-90 transition-opacity tracking-wide">
-            Registrati come fornitore →
-          </Link>
+          <div className="inline-block bg-gold/10 border border-gold/25 rounded-full px-5 py-2 text-xs text-gold tracking-widest uppercase mb-8">{tr.vendorCta.badge}</div>
+          <h2 className="text-4xl font-light mb-6">{tr.vendorCta.title}</h2>
+          <p className="text-muted text-lg mb-3 leading-relaxed">{tr.vendorCta.desc}</p>
+          <p className="text-gold text-sm mb-10 tracking-wide">{tr.vendorCta.pricing}</p>
+          <Link href="/vendor" className="inline-flex items-center gap-2 bg-gold text-bg font-semibold px-8 py-4 rounded-full text-sm hover:opacity-90 transition-opacity tracking-wide">{tr.vendorCta.btn}</Link>
         </div>
       </section>
 
@@ -206,11 +134,11 @@ export default function Home() {
             </div>
           </div>
           <div className="flex gap-8">
-            <Link href="/fornitori" className="text-muted text-sm hover:text-cream transition-colors">Fornitori</Link>
-            <Link href="/vendor" className="text-muted text-sm hover:text-cream transition-colors">Area Fornitori</Link>
-            <Link href="/admin" className="text-muted text-sm hover:text-cream transition-colors">Admin</Link>
+            <Link href="/fornitori" className="text-muted text-sm hover:text-cream transition-colors">{tr.footer.vendors}</Link>
+            <Link href="/vendor" className="text-muted text-sm hover:text-cream transition-colors">{tr.footer.vendorArea}</Link>
+            <Link href="/admin" className="text-muted text-sm hover:text-cream transition-colors">{tr.footer.admin}</Link>
           </div>
-          <p className="text-muted text-xs">© 2025 VELO · velowedding.it</p>
+          <p className="text-muted text-xs">{tr.footer.copy}</p>
         </div>
       </footer>
     </main>
