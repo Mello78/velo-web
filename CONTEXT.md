@@ -7,7 +7,7 @@
 ## Cos'è VELO
 
 App mobile + sito web per la pianificazione di matrimoni in Italia.
-Targeting: coppie italiane + destination wedding stranieri + fornitori del settore.
+Targeting: coppie italiane + destination wedding stranieri + fornitori.
 Posizionamento: luxury, dark editorial, palette nero/oro/crema.
 Tagline: *from yes to forever*
 
@@ -23,27 +23,16 @@ Tagline: *from yes to forever*
 |Sito live       |https://velowedding.it (Vercel, autodeploy da main)|
 |Supabase project|`jogsdrxnqrbbqieozlmo` (EU Central)                |
 
-Per deployare il sito: `git add -A && git commit -m "msg" && git push origin main`
+Deploy sito: `cd C:\Users\mello\velo-web-temp && git add -A && git commit -m "msg" && git push origin main`
 
 -----
 
-## Stack tecnico
+## Stack
 
-**App mobile**
+**App mobile:** React Native + Expo SDK 54, TypeScript, Supabase
+Avvio: `npx expo start --clear` — preview su Expo Go (shake to reload)
 
-- React Native + Expo SDK 54
-- TypeScript
-- Supabase (auth + PostgreSQL)
-- Expo Go per preview (shake to reload)
-- Sviluppato su Windows 11 con Cursor AI
-- Avvio: `npx expo start --clear` (porta 8081)
-
-**Sito web**
-
-- Next.js App Router (NON Pages Router)
-- Tailwind CSS
-- Supabase per dati vendor
-- Deploy: Vercel
+**Sito web:** Next.js App Router (NON Pages Router), Tailwind CSS, Supabase, Vercel
 
 -----
 
@@ -51,33 +40,32 @@ Per deployare il sito: `git add -A && git commit -m "msg" && git push origin mai
 
 ```
 app/
-  _layout.tsx          # Root routing + splash screen (usa logo_velo.png)
-  auth.tsx             # Login/registrazione
-  onboarding.tsx       # 8 step con autocomplete comuni italiani
+  _layout.tsx        # Root routing + splash (usa assets/images/logo_velo.png)
+  auth.tsx           # Login/registrazione
+  onboarding.tsx     # 8 step — autocomplete comuni + mappa provincia→zona VELO
   (tabs)/
-    index.tsx          # Home — countdown + budget
-    planning.tsx       # Checklist + guida cerimonia religiosa
-    vendors.tsx        # Marketplace fornitori
-    budget.tsx         # Budget tracker
-    guests.tsx         # Gestione ospiti
-    vision.tsx         # Stile matrimonio + palette colori
-    profile.tsx        # Profilo coppia
-    documents.tsx      # Guida documenti per stranieri
-  vendor/              # Area fornitori (dashboard, profilo, disponibilità)
+    index.tsx        # Home — countdown + budget
+    planning.tsx     # Checklist + ReligiousCeremonyGuide
+    vendors.tsx      # Marketplace — filtri, chat, conferma vendor
+    budget.tsx       # Budget tracker
+    guests.tsx       # Ospiti con RSVP
+    vision.tsx       # Stile + palette 18 colori
+    profile.tsx      # Profilo coppia
+    documents.tsx    # Guida documenti stranieri
+  vendor/            # Dashboard vendor (profilo, disponibilità, milestones, chat)
 lib/
   supabase.ts
-  i18n/index.tsx       # LanguageProvider IT/EN
-  i18n/it.ts           # Traduzioni italiano
-  i18n/en.ts           # Traduzioni inglese
-  data/countries.ts    # 20 paesi + ITALY_REGIONS
-  data/comuni.ts       # ~400 comuni italiani con coordinate + mappa provincia→zona VELO
+  geocoding.ts       # haversineKm() + geocodeCity() via Nominatim
+  i18n/              # LanguageProvider + it.ts + en.ts (traduzioni complete)
+  data/countries.ts  # 20 paesi + ITALY_REGIONS
+  data/comuni.ts     # ~400 comuni + PROVINCIA_TO_VELO_ZONA + cercaComuni()
 components/
   VendorDetail.tsx
   ReligiousCeremonyGuide.tsx
-  AIAssistant.tsx      # Disattivato — manca ANTHROPIC_API_KEY in Supabase
+  AIAssistant.tsx    # Disattivato (manca ANTHROPIC_API_KEY)
 assets/images/
-  logo_velo.png        # Logo completo con testo (PNG trasparente)
-  favicon.png          # Solo icona V (PNG trasparente)
+  logo_velo.png      # Logo completo trasparente
+  favicon.png        # Icona V trasparente
 ```
 
 -----
@@ -86,133 +74,91 @@ assets/images/
 
 ```
 app/
-  layout.tsx           # Root layout — include SplashLoader
-  page.tsx             # Home — usa NavBar component
-  fornitori/
-    page.tsx           # Lista vendor con filtri regione/categoria
-    [id]/page.tsx      # Dettaglio vendor
-  vendor/page.tsx      # Portale vendor (login + dashboard)
-  admin/page.tsx       # Admin panel (solo mello.cn@gmail.com)
+  layout.tsx          # Root — SplashLoader incluso
+  page.tsx            # Home — usa NavBar responsivo
+  fornitori/page.tsx  # Lista vendor (Client Component, ricerca per città + distanza)
+  fornitori/[id]/page.tsx  # Dettaglio vendor
+  vendor/page.tsx     # Portale vendor (login + dashboard 4 tab)
+  admin/page.tsx      # Admin (solo mello.cn@gmail.com)
 components/
-  NavBar.tsx           # Navbar responsiva con hamburger mobile
-  SimpleNav.tsx        # Navbar semplice per pagine interne
-  LangToggle.tsx       # Toggle IT/EN (salva cookie NEXT_LOCALE)
-  SplashLoader.tsx     # Splash 2 secondi al primo caricamento
+  NavBar.tsx          # Navbar responsiva con hamburger mobile
+  SimpleNav.tsx       # Navbar per pagine interne (da applicare a fornitori e vendor)
+  LangToggle.tsx      # Toggle IT/EN → cookie NEXT_LOCALE
+  SplashLoader.tsx    # Splash 2 sec primo caricamento
 lib/
-  supabase.ts          # Client Supabase
-  translations.ts      # Tutte le stringhe IT + EN
+  supabase.ts
+  translations.ts     # Tutte le stringhe IT + EN
 public/
-  logo_velo.png        # Logo completo (sfondo trasparente)
-  favicon.png          # Icona V (sfondo trasparente)
-  favicon_180.png      # Apple touch icon
-  favicon_512.png      # PWA icon
+  logo_velo.png / favicon.png / favicon_180.png / favicon_512.png
 ```
 
 -----
 
-## Database Supabase (schema attuale)
+## Database Supabase — schema attuale
 
-### Tabelle principali
+**public_vendors** — include `lat DOUBLE PRECISION` e `lng DOUBLE PRECISION` (aggiunte di recente). I 24 vendor esistenti hanno già le coordinate popolate. I nuovi vendor le ottengono via geocoding automatico (da implementare).
 
-- **couples** — id, user_id, partner1, partner2, wedding_date, budget, nationality, country_of_origin, wedding_region, wedding_style, wedding_season, ceremony_type, wedding_size, color1, color2, wedding_city
-- **public_vendors** — id, name, category, location, region, description, price_from, price_to, rating, review_count, verified, featured, photo1/2/3_url, logo_url, instagram, facebook, tiktok, website, whatsapp, phone, languages[], specialties[], styles[], work_regions[], **lat, lng** ← coordinate geografiche appena aggiunte
-- **vendor_accounts** — profilo privato vendor, include lat/lng, max_events_per_day, work_regions[]
-- **tasks** — planning coppia
-- **guests** — lista ospiti
-- **expenses** — budget tracker
-- **messages** — chat coppia↔vendor
-- **vendors** — vendor aggiunti dalla coppia (lista personale)
-- **custom_vendors** — vendor personali fuori da VELO
-- **vendor_milestones** — scadenziario vendor (max 4 per vendor)
-- **vendor_blocked_dates** — date bloccate manualmente
-- **vendor_invites** — traccia inviti vendor
-- **admin_users** — solo mello.cn@gmail.com
+**couples** — partner1/2, wedding_date, budget, nationality, country_of_origin, wedding_region, wedding_city, wedding_style, wedding_season, ceremony_type, wedding_size, color1, color2
 
-### Edge Functions attive
+**vendor_accounts** — lat, lng, max_events_per_day, work_regions[], logo_url
 
-- `send-vendor-invite`
-- `velo-ai-chat` (attiva ma senza ANTHROPIC_API_KEY — chatbot disattivato)
+**Altre tabelle:** tasks, guests, expenses, messages, vendors, custom_vendors, vendor_milestones, vendor_blocked_dates, vendor_invites, admin_users
 
-### Storage
+**Edge Functions:** send-vendor-invite, velo-ai-chat (senza ANTHROPIC_API_KEY)
 
-- Bucket `vendor-photos` (pubblico, max 5MB)
+**Storage:** bucket `vendor-photos` (pubblico, max 5MB)
 
 -----
 
-## Logica zone geografiche
+## Zone VELO (non corrispondono a regioni amministrative)
 
-L'app usa zone VELO (non regioni amministrative):
-
-- Langhe & Piemonte → province TO, CN, AT, AL, BI, NO, VC, VB, AO, PV
-- Lago di Como → province CO, LC, VA, SO, MI, MB, BG, CR, LO
-- Lago di Garda → province BS, VR, MN
-- Venezia & Veneto → province VE, PD, VI, TV, RO, BL, TN, BZ + Friuli + Marche + Emilia
-- Toscana → province FI, SI, PI, AR, PT, PO, LU, MS, GR, LI
-- Umbria → province PG, TR
-- Roma & Lazio → province RM, LT, FR, VT, RI + Abruzzo + Molise
-- Amalfi Coast → province NA, SA, CE, BN, AV
-- Puglia → province BA, TA, FG, LE, BR, BT + Basilicata + Calabria
-- Sicilia → tutte le province siciliane
-- Liguria → province GE, SP, SV, IM + Sardegna
+|Zona             |Province principali                                      |
+|-----------------|---------------------------------------------------------|
+|Langhe & Piemonte|TO, CN, AT, AL, BI, NO, VC, VB, AO, PV                   |
+|Lago di Como     |CO, LC, VA, SO, MI, MB, BG, CR, LO                       |
+|Lago di Garda    |BS, VR, MN                                               |
+|Venezia & Veneto |VE, PD, VI, TV, RO, BL, TN, BZ + Friuli + Marche + Emilia|
+|Toscana          |FI, SI, PI, AR, PT, PO, LU, MS, GR, LI                   |
+|Umbria           |PG, TR                                                   |
+|Roma & Lazio     |RM, LT, FR, VT, RI + Abruzzo + Molise                    |
+|Amalfi Coast     |NA, SA, CE, BN, AV                                       |
+|Puglia           |BA, TA, FG, LE, BR, BT + Basilicata + Calabria           |
+|Sicilia          |PA, CT, ME, SR, AG, TP, RG, CL, EN                       |
+|Liguria          |GE, SP, SV, IM + Sardegna                                |
 
 Mappa completa: `lib/data/comuni.ts` → `PROVINCIA_TO_VELO_ZONA`
 
 -----
 
-## Funzionalità in sviluppo (TODO)
+## AsyncStorage keys (app)
 
-### Ricerca vendor per distanza geografica ← IN CORSO
-
-- DB: colonne lat/lng già aggiunte a public_vendors ✓
-- Coordinate dei 24 vendor esistenti già popolate ✓
-- Sito: campo cerca città → geocoding Nominatim (gratuito) → ordina per distanza
-- App: stessa logica + opzione GPS
-
-### Altre pendenze
-
-- Immagini Vision (da scegliere insieme)
-- Test onboarding su Expo Go
-- AI chatbot (aggiungere ANTHROPIC_API_KEY in Supabase Secrets)
-- Google OAuth (credenziali Google Cloud Console)
-- Apple OAuth ($99/anno Apple Developer)
-- Prima build TestFlight
-- Email invito vendor (Resend/SendGrid in Edge Function)
-- Statistiche vendor reali nel portale web
-- Notifiche push nuovi messaggi
-- Versione inglese sito — traduzione completa già fatta, toggle IT/EN funzionante
+```
+velo_user_mode, velo_partner1/2, velo_wedding_date, velo_budget
+velo_nationality ('italian'|'foreign'), velo_country_code
+velo_wedding_region (zona VELO), velo_wedding_city
+velo_ceremony ('civil'|'religious'|'symbolic')
+velo_style, velo_season, velo_size
+velo_color1/2 (hex), velo_onboarded ('true'), velo_lang ('it'|'en')
+velo_vendor_id (UUID vendor_account)
+```
 
 -----
 
-## Credenziali e accessi
+## Regole critiche
 
-- **Admin sito**: velowedding.it/admin → mello.cn@gmail.com
-- **Supabase dashboard**: supabase.com → progetto jogsdrxnqrbbqieozlmo
-- **Vercel**: autodeploy da GitHub main branch
-- **GitHub**: https://github.com/Mello78/velo-web.git
-
------
-
-## Regole di sviluppo importanti
-
-1. **File completi** — Claude scrive sempre file interi, non diff parziali
-1. **BOM characters** — se copi codice in Cursor e non funziona, ricrea il file con PowerShell `New-Item`
-1. **Path Supabase** — import da `../lib/supabase` non `../../lib/supabase`
-1. **App Router** — il sito usa Next.js App Router, NON Pages Router. Non usare `useRouter` per cambio lingua
-1. **Lingua sito** — rilevata dal cookie `NEXT_LOCALE` nelle Server Components con `cookies()` di next/headers
-1. **Expo Go** — due terminali: uno per `npx expo start --clear`, uno per i package
-1. **TypeScript** — deve essere in devDependencies nell'app
-1. **AsyncStorage keys app**:
-- `velo_user_mode` → 'couple' | 'vendor'
-- `velo_partner1`, `velo_partner2`, `velo_wedding_date`, `velo_budget`
-- `velo_nationality` → 'italian' | 'foreign'
-- `velo_wedding_region` → zona VELO (es. 'Langhe & Piemonte')
-- `velo_wedding_city` → città specifica
-- `velo_ceremony` → 'civil' | 'religious' | 'symbolic'
-- `velo_style`, `velo_season`, `velo_size`
-- `velo_color1`, `velo_color2`
-- `velo_onboarded` → 'true'
-- `velo_lang` → 'it' | 'en'
+1. **File completi sempre** — mai diff parziali
+1. **BOM in Cursor** — se il codice non funziona, ricrea il file con PowerShell `New-Item`
+1. **Import Supabase app** → `../lib/supabase` (un solo `..`)
+1. **Next.js App Router** — lingua da cookie `NEXT_LOCALE` con `cookies()` di `next/headers`
+1. **Nominatim** — header `User-Agent: VELOWedding/1.0` obbligatorio, max 1 req/sec
+1. **Commit sito** → sempre dalla cartella `velo-web-temp`
 
 -----
+
+## Credenziali
+
+- Admin sito: velowedding.it/admin → mello.cn@gmail.com
+- Supabase: progetto `jogsdrxnqrbbqieozlmo`
+- Vercel: autodeploy da GitHub main
 
 *Aggiornato: marzo 2026*
