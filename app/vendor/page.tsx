@@ -4,17 +4,32 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { getT } from '@/lib/translations'
 import LangToggle from '@/components/LangToggle'
-import { useRouter } from 'next/navigation'
 
 function useLocale() {
   const [locale, setLocale] = useState('it')
   useEffect(() => {
-    // Detect locale from cookie set by Next.js i18n
     const match = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
     if (match) setLocale(match[1])
     else if (navigator.language.startsWith('en')) setLocale('en')
   }, [])
   return locale
+}
+
+async function geocodeCity(city: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const query = encodeURIComponent(`${city}, Italia`)
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
+      { headers: { 'User-Agent': 'VELOWedding/1.0' } }
+    )
+    const data = await res.json()
+    if (data && data[0]) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+    }
+    return null
+  } catch {
+    return null
+  }
 }
 
 export default function VendorPage() {
@@ -97,6 +112,23 @@ export default function VendorPage() {
   )
 }
 
+async function geocodeCity(city: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const query = encodeURIComponent(`${city}, Italia`)
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
+      { headers: { 'User-Agent': 'VELOWedding/1.0' } }
+    )
+    const data = await res.json()
+    if (data && data[0]) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
   vendor: any, locale: string, onLogout: () => void, onUpdate: (v: any) => void
 }) {
@@ -119,7 +151,19 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
 
   const save = async () => {
     setSaving(true)
-    const payload = { bio, phone, instagram, facebook, tiktok, website, whatsapp, price_from: priceFrom, price_to: priceTo, max_events_per_day: maxEvents }
+    const payload: any = {
+      bio, phone, instagram, facebook, tiktok, website, whatsapp,
+      price_from: priceFrom, price_to: priceTo, max_events_per_day: maxEvents
+    }
+    // Geocoding automatico della città del vendor
+    if (vendor.location || vendor.region) {
+      const cityToGeocode = vendor.location || vendor.region
+      const coords = await geocodeCity(cityToGeocode)
+      if (coords) {
+        payload.lat = coords.lat
+        payload.lng = coords.lng
+      }
+    }
     const { data } = await supabase.from('vendor_accounts').update(payload).eq('id', vendor.id).select().single()
     if (data) { onUpdate({ ...vendor, ...data }); setSavedMsg('✓'); setTimeout(() => setSavedMsg(''), 2000) }
     setEditing(false); setSaving(false)
@@ -202,7 +246,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                   [d.category, vendor.category],
                   [d.zone, vendor.region],
                   [d.phone, vendor.phone || '—'],
-                  [d.prices, vendor.price_from ? `€${vendor.price_from}${vendor.price_to ? ` – €${vendor.price_to}` : ''}` : '—'],
+                  [d.prices, vendor.price_from ? `€${vendor.price_from}${vendor.price_to ? ` → €${vendor.price_to}` : ''}` : '—'],
                   [d.bio, vendor.bio || '—'],
                 ].map(([label, value]) => (
                   <div key={label} className="flex justify-between py-3 border-b border-border last:border-0 gap-4">
