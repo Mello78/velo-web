@@ -15,23 +15,6 @@ function useLocale() {
   return locale
 }
 
-async function geocodeCity(city: string): Promise<{ lat: number; lng: number } | null> {
-  try {
-    const query = encodeURIComponent(`${city}, Italia`)
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
-      { headers: { 'User-Agent': 'VELOWedding/1.0' } }
-    )
-    const data = await res.json()
-    if (data && data[0]) {
-      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
-    }
-    return null
-  } catch {
-    return null
-  }
-}
-
 export default function VendorPage() {
   const locale = useLocale()
   const tr = getT(locale)
