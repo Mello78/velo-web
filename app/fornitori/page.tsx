@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { getT } from '@/lib/translations'
-import LangToggle from '@/components/LangToggle'
+import SimpleNav from '@/components/SimpleNav'
 
 const CATEGORIES_IT = ['Tutti', '📷 Fotografia', '🌸 Floral Design', '🍽️ Catering', '🎵 Musica', '🏛️ Location', '💌 Partecipazioni', '🎂 Torta']
 const CATEGORIES_EN = ['All', '📷 Photography', '🌸 Floral Design', '🍽️ Catering', '🎵 Music', '🏛️ Venue', '💌 Stationery', '🎂 Cake']
@@ -115,19 +115,13 @@ export default function FornitoriPage() {
 
   return (
     <main className="min-h-screen bg-bg text-cream">
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg/90 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <img src="/favicon.png" alt="" className="h-7 w-auto" />
-            <span className="text-gold text-xl tracking-[0.3em] font-light">VELO</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-cream text-sm">{tr.fornitori.label}</span>
-            <Link href="/vendor" className="text-muted hover:text-cream text-sm transition-colors">{tr.nav.forVendors}</Link>
-            <LangToggle locale={locale} />
-          </div>
-        </div>
-      </nav>
+      <SimpleNav
+        locale={locale}
+        backHref="/"
+        backLabel="← VELO"
+        rightLabel={tr.nav.forVendors}
+        rightHref="/vendor"
+      />
 
       <div className="pt-24 pb-16 px-6">
         <div className="max-w-6xl mx-auto">

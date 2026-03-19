@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { supabase } from '@/lib/supabase'
 import { getT } from '@/lib/translations'
-import LangToggle from '@/components/LangToggle'
+import SimpleNav from '@/components/SimpleNav'
 import { notFound } from 'next/navigation'
 
 async function getVendor(id: string) {
@@ -30,18 +30,11 @@ export default async function VendorDetailPage({
 
   return (
     <main className="min-h-screen bg-bg text-cream">
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg/90 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/fornitori" className="text-muted hover:text-cream text-sm transition-colors flex items-center gap-2">
-            {tr.vendorDetail.back}
-          </Link>
-          <div className="flex items-center gap-3">
-            <img src="/favicon.png" alt="" className="h-7 w-auto" />
-            <span className="text-gold text-xl tracking-[0.3em] font-light">VELO</span>
-          </div>
-          <LangToggle locale={locale} />
-        </div>
-      </nav>
+      <SimpleNav
+        locale={locale}
+        backHref="/fornitori"
+        backLabel={tr.vendorDetail.back}
+      />
 
       {/* Hero */}
       <div className="relative h-[420px] mt-16 overflow-hidden">

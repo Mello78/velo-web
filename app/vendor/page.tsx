@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { getT } from '@/lib/translations'
+import SimpleNav from '@/components/SimpleNav'
 import LangToggle from '@/components/LangToggle'
 
 function useLocale() {
@@ -50,15 +51,12 @@ export default function VendorPage() {
   )
 
   return (
-    <main className="min-h-screen bg-bg text-cream flex items-center justify-center px-6">
+    <main className="min-h-screen bg-bg text-cream">
+      <SimpleNav locale={locale} />
+      <div className="flex items-center justify-center px-6 pt-24 pb-16 min-h-screen">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <Link href="/" className="inline-flex items-center gap-3 justify-center">
-            <img src="/favicon.png" alt="" className="h-8 w-auto" />
-            <span className="text-gold text-3xl tracking-[0.3em] font-light">VELO</span>
-          </Link>
-          <p className="text-muted text-sm mt-2">{tr.vendor.title}</p>
-          <div className="mt-3 flex justify-center"><LangToggle locale={locale} /></div>
+          <p className="text-gold text-xs tracking-[0.3em] uppercase mb-2">{tr.vendor.title}</p>
         </div>
         <div className="bg-dark border border-border rounded-2xl p-8">
           <div className="flex gap-2 mb-8">
@@ -90,6 +88,7 @@ export default function VendorPage() {
           <p className="text-gold text-sm font-medium mb-2">{tr.vendor.earlyTitle}</p>
           <p className="text-muted text-sm leading-relaxed">{tr.vendor.earlyDesc}</p>
         </div>
+      </div>
       </div>
     </main>
   )
@@ -154,21 +153,21 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
 
   return (
     <main className="min-h-screen bg-bg text-cream">
-      <nav className="border-b border-border">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-bg/95 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
             <img src="/favicon.png" alt="" className="h-7 w-auto" />
-            <span className="text-gold text-xl tracking-[0.3em] font-light">VELO</span>
+            <span className="text-gold text-xl tracking-[0.3em] font-light hidden sm:block">VELO</span>
           </Link>
-          <div className="flex items-center gap-4">
+          <span className="text-muted text-sm hidden md:block truncate">{vendor.business_name}</span>
+          <div className="flex items-center gap-3 shrink-0">
             <LangToggle locale={locale} />
-            <span className="text-muted text-sm hidden sm:block">{vendor.business_name}</span>
-            <button onClick={onLogout} className="text-red-400 text-sm hover:opacity-70 transition-opacity">{d.logout}</button>
+            <button onClick={onLogout} className="text-red-400 text-xs hover:opacity-70 transition-opacity border border-red-400/30 rounded-full px-3 py-1.5">{d.logout}</button>
           </div>
         </div>
       </nav>
 
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="max-w-5xl mx-auto px-6 py-10 pt-24">
         <div className="mb-8">
           <p className="text-muted text-xs tracking-widest uppercase mb-2">{d.label}</p>
           <div className="flex items-start justify-between gap-4">
