@@ -4,330 +4,119 @@
 
 ---
 
-## TASK 1 — Navbar responsiva su tutte le pagine del sito
+## TASK 1 — Immagini Vision nell'app
 
-NavBar.tsx e SimpleNav.tsx esistono già in components/.
-Vanno applicati alle pagine che usano ancora la navbar inline.
+**In attesa di Mello** — le immagini vanno scelte insieme in chat con Claude.
 
-### fornitori/page.tsx
-Aggiungere in cima: `'use client'` (servirà anche per TASK 3)
-Sostituire la navbar inline con:
-```tsx
-import SimpleNav from '@/components/SimpleNav'
-<SimpleNav locale={locale} backHref="/" backLabel="<- VELO"
-  rightLabel={tr.nav.forVendors} rightHref="/vendor" />
-```
+**File:** `C:\Users\mello\VeloWedding\app\(tabs)\vision.tsx`
 
-### fornitori/[id]/page.tsx
-```tsx
-import SimpleNav from '@/components/SimpleNav'
-<SimpleNav locale={locale} backHref="/fornitori" backLabel={tr.vendorDetail.back} />
-```
+Attualmente usa placeholder Unsplash. Quando Mello sceglie le immagini,
+aggiornare gli URL per ogni stile e stagione nel file.
 
-### vendor/page.tsx
-Nella VendorDashboard sostituire la navbar con SimpleNav.
-Nella pagina login aggiungere SimpleNav senza backHref (solo logo + LangToggle).
-
-```
-git add -A && git commit -m "responsive-navbar-all-pages" && git push origin main
-```
+**Non toccare questo file finché Mello non conferma le immagini.**
 
 ---
 
-## TASK 2 — Geocoding automatico vendor
+## TASK 2 — Attivare AI Chatbot
 
-Quando un vendor salva la città, le coordinate lat/lng vengono salvate nel DB.
+Il componente AIAssistant.tsx esiste già. L'Edge Function velo-ai-chat
+è deployata su Supabase ma manca la chiave API.
 
-### Crea C:\Users\mello\VeloWedding\lib\geocoding.ts
+**Cosa fare:**
+1. Andare su console.anthropic.com → crea API key ($5 crediti iniziali)
+2. Supabase Dashboard → Edge Functions → velo-ai-chat → Secrets
+3. Aggiungere secret: ANTHROPIC_API_KEY = <la chiave>
+4. In auth.tsx o nel tab chat, riabilitare il componente AIAssistant
 
-```typescript
-export function haversineKm(
-  lat1: number, lng1: number, lat2: number, lng2: number
-): number {
-  const R = 6371
-  const dLat = (lat2 - lat1) * Math.PI / 180
-  const dLng = (lng2 - lng1) * Math.PI / 180
-  const a = Math.sin(dLat/2)**2 +
-    Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-}
-
-export async function geocodeCity(
-  city: string, province?: string
-): Promise<{ lat: number; lng: number } | null> {
-  try {
-    const q = encodeURIComponent(
-      province ? `${city}, ${province}, Italia` : `${city}, Italia`
-    )
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`,
-      { headers: { 'User-Agent': 'VELOWedding/1.0' } }
-    )
-    const data = await res.json()
-    if (data?.[0]) return {
-      lat: parseFloat(data[0].lat),
-      lng: parseFloat(data[0].lon)
-    }
-    return null
-  } catch { return null }
-}
-```
-
-### app/vendor/onboarding.tsx
-
-Importare: `import { geocodeCity } from '../../lib/geocoding'`
-
-Prima dell'insert su vendor_accounts aggiungere:
-```typescript
-const coords = await geocodeCity(vendorCity)
-// aggiungere al payload: lat: coords?.lat ?? null, lng: coords?.lng ?? null
-```
-
-### velo-web-temp/app/vendor/page.tsx
-
-Aggiungere funzione standalone geocodeCity (stessa logica, senza import).
-Nella funzione save() prima dell'update Supabase:
-```typescript
-if (vendor.location) {
-  const coords = await geocodeCity(vendor.location)
-  if (coords) { payload.lat = coords.lat; payload.lng = coords.lng }
-}
-```
-
-```
-git add -A && git commit -m "geocoding-automatico-vendor" && git push origin main
-```
+Costo stimato: ~$0.001 per conversazione con Claude Haiku.
 
 ---
 
-## TASK 3 — Ricerca vendor per distanza nel sito web
+## TASK 3 — Email invito vendor
 
-NOTA: fornitori/page.tsx deve essere 'use client' (fatto nel TASK 1).
+La Edge Function send-vendor-invite esiste ma non invia email reali.
 
-### Aggiungere stati
+**Cosa fare:**
+1. Creare account su resend.com (gratuito fino a 3.000 email/mese)
+2. Ottenere API key Resend
+3. Supabase → Edge Functions → send-vendor-invite → aggiornare il codice
+   per chiamare l'API Resend con template email VELO
 
-```typescript
-const [vendors, setVendors] = useState<any[]>([])
-const [cityInput, setCityInput] = useState('')
-const [citySearch, setCitySearch] = useState('')
-const [searchCoords, setSearchCoords] = useState<{lat:number;lng:number}|null>(null)
-const [searching, setSearching] = useState(false)
-```
-
-### Fetch vendor lato client
-
-```typescript
-useEffect(() => {
-  supabase.from('public_vendors').select('*')
-    .order('featured', { ascending: false })
-    .order('rating', { ascending: false })
-    .then(({ data }) => { if (data) setVendors(data) })
-}, [])
-```
-
-### Funzioni nel file
-
-```typescript
-function haversineKm(lat1:number,lng1:number,lat2:number,lng2:number):number {
-  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180
-  const a=Math.sin(dLat/2)**2+
-    Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
-}
-
-async function geocodeCity(city:string):Promise<{lat:number;lng:number}|null> {
-  try {
-    const q=encodeURIComponent(`${city}, Italia`)
-    const res=await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`,
-      {headers:{'User-Agent':'VELOWedding/1.0'}}
-    )
-    const data=await res.json()
-    if(data?.[0]) return{lat:parseFloat(data[0].lat),lng:parseFloat(data[0].lon)}
-    return null
-  } catch{return null}
-}
-
-const handleCitySearch = async () => {
-  if (!cityInput.trim()) return
-  setSearching(true)
-  const coords = await geocodeCity(cityInput.trim())
-  setSearchCoords(coords)
-  setCitySearch(cityInput.trim())
-  setSearching(false)
-}
-```
-
-### Campo ricerca città (sopra i filtri)
-
-```tsx
-<div className="mb-6">
-  <div className="flex gap-2">
-    <input type="text" value={cityInput}
-      onChange={e=>setCityInput(e.target.value)}
-      onKeyDown={e=>e.key==='Enter'&&handleCitySearch()}
-      placeholder={locale==='en'
-        ?'Search near a city...'
-        :'Cerca vicino a una città...'}
-      className="flex-1 bg-dark border border-border rounded-2xl px-5 py-3.5
-        text-cream placeholder-muted focus:outline-none focus:border-gold text-sm" />
-    <button onClick={handleCitySearch}
-      disabled={searching||!cityInput.trim()}
-      className="bg-gold text-bg font-semibold px-5 py-3.5 rounded-2xl
-        hover:opacity-90 disabled:opacity-40 text-sm whitespace-nowrap">
-      {searching?'...':(locale==='en'?'Search':'Cerca')}
-    </button>
-  </div>
-  {citySearch && (
-    <div className="flex items-center gap-2 mt-2 px-1">
-      <span className="text-muted text-xs">
-        📍 {locale==='en'
-          ?`Results near ${citySearch}`
-          :`Risultati vicino a ${citySearch}`}
-      </span>
-      <button
-        onClick={()=>{setCityInput('');setCitySearch('');setSearchCoords(null)}}
-        className="text-gold text-xs hover:opacity-70">✕</button>
-    </div>
-  )}
-</div>
-```
-
-### Ordinamento per distanza
-
-Nel calcolo dei vendor filtrati, dopo i filtri esistenti:
-```typescript
-if (searchCoords) {
-  sorted = sorted.map(v => ({
-    ...v,
-    _distKm: (v.lat && v.lng)
-      ? haversineKm(searchCoords.lat, searchCoords.lng, v.lat, v.lng)
-      : 9999
-  })).sort((a:any, b:any) => a._distKm - b._distKm)
-}
-```
-
-### Badge distanza sulle card
-
-```tsx
-{(v as any)._distKm && (v as any)._distKm < 9999 && (
-  <span className="text-xs text-muted border border-border rounded-full px-2 py-0.5">
-    📍 {Math.round((v as any)._distKm)} km
-  </span>
-)}
-```
-
-```
-git add -A && git commit -m "ricerca-per-distanza-sito" && git push origin main
-```
+**Template email da creare:**
+- Oggetto: "Sei stato invitato su VELO — la piattaforma per i matrimoni in Italia"
+- Body: nome del vendor che invita + link a velowedding.it/vendor
 
 ---
 
-## TASK 4 — Ricerca per distanza nell'app mobile
+## TASK 4 — Notifiche push per nuovi messaggi
 
-**File:** C:\Users\mello\VeloWedding\app\(tabs)\vendors.tsx
+Quando un vendor risponde in chat, la coppia deve ricevere una notifica.
+Viceversa quando la coppia scrive, il vendor riceve notifica.
 
-### Importare
+**Stack consigliato:** Expo Push Notifications + Supabase Realtime
 
-```typescript
-import { geocodeCity, haversineKm } from '../../lib/geocoding'
-import { cercaComuni } from '../../lib/data/comuni'
+**Cosa fare:**
+1. Installare: `npx expo install expo-notifications`
+2. In _layout.tsx: richiedere permesso notifiche e salvare il token Expo Push
+   nella tabella couples (colonna push_token) o vendor_accounts
+3. Creare Edge Function send-push-notification che chiama l'API Expo
+4. Trigger: quando viene inserito un nuovo messaggio in tabella messages,
+   chiamare la Edge Function con il push token del destinatario
+
+---
+
+## TASK 5 — Statistiche vendor reali nel portale web
+
+Attualmente il tab Statistiche mostra tutto "—".
+
+**File:** `C:\Users\mello\velo-web-temp\app\vendor\page.tsx`
+
+**Query da fare su Supabase per ogni vendor_account:**
+```sql
+-- Coppie che seguono il vendor (hanno aggiunto il vendor alla loro lista)
+SELECT COUNT(*) FROM vendors WHERE public_vendor_id = $vendor_public_id
+
+-- Conferme ricevute
+SELECT COUNT(*) FROM vendors
+WHERE public_vendor_id = $vendor_public_id AND confirmed = true
+
+-- Messaggi ricevuti
+SELECT COUNT(*) FROM messages
+WHERE vendor_id IN (
+  SELECT id FROM vendors WHERE public_vendor_id = $vendor_public_id
+)
 ```
 
-### Aggiungere stati
-
-```typescript
-const [citySearch, setCitySearch] = useState('')
-const [cityCoords, setCityCoords] = useState<{lat:number;lng:number}|null>(null)
-const [cityDropdown, setCityDropdown] = useState<any[]>([])
-```
-
-### Campo cerca città (sopra i filtri nel tab discover)
-
-```tsx
-<View style={{margin:16, marginBottom:0}}>
-  <TextInput style={styles.searchInput}
-    placeholder="Cerca vicino a una città..."
-    placeholderTextColor="#5A5040"
-    value={citySearch}
-    onChangeText={v=>{
-      setCitySearch(v)
-      setCityDropdown(cercaComuni(v))
-    }} />
-  {cityDropdown.length > 0 && (
-    <View style={styles.suggestBox}>
-      {cityDropdown.map((c, i) => (
-        <TouchableOpacity key={i} style={styles.suggestItem}
-          onPress={async () => {
-            setCitySearch(c.nome)
-            setCityDropdown([])
-            const coords = await geocodeCity(c.nome, c.provincia)
-            setCityCoords(coords)
-          }}>
-          <Text style={styles.suggestNome}>{c.nome}</Text>
-          <Text style={styles.suggestProv}>{c.provincia} · {c.regione}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  )}
-  {cityCoords && (
-    <TouchableOpacity
-      onPress={() => { setCityCoords(null); setCitySearch('') }}>
-      <Text style={{color:'#C9A84C',fontSize:11,marginTop:6}}>
-        📍 {citySearch} · ✕ Rimuovi
-      </Text>
-    </TouchableOpacity>
-  )}
-</View>
-```
-
-### Ordinamento per distanza
-
-Dopo i filtri esistenti in filteredPublic:
-```typescript
-if (cityCoords) {
-  result = result.map((v: any) => ({
-    ...v,
-    _distKm: (v.lat && v.lng)
-      ? haversineKm(cityCoords.lat, cityCoords.lng, v.lat, v.lng)
-      : 9999
-  })).sort((a: any, b: any) => a._distKm - b._distKm)
-}
-```
-
-### Badge distanza sulle card
-
-Sotto il nome vendor:
-```tsx
-{(v as any)._distKm && (v as any)._distKm < 500 && (
-  <Text style={{fontSize:11, color:'#8A7E6A'}}>
-    📍 {Math.round((v as any)._distKm)} km
-  </Text>
-)}
-```
-
-*(Nessun commit per l'app — Mello ricarica su Expo Go)*
+Sostituire i "—" con i valori reali nel tab stats.
 
 ---
 
 ## Stato attuale (marzo 2026)
 
-### Completato
-- Google OAuth configurato su Supabase ✅
-- Bottone Google (e Apple su iOS) gia' presenti in auth.tsx ✅
-- Coordinate lat/lng aggiunte al DB ✅
-- 24 vendor esistenti con coordinate popolate ✅
-- Navbar responsiva su home page ✅
-- Traduzione IT/EN completa sito ✅
-- Autocomplete comuni nell'onboarding ✅
-
-### Da fare (questi task)
-- TASK 1: Navbar responsiva su fornitori, dettaglio, vendor
-- TASK 2: Geocoding automatico al salvataggio profilo vendor
-- TASK 3: Campo ricerca citta' + distanza nel sito
-- TASK 4: Campo ricerca citta' + distanza nell'app
+### Completato ✅
+- Google OAuth configurato su Supabase
+- Bottone Google (e Apple su iOS) in auth.tsx
+- Coordinate lat/lng nel DB — 24 vendor con coordinate popolate
+- Navbar responsiva su tutte le pagine del sito
+- Traduzione IT/EN completa sito con toggle lingua
+- Autocomplete comuni nell'onboarding con mappa provincia→zona VELO
+- lib/geocoding.ts con haversineKm + geocodeCity
+- Geocoding automatico al salvataggio profilo vendor
+- Campo ricerca citta' + ordinamento per distanza nel sito
+- Campo ricerca citta' + ordinamento per distanza nell'app
+- Guida cerimonia religiosa IT/EN (ReligiousCeremonyGuide)
+- Sistema disponibilita' vendor (date bloccate + capacita' per giorno)
+- Scadenziario vendor → task automatici nel planning coppia
 
 ### In attesa di Mello
-- Immagini Vision (da scegliere insieme)
+- Immagini Vision (TASK 1)
 - Test onboarding completo su Expo Go
 - Prima build TestFlight (Apple Developer $99)
+- Chiave API Anthropic per chatbot (TASK 2)
+
+### Prossimi sviluppi
+- TASK 2: Attivare AI chatbot
+- TASK 3: Email invito vendor (Resend)
+- TASK 4: Notifiche push messaggi
+- TASK 5: Statistiche vendor reali
+- Apple OAuth (richiede Apple Developer $99)
