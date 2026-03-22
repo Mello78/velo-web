@@ -71,3 +71,22 @@
 ---
 
 *Aggiornato: 22 marzo 2026*
+
+---
+
+## 🔧 MIGRATION SQL necessaria (da eseguire su Supabase)
+
+Aggiungere colonne foto al vendor_accounts (serve per il nuovo flusso upload foto dal web):
+
+```sql
+ALTER TABLE vendor_accounts
+  ADD COLUMN IF NOT EXISTS photo1_url TEXT,
+  ADD COLUMN IF NOT EXISTS photo2_url TEXT,
+  ADD COLUMN IF NOT EXISTS photo3_url TEXT;
+```
+
+Eseguirla da: Supabase Dashboard → SQL Editor
+
+---
+
+*Aggiornato: 22 marzo 2026 — sessione autonoma*

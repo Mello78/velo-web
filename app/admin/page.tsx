@@ -54,6 +54,49 @@ export default function AdminPage() {
     setVendors(prev => prev.map(v => v.id === id ? { ...v, verified: !verified } : v))
   }
 
+  const activateVendor = async (v: any) => {
+    // Upsert su public_vendors con i dati del vendor_account
+    const payload = {
+      name: v.business_name,
+      category: v.category,
+      location: v.location || '',
+      region: v.region || '',
+      description: v.bio || '',
+      phone: v.phone || null,
+      instagram: v.instagram || null,
+      facebook: v.facebook || null,
+      tiktok: v.tiktok || null,
+      website: v.website || null,
+      whatsapp: v.whatsapp || null,
+      price_from: v.price_from || null,
+      price_to: v.price_to || null,
+      logo_url: v.logo_url || null,
+      photo1_url: v.photo1_url || null,
+      photo2_url: v.photo2_url || null,
+      photo3_url: v.photo3_url || null,
+      lat: v.lat || null,
+      lng: v.lng || null,
+      rating: 5.0,
+      review_count: 0,
+      verified: true,
+      featured: false,
+    }
+    if (v.public_vendor_id) {
+      // Aggiorna record esistente
+      await supabase.from('public_vendors').update(payload).eq('id', v.public_vendor_id)
+      await supabase.from('vendor_accounts').update({ verified: true }).eq('id', v.id)
+    } else {
+      // Crea nuovo record pubblico
+      const { data: pv } = await supabase.from('public_vendors').insert(payload).select().single()
+      if (pv) {
+        await supabase.from('vendor_accounts').update({ verified: true, public_vendor_id: pv.id }).eq('id', v.id)
+        setVendors(prev => prev.map(x => x.id === v.id ? { ...x, verified: true, public_vendor_id: pv.id } : x))
+        return
+      }
+    }
+    setVendors(prev => prev.map(x => x.id === v.id ? { ...x, verified: true } : x))
+  }
+
   const markInviteRegistered = async (id: string) => {
     await supabase.from('vendor_invites').update({ registered: true }).eq('id', id)
     setInvites(prev => prev.map(i => i.id === id ? { ...i, registered: true } : i))
@@ -121,21 +164,40 @@ export default function AdminPage() {
 
         {tab === 'vendors' && (
           <div className="space-y-3">
-            {vendors.map(v => (
-              <div key={v.id} className="bg-dark border border-border rounded-xl p-4 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-cream font-medium">{v.business_name}</p>
-                  <p className="text-muted text-sm">{v.category} · {v.region}</p>
-                  <p className="text-muted text-xs mt-1">{new Date(v.created_at).toLocaleDateString('it-IT')} · {v.plan || 'free'}</p>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className={`text-xs px-3 py-1 rounded-full border ${v.public_vendor_id ? 'border-green text-green' : 'border-border text-muted'}`}>
-                    {v.public_vendor_id ? '✓ In vetrina' : 'Non in vetrina'}
-                  </span>
-                  <button onClick={() => verifyVendor(v.id, v.verified)}
-                    className={`text-xs px-3 py-1 rounded-full border transition-colors ${v.verified ? 'border-green text-green' : 'border-border text-muted hover:border-green hover:text-green'}`}>
-                    {v.verified ? '✓ Verificato' : 'Verifica'}
-                  </button>
+            {/* Pending prima */}
+            {[...vendors].sort((a, b) => (a.public_vendor_id ? 1 : -1) - (b.public_vendor_id ? 1 : -1)).map(v => (
+              <div key={v.id} className={`bg-dark border rounded-xl p-4 ${!v.public_vendor_id ? 'border-gold/30' : 'border-border'}`}>
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      {!v.public_vendor_id && <span className="text-xs bg-gold/10 text-gold border border-gold/30 rounded-full px-2 py-0.5">Nuovo</span>}
+                      <p className="text-cream font-medium">{v.business_name}</p>
+                    </div>
+                    <p className="text-muted text-sm">{v.category} · {v.location || v.region}</p>
+                    {v.phone && <p className="text-muted text-xs mt-0.5">📞 {v.phone}</p>}
+                    <p className="text-muted text-xs mt-1">{new Date(v.created_at).toLocaleDateString('it-IT')} · {v.plan || 'free'}</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    <span className={`text-xs px-3 py-1 rounded-full border ${v.public_vendor_id ? 'border-green text-green' : 'border-border text-muted'}`}>
+                      {v.public_vendor_id ? '✓ In vetrina' : 'Non in vetrina'}
+                    </span>
+                    {!v.public_vendor_id && (
+                      <button onClick={() => activateVendor(v)}
+                        className="text-xs px-3 py-1 rounded-full border border-gold text-gold hover:bg-gold/10 transition-colors font-medium">
+                        🚀 Attiva in vetrina
+                      </button>
+                    )}
+                    {v.public_vendor_id && (
+                      <button onClick={() => activateVendor(v)}
+                        className="text-xs px-3 py-1 rounded-full border border-border text-muted hover:border-gold hover:text-gold transition-colors">
+                        🔄 Aggiorna vetrina
+                      </button>
+                    )}
+                    <button onClick={() => verifyVendor(v.id, v.verified)}
+                      className={`text-xs px-3 py-1 rounded-full border transition-colors ${v.verified ? 'border-green text-green' : 'border-border text-muted hover:border-green hover:text-green'}`}>
+                      {v.verified ? '✓ Verificato' : 'Verifica'}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -166,10 +228,16 @@ export default function AdminPage() {
           <div className="space-y-3">
             <p className="text-muted text-sm mb-4">Fornitori segnalati dalle coppie — da contattare per invitarli su VELO</p>
             {invites.map(i => (
-              <div key={i.id} className="bg-dark border border-border rounded-xl p-4 flex items-center justify-between gap-4">
+              <div key={i.id} className="bg-dark border border-border rounded-xl p-4 flex items-start justify-between gap-4 flex-wrap">
                 <div>
                   <p className="text-cream font-medium">{i.vendor_name}</p>
-                  {i.vendor_email && <p className="text-blue text-sm">{i.vendor_email}</p>}
+                  {i.vendor_email && (
+                    <a href={`mailto:${i.vendor_email}?subject=Unisciti a VELO — la piattaforma per i matrimoni in Italia&body=Ciao,%0A%0ASei stato segnalato su VELO da una coppia che ha pianificato il proprio matrimonio in Italia.%0A%0AVELO è la piattaforma italiana per la pianificazione di matrimoni.%0ARegistrati gratuitamente: https://velowedding.it/vendor%0A%0ATeam VELO`}
+                      className="text-blue-400 text-sm hover:opacity-70 transition-opacity">
+                      ✉️ {i.vendor_email}
+                    </a>
+                  )}
+                  {i.vendor_phone && <p className="text-muted text-xs mt-0.5">📱 {i.vendor_phone}</p>}
                   <p className="text-muted text-xs mt-1">Segnalato da: {i.couple_names}</p>
                   <p className="text-muted text-xs">{new Date(i.sent_at).toLocaleDateString('it-IT')}</p>
                 </div>

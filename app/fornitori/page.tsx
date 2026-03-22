@@ -78,6 +78,8 @@ export default function FornitoriPage() {
     const coords = await geocodeCity(citySearch.trim())
     setCityCoords(coords)
     setSearchCity(citySearch.trim())
+    // Resetta il filtro zona quando si cerca per città
+    setActiveRegion(allLabel)
   }
 
   const clearCitySearch = () => {
@@ -161,7 +163,11 @@ export default function FornitoriPage() {
           <div className="flex flex-wrap gap-2 mb-4">
             {REGIONS.map(r => (
               <button key={r}
-                onClick={() => setActiveRegion(r === 'Tutte / All' ? allLabel : r)}
+                onClick={() => {
+                  setActiveRegion(r === 'Tutte / All' ? allLabel : r)
+                  // Resetta ricerca città quando si seleziona una zona
+                  if (r !== 'Tutte / All') clearCitySearch()
+                }}
                 className={`px-4 py-2 rounded-full text-sm border transition-colors ${
                   (activeRegion === r || (r === 'Tutte / All' && (activeRegion === 'Tutte' || activeRegion === 'All')))
                     ? 'border-gold bg-gold/10 text-gold' : 'border-border text-muted hover:border-gold/50 hover:text-cream'
