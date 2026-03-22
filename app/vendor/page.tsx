@@ -62,8 +62,10 @@ export default function VendorPage() {
         setUserId(uid)
         setEmail(data.session.user.email || '')
         const { data: va } = await supabase.from('vendor_accounts').select('*').eq('user_id', uid).single()
+        // Vai alla dashboard SOLO se ha già un profilo vendor
+        // Se ha una sessione ma non è un vendor, resta sulla schermata login
         if (va) { setVendorData(va); setMode('dashboard') }
-        else setMode('setup')
+        // NON andare a 'setup' in automatico — solo dopo login esplicito
       }
     })
   }, [])
