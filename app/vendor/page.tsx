@@ -13,6 +13,14 @@ const CATEGORIES = [
   '💄 Trucco & Parrucco', '👗 Abiti', '🎉 Animazione', '🎊 Bomboniere', '📋 Wedding Planner',
 ]
 
+const LINGUE = ['Italiano', 'English', 'Français', 'Deutsch', 'Español', 'Português', '中文', 'العربية']
+const SPECIALITA = [
+  'Reportage naturale', 'Stile romantico', 'Luxury & Fine Art', 'Destination wedding',
+  'Cerimonie religiose', 'Cerimonie civili', 'Cerimonie simboliche', 'Matrimoni all\'aperto',
+  'Ville storiche', 'Piccoli matrimoni', 'Grandi eventi', 'Coppie straniere',
+  'Multilingue', 'Disponibile weekend',
+]
+
 function useLocale() {
   const [locale, setLocale] = useState('it')
   useEffect(() => {
@@ -265,7 +273,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
 }) {
   const tr = getT(locale)
   const d = tr.vendor.dashboard
-  const [tab, setTab] = useState<'profile' | 'photos' | 'social' | 'availability' | 'stats'>('profile')
+  const [tab, setTab] = useState<'profile' | 'info' | 'photos' | 'social' | 'availability' | 'stats'>('profile')
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savedMsg, setSavedMsg] = useState('')
@@ -282,6 +290,12 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
   const [website, setWebsite] = useState(vendor.website || '')
   const [whatsapp, setWhatsapp] = useState(vendor.whatsapp || '')
   const [maxEvents, setMaxEvents] = useState(vendor.max_events_per_day || 1)
+  const [specialties, setSpecialties] = useState<string[]>(vendor.specialties || [])
+  const [languages, setLanguages] = useState<string[]>(vendor.languages || [])
+  const [yearsExp, setYearsExp] = useState<string>((vendor.years_experience || 0).toString())
+  const [awards, setAwards] = useState<string[]>(
+    vendor.awards?.length ? [...vendor.awards, '', ''].slice(0, 3) : ['', '', '']
+  )
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState(vendor.logo_url || '')
   const [photoFiles, setPhotoFiles] = useState<(File | null)[]>([null, null, null])
@@ -333,6 +347,9 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
       tiktok: tiktok || null, website: website || null, whatsapp: whatsapp || null,
       price_from: priceFrom || null, price_to: priceTo || null,
       max_events_per_day: maxEvents, logo_url: logoUrl,
+      specialties, languages,
+      years_experience: parseInt(yearsExp) || 0,
+      awards: awards.filter(Boolean),
       ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
     }
     const { data } = await supabase.from('vendor_accounts').update(payload).eq('id', vendor.id).select().single()
@@ -379,13 +396,88 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           </div>
         </div>
         <div className="flex gap-2 mb-8 flex-wrap">
-          {(['profile', 'photos', 'social', 'availability', 'stats'] as const).map(t => (
+          {(['profile', 'info', 'photos', 'social', 'availability', 'stats'] as const).map(t => (
             <button key={t} onClick={() => { setTab(t); setEditing(false) }}
               className={`px-4 py-2 rounded-full text-sm transition-colors ${tab === t ? 'bg-gold text-bg font-semibold' : 'border border-border text-muted hover:text-cream'}`}>
-              {t === 'profile' ? d.tabProfile : t === 'photos' ? '📸 Foto' : t === 'social' ? d.tabSocial : t === 'availability' ? d.tabAvailability : d.tabStats}
+              {t === 'profile' ? d.tabProfile : t === 'info' ? '✨ Info' : t === 'photos' ? '📸 Foto' : t === 'social' ? d.tabSocial : t === 'availability' ? d.tabAvailability : d.tabStats}
             </button>
           ))}
         </div>
+
+        {/* INFO */}
+        {tab === 'info' && (
+          <div className="bg-dark border border-border rounded-2xl p-6 space-y-8">
+            <div className="flex justify-between items-center">
+              <h2 className="text-cream font-medium">✨ Info vetrina</h2>
+              <button onClick={save} disabled={saving}
+                className="text-sm px-4 py-2 rounded-full bg-gold text-bg font-semibold hover:opacity-90 disabled:opacity-50">
+                {saving ? d.saving : savedMsg || d.save}
+              </button>
+            </div>
+
+            {/* Specialità — max 5 */}
+            <div>
+              <p className="text-muted text-xs uppercase tracking-wider mb-1">Punti di forza / Specialità <span className="text-gold">(max 5)</span></p>
+              <p className="text-muted/60 text-xs mb-3">Seleziona fino a 5 che ti rappresentano meglio</p>
+              <div className="flex flex-wrap gap-2">
+                {SPECIALITA.map(sp => {
+                  const on = specialties.includes(sp)
+                  const atMax = specialties.length >= 5 && !on
+                  return (
+                    <button key={sp}
+                      onClick={() => { if (atMax) return; setSpecialties(prev => on ? prev.filter(x => x !== sp) : [...prev, sp]) }}
+                      className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${on ? 'border-gold bg-gold/10 text-gold' : atMax ? 'border-border text-muted opacity-40 cursor-not-allowed' : 'border-border text-muted hover:border-gold/50'}`}>
+                      {sp}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Anni esperienza */}
+            <div>
+              <p className="text-muted text-xs uppercase tracking-wider mb-3">Anni di esperienza</p>
+              <div className="flex items-center gap-4">
+                <button onClick={() => setYearsExp(v => Math.max(0, parseInt(v||'0') - 1).toString())}
+                  className="w-9 h-9 rounded-full border border-gold text-gold text-lg hover:bg-gold/10 flex items-center justify-center">−</button>
+                <span className="text-3xl font-light text-cream w-12 text-center">{yearsExp || '0'}</span>
+                <button onClick={() => setYearsExp(v => (parseInt(v||'0') + 1).toString())}
+                  className="w-9 h-9 rounded-full border border-gold text-gold text-lg hover:bg-gold/10 flex items-center justify-center">+</button>
+                <span className="text-muted text-sm">anni nel settore wedding</span>
+              </div>
+            </div>
+
+            {/* Lingue */}
+            <div>
+              <p className="text-muted text-xs uppercase tracking-wider mb-3">Lingue parlate</p>
+              <div className="flex flex-wrap gap-2">
+                {LINGUE.map(lang => {
+                  const on = languages.includes(lang)
+                  return (
+                    <button key={lang}
+                      onClick={() => setLanguages(prev => on ? prev.filter(x => x !== lang) : [...prev, lang])}
+                      className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${on ? 'border-gold bg-gold/10 text-gold' : 'border-border text-muted hover:border-gold/50'}`}>
+                      {lang}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Riconoscimenti */}
+            <div>
+              <p className="text-muted text-xs uppercase tracking-wider mb-1">🏆 Riconoscimenti <span className="text-muted/60">(opzionale)</span></p>
+              <p className="text-muted/60 text-xs mb-3">Premi, pubblicazioni su riviste, certificazioni — fino a 3</p>
+              <div className="space-y-2">
+                {[0, 1, 2].map(i => (
+                  <input key={i} type="text" value={awards[i] || ''} onChange={e => { const n = [...awards]; n[i] = e.target.value; setAwards(n) }}
+                    className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
+                    placeholder={i === 0 ? 'es. WedAwards 2024 — Miglior Fotografo' : i === 1 ? 'es. Pubblicato su Vogue Sposa' : 'es. Premio Eccellenza VELO'} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* PROFILO */}
         {tab === 'profile' && (
