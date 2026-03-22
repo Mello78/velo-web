@@ -330,7 +330,18 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     const { data } = await supabase.from('vendor_accounts').update({
       photo1_url: urls[0] || null, photo2_url: urls[1] || null, photo3_url: urls[2] || null,
     }).eq('id', vendor.id).select().single()
-    if (data) { onUpdate({ ...vendor, ...data }); setPhotoMsg('✓ Foto salvate') }
+    if (data) {
+      onUpdate({ ...vendor, ...data })
+      // Aggiorna anche public_vendors se il vendor è in vetrina
+      if (vendor.public_vendor_id) {
+        await supabase.from('public_vendors').update({
+          photo1_url: urls[0] || null,
+          photo2_url: urls[1] || null,
+          photo3_url: urls[2] || null,
+        }).eq('id', vendor.public_vendor_id)
+      }
+      setPhotoMsg('✓ Foto salvate')
+    }
     setPhotoSaving(false); setTimeout(() => setPhotoMsg(''), 3000)
   }
 
@@ -355,7 +366,33 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
       ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
     }
     const { data } = await supabase.from('vendor_accounts').update(payload).eq('id', vendor.id).select().single()
-    if (data) { onUpdate({ ...vendor, ...data }); setSavedMsg('✓') }
+    if (data) {
+      onUpdate({ ...vendor, ...data })
+      // Sincronizza automaticamente con public_vendors se il vendor è in vetrina
+      if (vendor.public_vendor_id) {
+        await supabase.from('public_vendors').update({
+          name: businessName,
+          category,
+          location,
+          description: bio || null,
+          phone: phone || null,
+          instagram: instagram || null,
+          facebook: facebook || null,
+          tiktok: tiktok || null,
+          website: website || null,
+          whatsapp: whatsapp || null,
+          price_from: priceFrom || null,
+          price_to: priceTo || null,
+          logo_url: logoUrl,
+          specialties,
+          languages,
+          years_experience: parseInt(yearsExp) || 0,
+          awards: awards.filter(Boolean),
+          ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
+        }).eq('id', vendor.public_vendor_id)
+      }
+      setSavedMsg('✓')
+    }
     setEditing(false); setSaving(false); setLogoFile(null)
     setTimeout(() => setSavedMsg(''), 2000)
   }
