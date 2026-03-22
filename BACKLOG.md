@@ -110,3 +110,28 @@ Eseguirla da: Supabase Dashboard → SQL Editor
 ---
 
 *Aggiornato: 22 marzo 2026 — sessione autonoma*
+
+---
+
+## 📧 EMAIL — Setup Resend (10 minuti quando sei pronto)
+
+Resend è un servizio email gratuito fino a 3.000 email/mese.
+Sito: https://resend.com
+
+### Setup:
+1. Crea account su resend.com (gratis)
+2. Vai su "API Keys" → crea una chiave → copiala
+3. Supabase Dashboard → Edge Functions → send-vendor-invite → Secrets
+4. Aggiungi: RESEND_API_KEY = <la tua chiave>
+5. Verifica il dominio velowedding.it in Resend (DNS record TXT)
+
+### Email da implementare:
+- **Auguri matrimonio** (giorno del matrimonio) → "Auguri da VELO 💛"
+- **Richiesta review** (+7 giorni) → link diretto all'app per recensire i fornitori  
+- **Invito vendor** → già strutturata, basta aggiungere Resend
+
+### Già fatto senza email:
+- Modal auguri nell'app (appare il giorno del matrimonio)
+- Schermata review nell'app (appare +7 giorni dopo)
+- Tabella reviews nel DB con trigger aggiornamento rating automatico
+
