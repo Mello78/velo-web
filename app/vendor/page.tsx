@@ -323,7 +323,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     for (let i = 0; i < 3; i++) {
       if (photoFiles[i]) {
         const ext = photoFiles[i]!.name.split('.').pop() || 'jpg'
-        const url = await uploadImage(photoFiles[i]!, `${vendor.id}/photo${i + 1}.${ext}`)
+        const url = await uploadImage(photoFiles[i]!, `${vendor.user_id}/photo${i + 1}.${ext}`)
         if (url) urls[i] = url
       }
     }
@@ -340,7 +340,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     let logoUrl = vendor.logo_url
     if (logoFile) {
       const ext = logoFile.name.split('.').pop() || 'jpg'
-      const url = await uploadImage(logoFile, `${vendor.id}/logo.${ext}`)
+      const url = await uploadImage(logoFile, `${vendor.user_id}/logo.${ext}`)
       if (url) logoUrl = url
     }
     const payload: any = {
