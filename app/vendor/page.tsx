@@ -44,8 +44,10 @@ async function geocodeCity(city: string): Promise<{ lat: number; lng: number } |
 }
 
 async function uploadImage(file: File, path: string): Promise<string | null> {
+  if (!file || file.size === 0) { console.error('File vuoto'); return null; }
+  if (file.size > 5 * 1024 * 1024) { alert('Il file supera i 5MB'); return null; }
   const { error } = await supabase.storage.from('vendor-photos').upload(path, file, { upsert: true })
-  if (error) { console.error('Upload error:', error); return null }
+  if (error) { console.error('Upload error:', error); alert('Errore upload: ' + error.message); return null; }
   const { data } = supabase.storage.from('vendor-photos').getPublicUrl(path)
   return data.publicUrl
 }
