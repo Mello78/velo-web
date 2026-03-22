@@ -299,6 +299,8 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
   const [awards, setAwards] = useState<string[]>(
     vendor.awards?.length ? [...vendor.awards, '', ''].slice(0, 3) : ['', '', '']
   )
+  const [translating, setTranslating] = useState(false)
+  const [translateMsg, setTranslateMsg] = useState('')
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState(vendor.logo_url || '')
   const [photoFiles, setPhotoFiles] = useState<(File | null)[]>([null, null, null])
@@ -400,7 +402,35 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     setTimeout(() => setSavedMsg(''), 2000)
   }
 
-  const statusBadge = vendor.public_vendor_id
+  const translateToEnglish = async () => {
+    setTranslating(true); setTranslateMsg('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(
+        'https://jogsdrxnqrbbqieozlmo.supabase.co/functions/v1/velo-translate-vendor',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+          body: JSON.stringify({ description: bio, specialties, awards: awards.filter(Boolean) }),
+        }
+      )
+      const data = await res.json()
+      if (data.error) { setTranslateMsg('❌ Errore: ' + data.error); return }
+      // Salva i campi EN direttamente su public_vendors
+      if (vendor.public_vendor_id) {
+        await supabase.from('public_vendors').update({
+          description_en: data.description || null,
+          specialties_en: data.specialties || [],
+          awards_en: data.awards || [],
+        }).eq('id', vendor.public_vendor_id)
+      }
+      setTranslateMsg('✓ Traduzione salvata in inglese')
+      setTimeout(() => setTranslateMsg(''), 3000)
+    } catch (e) { setTranslateMsg('❌ Errore di rete') }
+    setTranslating(false)
+  }
+
+   = vendor.public_vendor_id
     ? { label: '✓ In vetrina', cls: 'text-green-400 border-green-400/30 bg-green-400/5' }
     : vendor.verified
     ? { label: '✓ Verificato · in attesa di pubblicazione', cls: 'text-gold border-gold/30 bg-gold/5' }
@@ -518,6 +548,22 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+            {/* Bottone traduzione automatica */}
+            {vendor.public_vendor_id && (
+              <div className="pt-4 border-t border-border">
+                <button onClick={translateToEnglish} disabled={translating}
+                  className="w-full py-3 rounded-xl border border-gold/40 text-gold text-sm hover:bg-gold/10 transition-colors disabled:opacity-50">
+                  {translating ? '🌐 Traduzione in corso...' : '🌐 Traduci automaticamente in inglese'}
+                </button>
+                {translateMsg && <p className="text-center text-xs mt-2 text-green-400">{translateMsg}</p>}
+                <p className="text-muted/60 text-xs text-center mt-1">
+                  Descrizione, specialità e riconoscimenti vengono tradotti con AI
+                </p>
+              </div>
+            )}
           </div>
         )}
 

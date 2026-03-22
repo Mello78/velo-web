@@ -242,7 +242,20 @@ export default function AdminPage() {
                       ✉️ {i.vendor_email}
                     </a>
                   )}
-                  {i.vendor_phone && <p className="text-muted text-xs mt-0.5">📱 {i.vendor_phone}</p>}
+                  {i.vendor_phone && (
+                    <div className="flex items-center gap-3 mt-1 flex-wrap">
+                      <a href={`sms:${i.vendor_phone}&body=Ciao! Sei stato segnalato su VELO da una coppia. Registrati gratis come fornitore: https://velowedding.it/vendor`}
+                        className="text-green-400 text-xs hover:opacity-70 transition-opacity border border-green-400/30 rounded-full px-3 py-1">
+                        💬 SMS
+                      </a>
+                      <a href={`https://wa.me/${i.vendor_phone.replace(/[^0-9]/g, '')}?text=Ciao! Sei stato segnalato su VELO da una coppia che pianifica il matrimonio in Italia. Registrati gratis: https://velowedding.it/vendor`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="text-green-400 text-xs hover:opacity-70 transition-opacity border border-green-400/30 rounded-full px-3 py-1">
+                        📱 WhatsApp
+                      </a>
+                      <span className="text-muted text-xs">{i.vendor_phone}</span>
+                    </div>
+                  )}
                   <p className="text-muted text-xs mt-1">Segnalato da: {i.couple_names}</p>
                   <p className="text-muted text-xs">{new Date(i.sent_at).toLocaleDateString('it-IT')}</p>
                 </div>

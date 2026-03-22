@@ -125,19 +125,21 @@ export default async function VendorDetailPage({
             )}
 
             {/* About */}
-            {vendor.description && (
+            {(locale === 'en' ? vendor.description_en : vendor.description) && (
               <section>
                 <h2 className="text-xs text-gold tracking-[0.3em] uppercase mb-4">{tr.vendorDetail.about}</h2>
-                <p className="text-muted leading-relaxed text-base">{vendor.description}</p>
+                <p className="text-muted leading-relaxed text-base">
+                  {locale === 'en' && vendor.description_en ? vendor.description_en : vendor.description}
+                </p>
               </section>
             )}
 
             {/* Specialties */}
-            {vendor.specialties?.length > 0 && (
+            {((locale === 'en' ? vendor.specialties_en : vendor.specialties) || vendor.specialties)?.length > 0 && (
               <section>
                 <h2 className="text-xs text-gold tracking-[0.3em] uppercase mb-4">{tr.vendorDetail.specialties}</h2>
                 <div className="flex flex-wrap gap-2">
-                  {vendor.specialties.map((s: string, i: number) => (
+                  {(locale === 'en' && vendor.specialties_en?.length ? vendor.specialties_en : vendor.specialties).map((s: string, i: number) => (
                     <span key={i} className="border border-border rounded-full px-4 py-1.5 text-sm text-muted">{s}</span>
                   ))}
                 </div>
