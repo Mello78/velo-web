@@ -586,8 +586,8 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                       className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold" />
                   </div>
                 </div>
-                {/* Max ospiti — solo per location */}
-                {(category || vendor.category || '').toLowerCase().includes('location') && (
+                {/* Max ospiti — per location e catering */}
+                {['location', 'catering'].some(t => (category || vendor.category || '').toLowerCase().includes(t)) && (
                   <div>
                     <label className="text-muted text-xs uppercase tracking-wider block mb-2">
                       👥 Numero massimo ospiti

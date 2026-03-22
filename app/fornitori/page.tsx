@@ -116,7 +116,8 @@ export default function FornitoriPage() {
     const matchC = activeCategory === allCatLabel || v.category === activeCategory ||
       (locale === 'en' && activeCategory !== 'All' && v.category.includes(activeCategory.replace(/[^\w\s]/g, '').trim()))
     // Filtra location per capienza ospiti
-    const matchGuests = !guestCount || !v.category?.toLowerCase().includes('location') ||
+    const matchGuests = !guestCount ||
+      (!v.category?.toLowerCase().includes('location') && !v.category?.toLowerCase().includes('catering')) ||
       !v.max_guests || v.max_guests >= guestCount
     return matchR && matchC && matchGuests
   })
