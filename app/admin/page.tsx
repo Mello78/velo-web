@@ -87,12 +87,12 @@ export default function AdminPage() {
       featured: false,
     }
     if (v.public_vendor_id) {
-      // Aggiorna record esistente
-      await supabase.from('public_vendors').update(payload).eq('id', v.public_vendor_id)
+      const { error: updErr } = await supabase.from('public_vendors').update(payload).eq('id', v.public_vendor_id)
+      if (updErr) { alert('Errore aggiornamento: ' + updErr.message); return; }
       await supabase.from('vendor_accounts').update({ verified: true }).eq('id', v.id)
     } else {
-      // Crea nuovo record pubblico
-      const { data: pv } = await supabase.from('public_vendors').insert(payload).select().single()
+      const { data: pv, error: insErr } = await supabase.from('public_vendors').insert(payload).select().single()
+      if (insErr) { alert('Errore inserimento: ' + insErr.message); return; }
       if (pv) {
         await supabase.from('vendor_accounts').update({ verified: true, public_vendor_id: pv.id }).eq('id', v.id)
         setVendors(prev => prev.map(x => x.id === v.id ? { ...x, verified: true, public_vendor_id: pv.id } : x))
