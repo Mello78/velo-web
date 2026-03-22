@@ -2,7 +2,27 @@
 
 ---
 
-## 🔴 CRITICO — Sezione Fornitori (web + app)
+## ✅ COMPLETATI in sessione 22 marzo 2026
+
+- [x] Build Vercel: fix tutti gli import @/ → percorsi relativi
+- [x] Vendor portal web: registrazione, logo, foto, tutti i campi editabili
+- [x] Admin: pulsante "Attiva in vetrina" + "Aggiorna vetrina" + email cliccabile inviti
+- [x] Fornitori web: ricerca città ↔ filtro zona si resettano a vicenda
+- [x] App vendors: filtro città auto-geocodifica la città del matrimonio al caricamento
+- [x] App vendors: pulsante 🗑️ rimuovi fornitore dalla lista (solo se non confermato)
+- [x] App vendors: check categoria duplicata alla conferma (avviso se già confermato stesso tipo)
+- [x] App vendors: acconto nel reminder mostra cifra fissa o percentuale
+- [x] App guests: campo Gruppo → select Famiglia/Parenti/Amici/Colleghi/Altro
+- [x] App vendor/availability: data bloccata in formato GG/MM/AAAA con auto-inserimento /
+- [x] App vendor/reminder: toggle cifra fissa / percentuale sul preventivo
+- [x] App planning: task roadmap tradotti in inglese per le coppie straniere
+- [x] DB: colonne photo1/2/3_url e location aggiunte a vendor_accounts
+- [x] DB: colonna deposit_type aggiunta a vendor_reminders
+- [x] Google OAuth: fix parsing token dal fragment + redirect dopo login
+
+---
+
+
 
 - [ ] Da web non si possono aggiungere foto al profilo fornitore
 - [ ] Nessun campo per il logo nella registrazione fornitore
