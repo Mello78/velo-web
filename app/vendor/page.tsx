@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import Link from 'next/link'
-import { getT } from '@/lib/translations'
-import SimpleNav from '@/components/SimpleNav'
-import LangToggle from '@/components/LangToggle'
+import { getT } from '../../lib/translations'
+import SimpleNav from '../../components/SimpleNav'
+import LangToggle from '../../components/LangToggle'
 
 function useLocale() {
   const [locale, setLocale] = useState('it')

@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { cookies } from 'next/headers'
-import { supabase } from '@/lib/supabase'
-import { getT } from '@/lib/translations'
-import SimpleNav from '@/components/SimpleNav'
+import { supabase } from '../../../lib/supabase'
+import { getT } from '../../../lib/translations'
+import SimpleNav from '../../../components/SimpleNav'
 import { notFound } from 'next/navigation'
 
 async function getVendor(id: string) {

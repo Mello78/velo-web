@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import LangToggle from '@/components/LangToggle'
+import LangToggle from './LangToggle'
 
 type SimpleNavProps = {
   locale?: string

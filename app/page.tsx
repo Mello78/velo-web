@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { cookies } from 'next/headers'
-import { getT } from '@/lib/translations'
-import NavBar from '@/components/NavBar'
+import { getT } from '../lib/translations'
+import NavBar from '../components/NavBar'
 
 const regions = ['Toscana', 'Amalfi Coast', 'Lago di Como', 'Langhe & Piemonte', 'Roma & Lazio', 'Puglia', 'Venezia & Veneto', 'Umbria']
 

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import LangToggle from '@/components/LangToggle'
+import LangToggle from './LangToggle'
 
 type NavBarProps = {
   locale?: string

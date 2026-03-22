@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import SplashLoader from '@/components/SplashLoader'
+import SplashLoader from '../components/SplashLoader'
 
 export const metadata: Metadata = {
   title: 'VELO — from yes to forever',
