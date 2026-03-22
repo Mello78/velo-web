@@ -292,6 +292,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
   const [website, setWebsite] = useState(vendor.website || '')
   const [whatsapp, setWhatsapp] = useState(vendor.whatsapp || '')
   const [maxEvents, setMaxEvents] = useState(vendor.max_events_per_day || 1)
+  const [maxGuests, setMaxGuests] = useState(vendor.max_guests?.toString() || '')
   const [specialties, setSpecialties] = useState<string[]>(vendor.specialties || [])
   const [languages, setLanguages] = useState<string[]>(vendor.languages || [])
   const [yearsExp, setYearsExp] = useState<string>((vendor.years_experience || 0).toString())
@@ -360,6 +361,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
       tiktok: tiktok || null, website: website || null, whatsapp: whatsapp || null,
       price_from: priceFrom || null, price_to: priceTo || null,
       max_events_per_day: maxEvents, logo_url: logoUrl,
+      max_guests: maxGuests ? parseInt(maxGuests) : null,
       specialties, languages,
       years_experience: parseInt(yearsExp) || 0,
       awards: awards.filter(Boolean),
@@ -384,6 +386,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           price_from: priceFrom || null,
           price_to: priceTo || null,
           logo_url: logoUrl,
+          max_guests: maxGuests ? parseInt(maxGuests) : null,
           specialties,
           languages,
           years_experience: parseInt(yearsExp) || 0,
@@ -583,6 +586,18 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                       className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold" />
                   </div>
                 </div>
+                {/* Max ospiti — solo per location */}
+                {(category || vendor.category || '').toLowerCase().includes('location') && (
+                  <div>
+                    <label className="text-muted text-xs uppercase tracking-wider block mb-2">
+                      👥 Numero massimo ospiti
+                    </label>
+                    <input type="number" value={maxGuests} onChange={e => setMaxGuests(e.target.value)}
+                      className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
+                      placeholder="es. 150" />
+                    <p className="text-muted/60 text-xs mt-1">Le coppie vedranno solo le location compatibili con il loro numero di ospiti</p>
+                  </div>
+                )}
                 <button onClick={() => setEditing(false)} className="text-muted text-sm hover:text-cream">{d.cancel}</button>
               </div>
             ) : (

@@ -172,6 +172,10 @@ export default async function VendorDetailPage({
               )}
               <div><p className="text-muted text-xs mb-1">{tr.vendorDetail.area}</p>
                 <p className="text-cream text-sm">{vendor.location}, {vendor.region}</p></div>
+              {vendor.max_guests && (
+                <div><p className="text-muted text-xs mb-1">👥 Capienza massima</p>
+                  <p className="text-cream text-sm">{vendor.max_guests} ospiti</p></div>
+              )}
               {vendor.work_regions?.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {vendor.work_regions.map((r: string, i: number) => (

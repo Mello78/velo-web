@@ -51,6 +51,7 @@ export default function FornitoriPage() {
   const [citySearch, setCitySearch] = useState('')
   const [cityCoords, setCityCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [searchCity, setSearchCity] = useState('')
+  const [guestCount, setGuestCount] = useState<number | null>(null)
 
   useEffect(() => {
     const match = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
@@ -114,7 +115,10 @@ export default function FornitoriPage() {
       v.serves_regioni?.includes(activeRegion)
     const matchC = activeCategory === allCatLabel || v.category === activeCategory ||
       (locale === 'en' && activeCategory !== 'All' && v.category.includes(activeCategory.replace(/[^\w\s]/g, '').trim()))
-    return matchR && matchC
+    // Filtra location per capienza ospiti
+    const matchGuests = !guestCount || !v.category?.toLowerCase().includes('location') ||
+      !v.max_guests || v.max_guests >= guestCount
+    return matchR && matchC && matchGuests
   })
 
   const displayed = withDistance(filtered)
