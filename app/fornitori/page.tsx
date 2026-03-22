@@ -7,7 +7,14 @@ import SimpleNav from '../../components/SimpleNav'
 
 const CATEGORIES_IT = ['Tutti', '📷 Fotografia', '🌸 Floral Design', '🍽️ Catering', '🎵 Musica', '🏛️ Location', '💌 Partecipazioni', '🎂 Torta']
 const CATEGORIES_EN = ['All', '📷 Photography', '🌸 Floral Design', '🍽️ Catering', '🎵 Music', '🏛️ Venue', '💌 Stationery', '🎂 Cake']
-const REGIONS = ['Tutte / All', 'Toscana', 'Langhe & Piemonte', 'Amalfi Coast', 'Lago di Como', 'Roma & Lazio', 'Venezia & Veneto', 'Puglia', 'Umbria']
+const REGIONS = [
+  'Tutte / All',
+  'Piemonte', 'Valle d\'Aosta', 'Liguria', 'Lombardia',
+  'Trentino-Alto Adige', 'Veneto', 'Friuli-Venezia Giulia',
+  'Emilia-Romagna', 'Toscana', 'Marche', 'Umbria', 'Lazio',
+  'Abruzzo', 'Molise', 'Campania', 'Puglia',
+  'Basilicata', 'Calabria', 'Sicilia', 'Sardegna',
+]
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371
@@ -101,7 +108,10 @@ export default function FornitoriPage() {
   }
 
   const filtered = vendors.filter((v: any) => {
-    const matchR = activeRegion === allLabel || activeRegion === 'Tutte / All' || v.region === activeRegion
+    const matchR = activeRegion === allLabel || activeRegion === 'Tutte / All' ||
+      v.region === activeRegion ||
+      v.work_regions?.includes(activeRegion) ||
+      v.serves_regioni?.includes(activeRegion)
     const matchC = activeCategory === allCatLabel || v.category === activeCategory ||
       (locale === 'en' && activeCategory !== 'All' && v.category.includes(activeCategory.replace(/[^\w\s]/g, '').trim()))
     return matchR && matchC
