@@ -415,8 +415,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
         }
       )
       const data = await res.json()
-      if (data.error) { setTranslateMsg('❌ Errore: ' + data.error); return }
-      // Salva i campi EN direttamente su public_vendors
+      if (data.error) { setTranslateMsg('❌ Errore: ' + data.error); setTranslating(false); return }
       if (vendor.public_vendor_id) {
         await supabase.from('public_vendors').update({
           description_en: data.description || null,
@@ -430,7 +429,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     setTranslating(false)
   }
 
-   = vendor.public_vendor_id
+  const statusBadge = vendor.public_vendor_id
     ? { label: '✓ In vetrina', cls: 'text-green-400 border-green-400/30 bg-green-400/5' }
     : vendor.verified
     ? { label: '✓ Verificato · in attesa di pubblicazione', cls: 'text-gold border-gold/30 bg-gold/5' }
@@ -548,8 +547,6 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                 ))}
               </div>
             </div>
-          </div>
-        )}
 
             {/* Bottone traduzione automatica */}
             {vendor.public_vendor_id && (
