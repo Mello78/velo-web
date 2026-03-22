@@ -92,7 +92,7 @@ export default function VendorPage() {
     } else {
       const { error: err } = await supabase.auth.signUp({ email, password })
       if (err) setError(err.message)
-      else setSuccess("✉️ Controlla la tua email per confermare l'account, poi torna qui e accedi.")
+      else setSuccess("✅ Registrazione completata! Controlla la tua email e clicca sul link di conferma, poi torna qui ad accedere. Se non trovi l'email, controlla la cartella spam.")
     }
     setLoading(false)
   }
