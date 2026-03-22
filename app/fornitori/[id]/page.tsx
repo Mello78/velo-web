@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { supabase } from '../../../lib/supabase'
 import { getT } from '../../../lib/translations'
 import SimpleNav from '../../../components/SimpleNav'
+import PhotoLightbox from '../../../components/PhotoLightbox'
 import { notFound } from 'next/navigation'
 
 async function getVendor(id: string) {
@@ -94,13 +95,10 @@ export default async function VendorDetailPage({
             {(vendor.photo1_url || vendor.photo2_url || vendor.photo3_url) && (
               <section>
                 <h2 className="text-xs text-gold tracking-[0.3em] uppercase mb-5">{tr.vendorDetail.portfolio}</h2>
-                <div className="grid grid-cols-3 gap-3">
-                  {[vendor.photo1_url, vendor.photo2_url, vendor.photo3_url].filter(Boolean).map((url, i) => (
-                    <div key={i} className="aspect-square rounded-xl overflow-hidden">
-                      <img src={url} alt={`${vendor.name} ${i+1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
-                    </div>
-                  ))}
-                </div>
+                <PhotoLightbox
+                  photos={[vendor.photo1_url, vendor.photo2_url, vendor.photo3_url].filter(Boolean)}
+                  vendorName={vendor.name}
+                />
               </section>
             )}
 
