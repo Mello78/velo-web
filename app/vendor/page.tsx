@@ -103,19 +103,18 @@ export default function VendorPage() {
       <div className="flex items-center justify-center px-6 pt-24 pb-16 min-h-screen">
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
-            <p className="text-gold text-xs tracking-[0.3em] uppercase mb-2">{tr.vendor.title}</p>
+            <p className="text-gold text-xs tracking-[0.3em] uppercase mb-3">{tr.vendor.title}</p>
+            <h1 className="text-3xl font-light text-cream">
+              {isLogin ? 'Accedi alla tua area' : 'Crea il tuo profilo'}
+            </h1>
           </div>
           <div className="bg-dark border border-border rounded-2xl p-8">
-            <div className="flex gap-2 mb-8">
-              <button onClick={() => setIsLogin(true)} className={`flex-1 py-3 rounded-xl text-sm font-medium transition-colors ${isLogin ? 'bg-gold text-bg' : 'border border-border text-muted hover:text-cream'}`}>{tr.vendor.login}</button>
-              <button onClick={() => setIsLogin(false)} className={`flex-1 py-3 rounded-xl text-sm font-medium transition-colors ${!isLogin ? 'bg-gold text-bg' : 'border border-border text-muted hover:text-cream'}`}>{tr.vendor.register}</button>
-            </div>
             <div className="space-y-4">
               <div>
                 <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.emailLabel}</label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                   className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
-                  placeholder="email@example.com" onKeyDown={e => e.key === 'Enter' && handle()} />
+                  placeholder="email@example.com" onKeyDown={e => e.key === 'Enter' && handle()} autoFocus />
               </div>
               <div>
                 <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.passwordLabel}</label>
@@ -130,9 +129,27 @@ export default function VendorPage() {
               className="w-full bg-gold text-bg font-semibold py-4 rounded-xl mt-6 hover:opacity-90 disabled:opacity-50">
               {loading ? tr.vendor.loading : isLogin ? tr.vendor.loginBtn : tr.vendor.registerBtn}
             </button>
+            {/* Toggle login/registrazione — link secondario */}
+            <p className="text-center text-muted text-sm mt-5">
+              {isLogin ? (
+                <>Nuovo su VELO?{' '}
+                  <button onClick={() => { setIsLogin(false); setError(''); setSuccess('') }}
+                    className="text-gold hover:opacity-70 transition-opacity underline underline-offset-2">
+                    Crea il tuo profilo gratuito →
+                  </button>
+                </>
+              ) : (
+                <>Hai già un account?{' '}
+                  <button onClick={() => { setIsLogin(true); setError(''); setSuccess('') }}
+                    className="text-gold hover:opacity-70 transition-opacity underline underline-offset-2">
+                    Accedi →
+                  </button>
+                </>
+              )}
+            </p>
           </div>
-          <div className="mt-8 bg-gold/5 border border-gold/20 rounded-2xl p-6">
-            <p className="text-gold text-sm font-medium mb-2">{tr.vendor.earlyTitle}</p>
+          <div className="mt-6 bg-gold/5 border border-gold/20 rounded-2xl p-5">
+            <p className="text-gold text-sm font-medium mb-1">{tr.vendor.earlyTitle}</p>
             <p className="text-muted text-sm leading-relaxed">{tr.vendor.earlyDesc}</p>
           </div>
         </div>
