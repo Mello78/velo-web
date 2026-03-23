@@ -8,18 +8,33 @@ import SimpleNav from '../../components/SimpleNav'
 import LangToggle from '../../components/LangToggle'
 
 const CATEGORIES = [
-  '📷 Fotografia', '🎬 Video', '🌸 Floral Design', '🍽️ Catering', '🎵 Musica',
-  '🏛️ Location', '💌 Partecipazioni', '🎂 Torta', '💐 Fiori', '🚗 Auto',
-  '💄 Trucco & Parrucco', '👗 Abiti', '🎉 Animazione', '🎊 Bomboniere', '📋 Wedding Planner',
+  'ð· Fotografia', 'ð¬ Video', 'ð¸ Floral Design', 'ð½ï¸ Catering', 'ðµ Musica',
+  'ðï¸ Location', 'ð Partecipazioni', 'ð Torta', 'ð Fiori', 'ð Auto',
+  'ð Trucco & Parrucco', 'ð Abiti', 'ð Animazione', 'ð Bomboniere', 'ð Wedding Planner',
 ]
 
-const LINGUE = ['Italiano', 'English', 'Français', 'Deutsch', 'Español', 'Português', '中文', 'العربية']
-const SPECIALITA = [
-  'Reportage naturale', 'Stile romantico', 'Luxury & Fine Art', 'Destination wedding',
-  'Cerimonie religiose', 'Cerimonie civili', 'Cerimonie simboliche', 'Matrimoni all\'aperto',
-  'Ville storiche', 'Piccoli matrimoni', 'Grandi eventi', 'Coppie straniere',
-  'Multilingue', 'Disponibile weekend',
-]
+const LINGUE = ['Italiano', 'English', 'FranÃ§ais', 'Deutsch', 'EspaÃ±ol', 'PortuguÃªs', 'ä¸­æ', 'Ø§ÙØ¹Ø±Ø¨ÙØ©']
+const SPECIALITA_PER_CATEGORIA: Record<string, string[]> = {
+  '📷 Fotografia': ['Reportage naturale', 'Fine Art', 'Stile romantico', 'Stile documentario', 'Luxury & Editoriale', 'Bianco e nero', 'Film analogico', 'Drone'],
+  '🎬 Video': ['Cinematic', 'Reportage', 'Drone aereo', 'Super 8 / Film', 'Short film', 'Highlight 3 min', 'Full day'],
+  '🌸 Floral Design': ['Allestimento chiesa', 'Allestimento ricevimento', 'Bouquet cascata', 'Decorazioni tavoli', 'Archi floreali', 'Stile boho', 'Stile lusso', 'Fiori secchi'],
+  '🍽️ Catering': ['Cucina italiana tradizionale', 'Cucina fusion', 'Menu vegano', 'Finger food', 'Buffet', 'Servizio al tavolo', 'Food truck', 'Chef privato'],
+  '🎵 Musica': ['Jazz trio', 'Musica classica', 'Band pop/rock', 'DJ set', "Quartetto d'archi", 'Pianoforte live', 'Singer & guitar'],
+  '🏛️ Location': ['Villa storica', 'Castello', 'Masseria', 'Agriturismo', 'Vista mare', 'Vista lago', 'Vista montagna', 'Tenuta vinicola'],
+  '💌 Partecipazioni': ['Stile classico', 'Acquerello', 'Calligrafia a mano', 'Stampa tipografica', 'Laser cut', 'Illustrazione custom'],
+  '🎂 Torta': ['Naked cake', 'Torta fondente', 'Torta floreale', 'Torta a piani', 'Torta moderna', 'Dolci tradizionali'],
+  '💄 Trucco & Parrucco': ['Trucco naturale', 'Trucco glamour', 'Acconciatura raccolta', 'Acconciatura sciolta', 'Prove incluse', 'Servizio in loco'],
+  '👗 Abiti': ['Alta moda', 'Sartoria su misura', 'Abiti vintage', 'Abiti boho', 'Abiti da sposo', 'Noleggio'],
+  '🚗 Auto': ["Auto d'epoca", 'Auto di lusso', 'Limousine', 'Cabriolet', 'Carrozza'],
+  '📋 Wedding Planner': ['Full planning', 'Day coordination', 'Design & styling', 'Destination wedding', 'Budget management'],
+}
+
+const SPECIALITA_GENERICHE = ['Destination wedding', 'Coppie straniere', 'Multilingue', 'Piccoli matrimoni (< 30)', 'Grandi eventi (> 150)', "Matrimoni all'aperto", 'Cerimonie religiose', 'Cerimonie civili', 'Disponibile weekend']
+
+function getSpecialitaPerCategoria(category: string): string[] {
+  const key = Object.keys(SPECIALITA_PER_CATEGORIA).find(k => category.includes(k.replace(/[^\w\s]/g, '').trim()) || k.includes(category.replace(/[^\w\s]/g, '').trim()))
+  return key ? SPECIALITA_PER_CATEGORIA[key] : SPECIALITA_GENERICHE
+}
 
 function useLocale() {
   const [locale, setLocale] = useState('it')
@@ -72,10 +87,10 @@ export default function VendorPage() {
         setUserId(uid)
         setEmail(data.session.user.email || '')
         const { data: va } = await supabase.from('vendor_accounts').select('*').eq('user_id', uid).single()
-        // Vai alla dashboard SOLO se ha già un profilo vendor
-        // Se ha una sessione ma non è un vendor, resta sulla schermata login
+        // Vai alla dashboard SOLO se ha giÃ  un profilo vendor
+        // Se ha una sessione ma non Ã¨ un vendor, resta sulla schermata login
         if (va) { setVendorData(va); setMode('dashboard') }
-        // NON andare a 'setup' in automatico — solo dopo login esplicito
+        // NON andare a 'setup' in automatico â solo dopo login esplicito
       }
     })
   }, [])
@@ -92,7 +107,7 @@ export default function VendorPage() {
     } else {
       const { error: err } = await supabase.auth.signUp({ email, password })
       if (err) setError(err.message)
-      else setSuccess("✅ Registrazione completata! Controlla la tua email e clicca sul link di conferma, poi torna qui ad accedere. Se non trovi l'email, controlla la cartella spam.")
+      else setSuccess("â Registrazione completata! Controlla la tua email e clicca sul link di conferma, poi torna qui ad accedere. Se non trovi l'email, controlla la cartella spam.")
     }
     setLoading(false)
   }
@@ -130,7 +145,7 @@ export default function VendorPage() {
                 <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.passwordLabel}</label>
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)}
                   className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
-                  placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handle()} />
+                  placeholder="â¢â¢â¢â¢â¢â¢â¢â¢" onKeyDown={e => e.key === 'Enter' && handle()} />
               </div>
             </div>
             {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
@@ -139,20 +154,20 @@ export default function VendorPage() {
               className="w-full bg-gold text-bg font-semibold py-4 rounded-xl mt-6 hover:opacity-90 disabled:opacity-50">
               {loading ? tr.vendor.loading : isLogin ? tr.vendor.loginBtn : tr.vendor.registerBtn}
             </button>
-            {/* Toggle login/registrazione — link secondario */}
+            {/* Toggle login/registrazione â link secondario */}
             <p className="text-center text-muted text-sm mt-5">
               {isLogin ? (
                 <>Nuovo su VELO?{' '}
                   <button onClick={() => { setIsLogin(false); setError(''); setSuccess('') }}
                     className="text-gold hover:opacity-70 transition-opacity underline underline-offset-2">
-                    Crea il tuo profilo gratuito →
+                    Crea il tuo profilo gratuito â
                   </button>
                 </>
               ) : (
-                <>Hai già un account?{' '}
+                <>Hai giÃ  un account?{' '}
                   <button onClick={() => { setIsLogin(true); setError(''); setSuccess('') }}
                     className="text-gold hover:opacity-70 transition-opacity underline underline-offset-2">
-                    Accedi →
+                    Accedi â
                   </button>
                 </>
               )}
@@ -168,7 +183,7 @@ export default function VendorPage() {
   )
 }
 
-// ─── PROFILE SETUP (prima volta dopo registrazione) ───────────────────────────
+// âââ PROFILE SETUP (prima volta dopo registrazione) âââââââââââââââââââââââââââ
 function ProfileSetup({ locale, userId, onComplete }: {
   locale: string; userId: string; onComplete: (va: any) => void
 }) {
@@ -188,8 +203,8 @@ function ProfileSetup({ locale, userId, onComplete }: {
   }
 
   const save = async () => {
-    if (!businessName.trim()) { setError("Il nome dell'attività è obbligatorio"); return }
-    if (!location.trim()) { setError('La città è obbligatoria'); return }
+    if (!businessName.trim()) { setError("Il nome dell'attivitÃ  Ã¨ obbligatorio"); return }
+    if (!location.trim()) { setError('La cittÃ  Ã¨ obbligatoria'); return }
     setSaving(true); setError('')
     const coords = await geocodeCity(location)
     let logoUrl: string | null = null
@@ -213,13 +228,13 @@ function ProfileSetup({ locale, userId, onComplete }: {
       <div className="max-w-lg mx-auto px-6 pt-28 pb-16">
         <p className="text-gold text-xs tracking-[0.3em] uppercase mb-2">Configurazione profilo</p>
         <h1 className="text-3xl font-light mb-2">Crea il tuo profilo fornitore</h1>
-        <p className="text-muted text-sm mb-8">Il profilo sarà visibile dopo la revisione del team VELO</p>
+        <p className="text-muted text-sm mb-8">Il profilo sarÃ  visibile dopo la revisione del team VELO</p>
         <div className="bg-dark border border-border rounded-2xl p-6 space-y-5">
           <div>
             <label className="text-muted text-xs uppercase tracking-wider block mb-3">Logo</label>
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-xl border border-border bg-bg overflow-hidden flex items-center justify-center shrink-0">
-                {logoPreview ? <img src={logoPreview} className="w-full h-full object-cover" alt="logo" /> : <span className="text-3xl opacity-20">🏷️</span>}
+                {logoPreview ? <img src={logoPreview} className="w-full h-full object-cover" alt="logo" /> : <span className="text-3xl opacity-20">ð·ï¸</span>}
               </div>
               <label className="cursor-pointer border border-gold/40 text-gold text-xs px-4 py-2.5 rounded-full hover:bg-gold/10 transition-colors">
                 {logoPreview ? 'Cambia logo' : 'Carica logo'}
@@ -228,7 +243,7 @@ function ProfileSetup({ locale, userId, onComplete }: {
             </div>
           </div>
           <div>
-            <label className="text-muted text-xs uppercase tracking-wider block mb-2">Nome attività *</label>
+            <label className="text-muted text-xs uppercase tracking-wider block mb-2">Nome attivitÃ  *</label>
             <input type="text" value={businessName} onChange={e => setBusinessName(e.target.value)}
               className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
               placeholder="Es. Studio Fotografico Rossi" />
@@ -241,7 +256,7 @@ function ProfileSetup({ locale, userId, onComplete }: {
             </select>
           </div>
           <div>
-            <label className="text-muted text-xs uppercase tracking-wider block mb-2">Città *</label>
+            <label className="text-muted text-xs uppercase tracking-wider block mb-2">CittÃ  *</label>
             <input type="text" value={location} onChange={e => setLocation(e.target.value)}
               className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
               placeholder="Es. Firenze" />
@@ -254,14 +269,25 @@ function ProfileSetup({ locale, userId, onComplete }: {
           </div>
           <div>
             <label className="text-muted text-xs uppercase tracking-wider block mb-2">Presentazione</label>
-            <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3}
-              className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold resize-none"
-              placeholder="Descriviti brevemente..." />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-muted/60 text-xs mb-1.5">🇮🇹 Italiano</p>
+                      <textarea value={bio} onChange={e => setBio(e.target.value)} rows={4}
+                        className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold resize-none"
+                        placeholder="Descriviti brevemente..." />
+                    </div>
+                    <div>
+                      <p className="text-muted/60 text-xs mb-1.5">🇬🇧 English</p>
+                      <textarea value={bioEn} onChange={e => setBioEn(e.target.value)} rows={4}
+                        className="w-full bg-bg border border-border/60 rounded-xl px-4 py-3 text-cream/80 text-sm focus:outline-none focus:border-gold/60 resize-none"
+                        placeholder="Describe yourself... (or use Translate in ✨ Info)" />
+                    </div>
+                  </div>
           </div>
           {error && <p className="text-red-400 text-sm">{error}</p>}
           <button onClick={save} disabled={saving}
             className="w-full bg-gold text-bg font-semibold py-4 rounded-xl hover:opacity-90 disabled:opacity-50">
-            {saving ? 'Salvataggio in corso...' : 'Crea profilo →'}
+            {saving ? 'Salvataggio in corso...' : 'Crea profilo â'}
           </button>
         </div>
       </div>
@@ -269,7 +295,7 @@ function ProfileSetup({ locale, userId, onComplete }: {
   )
 }
 
-// ─── VENDOR DASHBOARD ──────────────────────────────────────────────────────────
+// âââ VENDOR DASHBOARD ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
   vendor: any; locale: string; onLogout: () => void; onUpdate: (v: any) => void
 }) {
@@ -299,6 +325,16 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
   const [awards, setAwards] = useState<string[]>(
     vendor.awards?.length ? [...vendor.awards, '', ''].slice(0, 3) : ['', '', '']
   )
+  const [awardsEn, setAwardsEn] = useState<string[]>(
+    vendor.awards_en?.length ? [...vendor.awards_en, '', ''].slice(0, 3) : ['', '', '']
+  )
+  const [specialtiesCustom, setSpecialtiesCustom] = useState<string[]>(
+    vendor.specialties_custom?.length ? [...vendor.specialties_custom, '', ''] : ['', '', '']
+  )
+  const [specialtiesCustomEn, setSpecialtiesCustomEn] = useState<string[]>(
+    vendor.specialties_custom_en?.length ? [...vendor.specialties_custom_en, '', ''] : ['', '', '']
+  )
+  const [bioEn, setBioEn] = useState(vendor.bio_en || '')
   const [translating, setTranslating] = useState(false)
   const [translateMsg, setTranslateMsg] = useState('')
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -335,7 +371,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     }).eq('id', vendor.id).select().single()
     if (data) {
       onUpdate({ ...vendor, ...data })
-      // Aggiorna anche public_vendors se il vendor è in vetrina
+      // Aggiorna anche public_vendors se il vendor Ã¨ in vetrina
       if (vendor.public_vendor_id) {
         await supabase.from('public_vendors').update({
           photo1_url: urls[0] || null,
@@ -343,7 +379,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           photo3_url: urls[2] || null,
         }).eq('id', vendor.public_vendor_id)
       }
-      setPhotoMsg('✓ Foto salvate')
+      setPhotoMsg('â Foto salvate')
     }
     setPhotoSaving(false); setTimeout(() => setPhotoMsg(''), 3000)
   }
@@ -365,6 +401,10 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
       max_events_per_day: maxEvents, logo_url: logoUrl,
       max_guests: maxGuests ? parseInt(maxGuests) : null,
       specialties, languages,
+      specialties_custom: specialtiesCustom.filter(Boolean),
+      bio_en: bioEn || null,
+      awards_en: awardsEn.filter(Boolean),
+      specialties_custom_en: specialtiesCustomEn.filter(Boolean),
       years_experience: parseInt(yearsExp) || 0,
       awards: awards.filter(Boolean),
       ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
@@ -372,7 +412,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     const { data } = await supabase.from('vendor_accounts').update(payload).eq('id', vendor.id).select().single()
     if (data) {
       onUpdate({ ...vendor, ...data })
-      // Sincronizza automaticamente con public_vendors se il vendor è in vetrina
+      // Sincronizza automaticamente con public_vendors se il vendor Ã¨ in vetrina
       if (vendor.public_vendor_id) {
         await supabase.from('public_vendors').update({
           name: businessName,
@@ -391,12 +431,16 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           max_guests: maxGuests ? parseInt(maxGuests) : null,
           specialties,
           languages,
+          specialties_custom: specialtiesCustom.filter(Boolean),
+          bio_en: bioEn || null,
+          awards_en: awardsEn.filter(Boolean),
+          specialties_custom_en: specialtiesCustomEn.filter(Boolean),
           years_experience: parseInt(yearsExp) || 0,
           awards: awards.filter(Boolean),
           ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
         }).eq('id', vendor.public_vendor_id)
       }
-      setSavedMsg('✓')
+      setSavedMsg('â')
     }
     setEditing(false); setSaving(false); setLogoFile(null)
     setTimeout(() => setSavedMsg(''), 2000)
@@ -411,11 +455,11 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-          body: JSON.stringify({ description: bio, specialties, awards: awards.filter(Boolean) }),
+          body: JSON.stringify({ bio, description: bio, specialties, specialties_custom: specialtiesCustom.filter(Boolean), awards: awards.filter(Boolean) }),
         }
       )
       const data = await res.json()
-      if (data.error) { setTranslateMsg('❌ Errore: ' + data.error); setTranslating(false); return }
+      if (data.error) { setTranslateMsg('â Errore: ' + data.error); setTranslating(false); return }
       if (vendor.public_vendor_id) {
         await supabase.from('public_vendors').update({
           description_en: data.description || null,
@@ -423,17 +467,17 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           awards_en: data.awards || [],
         }).eq('id', vendor.public_vendor_id)
       }
-      setTranslateMsg('✓ Traduzione salvata in inglese')
+      setTranslateMsg('â Traduzione salvata in inglese')
       setTimeout(() => setTranslateMsg(''), 3000)
-    } catch (e) { setTranslateMsg('❌ Errore di rete') }
+    } catch (e) { setTranslateMsg('â Errore di rete') }
     setTranslating(false)
   }
 
   const statusBadge = vendor.public_vendor_id
-    ? { label: '✓ In vetrina', cls: 'text-green-400 border-green-400/30 bg-green-400/5' }
+    ? { label: 'â In vetrina', cls: 'text-green-400 border-green-400/30 bg-green-400/5' }
     : vendor.verified
-    ? { label: '✓ Verificato · in attesa di pubblicazione', cls: 'text-gold border-gold/30 bg-gold/5' }
-    : { label: '⏳ In attesa di approvazione', cls: 'text-muted border-border bg-transparent' }
+    ? { label: 'â Verificato Â· in attesa di pubblicazione', cls: 'text-gold border-gold/30 bg-gold/5' }
+    : { label: 'â³ In attesa di approvazione', cls: 'text-muted border-border bg-transparent' }
 
   return (
     <main className="min-h-screen bg-bg text-cream">
@@ -456,7 +500,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-3xl font-light">{vendor.business_name}</h1>
-              <p className="text-muted mt-1">{vendor.category} · {vendor.location}</p>
+              <p className="text-muted mt-1">{vendor.category} Â· {vendor.location}</p>
               <span className={`inline-block mt-2 text-xs border rounded-full px-3 py-1 ${statusBadge.cls}`}>{statusBadge.label}</span>
             </div>
             <div className="bg-gold/5 border border-gold/20 rounded-xl p-4 text-right shrink-0">
@@ -470,7 +514,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           {(['profile', 'info', 'photos', 'social', 'availability', 'stats'] as const).map(t => (
             <button key={t} onClick={() => { setTab(t); setEditing(false) }}
               className={`px-4 py-2 rounded-full text-sm transition-colors ${tab === t ? 'bg-gold text-bg font-semibold' : 'border border-border text-muted hover:text-cream'}`}>
-              {t === 'profile' ? d.tabProfile : t === 'info' ? '✨ Info' : t === 'photos' ? '📸 Foto' : t === 'social' ? d.tabSocial : t === 'availability' ? d.tabAvailability : d.tabStats}
+              {t === 'profile' ? d.tabProfile : t === 'info' ? 'â¨ Info' : t === 'photos' ? 'ð¸ Foto' : t === 'social' ? d.tabSocial : t === 'availability' ? d.tabAvailability : d.tabStats}
             </button>
           ))}
         </div>
@@ -479,19 +523,22 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
         {tab === 'info' && (
           <div className="bg-dark border border-border rounded-2xl p-6 space-y-8">
             <div className="flex justify-between items-center">
-              <h2 className="text-cream font-medium">✨ Info vetrina</h2>
+              <h2 className="text-cream font-medium">â¨ Info vetrina</h2>
               <button onClick={save} disabled={saving}
                 className="text-sm px-4 py-2 rounded-full bg-gold text-bg font-semibold hover:opacity-90 disabled:opacity-50">
                 {saving ? d.saving : savedMsg || d.save}
               </button>
             </div>
 
-            {/* Specialità — max 5 */}
+            {/* SpecialitÃ  â max 5 */}
             <div>
-              <p className="text-muted text-xs uppercase tracking-wider mb-1">Punti di forza / Specialità <span className="text-gold">(max 5)</span></p>
+              <p className="text-muted text-xs uppercase tracking-wider mb-1">Punti di forza / SpecialitÃ  <span className="text-gold">(max 5)</span></p>
               <p className="text-muted/60 text-xs mb-3">Seleziona fino a 5 che ti rappresentano meglio</p>
+              <p className="text-muted/60 text-xs mb-3">
+                Lista per: <strong className="text-cream/80">{category || vendor.category}</strong>
+              </p>
               <div className="flex flex-wrap gap-2">
-                {SPECIALITA.map(sp => {
+                {getSpecialitaPerCategoria(category || vendor.category || '').map(sp => {
                   const on = specialties.includes(sp)
                   const atMax = specialties.length >= 5 && !on
                   return (
@@ -503,6 +550,24 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                   )
                 })}
               </div>
+
+              {/* Specialità custom — campi liberi */}
+              <div className="mt-4 space-y-2">
+                <p className="text-muted/60 text-xs">✎ Aggiungi le tue specialità (non in lista)</p>
+                {[0, 1, 2].map(i => (
+                  <div key={i} className="grid grid-cols-2 gap-2">
+                    <input type="text" value={specialtiesCustom[i] || ''}
+                      onChange={e => { const n = [...specialtiesCustom]; n[i] = e.target.value; setSpecialtiesCustom(n) }}
+                      className="bg-bg border border-border rounded-xl px-3 py-2.5 text-cream text-sm focus:outline-none focus:border-gold"
+                      placeholder={`Skill personalizzata (IT)`} />
+                    <input type="text" value={specialtiesCustomEn[i] || ''}
+                      onChange={e => { const n = [...specialtiesCustomEn]; n[i] = e.target.value; setSpecialtiesCustomEn(n) }}
+                      className="bg-bg border border-border/60 rounded-xl px-3 py-2.5 text-cream/80 text-sm focus:outline-none focus:border-gold/60"
+                      placeholder={`Custom skill (EN)`} />
+                  </div>
+                ))}
+                <p className="text-muted/40 text-xs">IT = italiano · EN = inglese · oppure usa "Traduci" in fondo</p>
+              </div>
             </div>
 
             {/* Anni esperienza */}
@@ -510,7 +575,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
               <p className="text-muted text-xs uppercase tracking-wider mb-3">Anni di esperienza</p>
               <div className="flex items-center gap-4">
                 <button onClick={() => setYearsExp(v => Math.max(0, parseInt(v||'0') - 1).toString())}
-                  className="w-9 h-9 rounded-full border border-gold text-gold text-lg hover:bg-gold/10 flex items-center justify-center">−</button>
+                  className="w-9 h-9 rounded-full border border-gold text-gold text-lg hover:bg-gold/10 flex items-center justify-center">â</button>
                 <span className="text-3xl font-light text-cream w-12 text-center">{yearsExp || '0'}</span>
                 <button onClick={() => setYearsExp(v => (parseInt(v||'0') + 1).toString())}
                   className="w-9 h-9 rounded-full border border-gold text-gold text-lg hover:bg-gold/10 flex items-center justify-center">+</button>
@@ -541,9 +606,14 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
               <p className="text-muted/60 text-xs mb-3">Premi, pubblicazioni su riviste, certificazioni — fino a 3</p>
               <div className="space-y-2">
                 {[0, 1, 2].map(i => (
-                  <input key={i} type="text" value={awards[i] || ''} onChange={e => { const n = [...awards]; n[i] = e.target.value; setAwards(n) }}
-                    className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
-                    placeholder={i === 0 ? 'es. WedAwards 2024 — Miglior Fotografo' : i === 1 ? 'es. Pubblicato su Vogue Sposa' : 'es. Premio Eccellenza VELO'} />
+                  <div key={i} className="grid grid-cols-2 gap-2">
+                    <input type="text" value={awards[i] || ''} onChange={e => { const n = [...awards]; n[i] = e.target.value; setAwards(n) }}
+                      className="bg-bg border border-border rounded-xl px-3 py-2.5 text-cream text-sm focus:outline-none focus:border-gold"
+                      placeholder={i === 0 ? 'Premio (IT)' : i === 1 ? 'Pubblicazione (IT)' : 'Riconoscimento (IT)'} />
+                    <input type="text" value={awardsEn[i] || ''} onChange={e => { const n = [...awardsEn]; n[i] = e.target.value; setAwardsEn(n) }}
+                      className="bg-bg border border-border/60 rounded-xl px-3 py-2.5 text-cream/80 text-sm focus:outline-none focus:border-gold/60"
+                      placeholder={i === 0 ? 'Award (EN)' : i === 1 ? 'Publication (EN)' : 'Recognition (EN)'} />
+                  </div>
                 ))}
               </div>
             </div>
@@ -553,11 +623,11 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
               <div className="pt-4 border-t border-border">
                 <button onClick={translateToEnglish} disabled={translating}
                   className="w-full py-3 rounded-xl border border-gold/40 text-gold text-sm hover:bg-gold/10 transition-colors disabled:opacity-50">
-                  {translating ? '🌐 Traduzione in corso...' : '🌐 Traduci automaticamente in inglese'}
+                  {translating ? 'ð Traduzione in corso...' : 'ð Traduci automaticamente in inglese'}
                 </button>
                 {translateMsg && <p className="text-center text-xs mt-2 text-green-400">{translateMsg}</p>}
                 <p className="text-muted/60 text-xs text-center mt-1">
-                  Descrizione, specialità e riconoscimenti vengono tradotti con AI
+                  Descrizione, specialitÃ  e riconoscimenti vengono tradotti con AI
                 </p>
               </div>
             )}
@@ -580,7 +650,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                   <label className="text-muted text-xs uppercase tracking-wider block mb-3">Logo</label>
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-xl border border-border bg-bg overflow-hidden flex items-center justify-center shrink-0">
-                      {logoPreview ? <img src={logoPreview} className="w-full h-full object-cover" alt="logo" /> : <span className="text-2xl opacity-20">🏷️</span>}
+                      {logoPreview ? <img src={logoPreview} className="w-full h-full object-cover" alt="logo" /> : <span className="text-2xl opacity-20">ð·ï¸</span>}
                     </div>
                     <label className="cursor-pointer border border-gold/40 text-gold text-xs px-4 py-2 rounded-full hover:bg-gold/10 transition-colors">
                       {logoPreview ? 'Cambia logo' : 'Carica logo'}
@@ -589,7 +659,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                   </div>
                 </div>
                 <div>
-                  <label className="text-muted text-xs uppercase tracking-wider block mb-2">Nome attività</label>
+                  <label className="text-muted text-xs uppercase tracking-wider block mb-2">Nome attivitÃ </label>
                   <input type="text" value={businessName} onChange={e => setBusinessName(e.target.value)}
                     className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold" />
                 </div>
@@ -601,7 +671,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                   </select>
                 </div>
                 <div>
-                  <label className="text-muted text-xs uppercase tracking-wider block mb-2">Città</label>
+                  <label className="text-muted text-xs uppercase tracking-wider block mb-2">CittÃ </label>
                   <input type="text" value={location} onChange={e => setLocation(e.target.value)}
                     className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold" placeholder="Es. Firenze" />
                 </div>
@@ -629,11 +699,11 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                       className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold" />
                   </div>
                 </div>
-                {/* Max ospiti — per location e catering */}
+                {/* Max ospiti â per location e catering */}
                 {['location', 'catering'].some(t => (category || vendor.category || '').toLowerCase().includes(t)) && (
                   <div>
                     <label className="text-muted text-xs uppercase tracking-wider block mb-2">
-                      👥 Numero massimo ospiti
+                      ð¥ Numero massimo ospiti
                     </label>
                     <input type="number" value={maxGuests} onChange={e => setMaxGuests(e.target.value)}
                       className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
@@ -653,10 +723,10 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                 {[
                   ['Nome', vendor.business_name],
                   [d.category, vendor.category],
-                  ['Città', vendor.location || '—'],
-                  [d.phone, vendor.phone || '—'],
-                  [d.prices, vendor.price_from ? `€${vendor.price_from}${vendor.price_to ? ` → €${vendor.price_to}` : ''}` : '—'],
-                  [d.bio, vendor.bio || '—'],
+                  ['CittÃ ', vendor.location || 'â'],
+                  [d.phone, vendor.phone || 'â'],
+                  [d.prices, vendor.price_from ? `â¬${vendor.price_from}${vendor.price_to ? ` â â¬${vendor.price_to}` : ''}` : 'â'],
+                  [d.bio, vendor.bio || 'â'],
                 ].map(([label, value]) => (
                   <div key={label} className="flex justify-between py-3 border-b border-border last:border-0 gap-4">
                     <span className="text-muted text-sm shrink-0">{label}</span>
@@ -672,7 +742,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
         {tab === 'photos' && (
           <div className="bg-dark border border-border rounded-2xl p-6">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-cream font-medium">📸 Foto del portfolio</h2>
+              <h2 className="text-cream font-medium">ð¸ Foto del portfolio</h2>
               <button onClick={savePhotos} disabled={photoSaving}
                 className="text-sm px-4 py-2 rounded-full bg-gold text-bg font-semibold hover:opacity-90 disabled:opacity-50">
                 {photoSaving ? 'Salvataggio...' : photoMsg || 'Salva foto'}
@@ -685,7 +755,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                   <div className="aspect-video rounded-xl border border-border bg-bg overflow-hidden flex items-center justify-center relative group">
                     {photoPreviews[i]
                       ? <img src={photoPreviews[i]} className="w-full h-full object-cover" alt={`foto ${i + 1}`} />
-                      : <span className="text-4xl opacity-20">📷</span>}
+                      : <span className="text-4xl opacity-20">ð·</span>}
                     <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                       <span className="text-cream text-xs border border-cream/50 rounded-full px-3 py-1">{photoPreviews[i] ? 'Cambia' : 'Carica'}</span>
                       <input type="file" accept="image/*" onChange={handlePhotoChange(i)} className="hidden" />
@@ -727,12 +797,12 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
               </div>
             ) : (
               <div>
-                {[['📷 Instagram', vendor.instagram], ['📘 Facebook', vendor.facebook],
-                  ['🎵 TikTok', vendor.tiktok], ['🌐 Sito web', vendor.website], ['💬 WhatsApp', vendor.whatsapp],
+                {[['ð· Instagram', vendor.instagram], ['ð Facebook', vendor.facebook],
+                  ['ðµ TikTok', vendor.tiktok], ['ð Sito web', vendor.website], ['ð¬ WhatsApp', vendor.whatsapp],
                 ].map(([label, value]) => (
                   <div key={label} className="flex justify-between py-3 border-b border-border last:border-0">
                     <span className="text-muted text-sm">{label}</span>
-                    <span className={`text-sm ${!value ? 'text-muted' : 'text-blue-400'}`}>{value || '—'}</span>
+                    <span className={`text-sm ${!value ? 'text-muted' : 'text-blue-400'}`}>{value || 'â'}</span>
                   </div>
                 ))}
               </div>
@@ -740,7 +810,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           </div>
         )}
 
-        {/* DISPONIBILITÀ */}
+        {/* DISPONIBILITÃ */}
         {tab === 'availability' && (
           <div className="bg-dark border border-border rounded-2xl p-6">
             <div className="flex justify-between items-center mb-6">
@@ -753,7 +823,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
             <p className="text-muted text-sm mb-6">{d.availabilityDesc}</p>
             <div className="flex items-center gap-4 mb-8">
               <button onClick={() => setMaxEvents((v: number) => Math.max(1, v - 1))}
-                className="w-10 h-10 rounded-full border border-gold text-gold text-xl hover:bg-gold/10 flex items-center justify-center">−</button>
+                className="w-10 h-10 rounded-full border border-gold text-gold text-xl hover:bg-gold/10 flex items-center justify-center">â</button>
               <span className="text-4xl font-light text-cream w-12 text-center">{maxEvents}</span>
               <button onClick={() => setMaxEvents((v: number) => v + 1)}
                 className="w-10 h-10 rounded-full border border-gold text-gold text-xl hover:bg-gold/10 flex items-center justify-center">+</button>
@@ -771,7 +841,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                 [d.statsMessages, 'text-blue-400'], [d.statsViews, 'text-cream'],
               ].map(([label, cls]) => (
                 <div key={label} className="bg-dark border border-border rounded-2xl p-6 text-center">
-                  <p className={`text-3xl font-light ${cls}`}>—</p>
+                  <p className={`text-3xl font-light ${cls}`}>â</p>
                   <p className="text-muted text-sm mt-1">{label}</p>
                 </div>
               ))}
