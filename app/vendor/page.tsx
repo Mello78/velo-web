@@ -269,20 +269,10 @@ function ProfileSetup({ locale, userId, onComplete }: {
           </div>
           <div>
             <label className="text-muted text-xs uppercase tracking-wider block mb-2">Presentazione</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-muted/60 text-xs mb-1.5">🇮🇹 Italiano</p>
-                      <textarea value={bio} onChange={e => setBio(e.target.value)} rows={4}
-                        className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold resize-none"
-                        placeholder="Descriviti brevemente..." />
-                    </div>
-                    <div>
-                      <p className="text-muted/60 text-xs mb-1.5">🇬🇧 English</p>
-                      <textarea value={bioEn} onChange={e => setBioEn(e.target.value)} rows={4}
-                        className="w-full bg-bg border border-border/60 rounded-xl px-4 py-3 text-cream/80 text-sm focus:outline-none focus:border-gold/60 resize-none"
-                        placeholder="Describe yourself... (or use Translate in ✨ Info)" />
-                    </div>
-                  </div>
+            <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3}
+              className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold resize-none"
+              placeholder="Descriviti brevemente..." />
+            <p className="text-muted/50 text-xs mt-1">La versione in inglese puoi aggiungerla dopo dal tab ✨ Info</p>
           </div>
           {error && <p className="text-red-400 text-sm">{error}</p>}
           <button onClick={save} disabled={saving}
@@ -677,9 +667,20 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                 </div>
                 <div>
                   <label className="text-muted text-xs uppercase tracking-wider block mb-2">{d.bioLabel}</label>
-                  <textarea value={bio} onChange={e => setBio(e.target.value)} rows={4}
-                    className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold resize-none"
-                    placeholder={d.bioPlaceholder} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-muted/60 text-xs mb-1.5">🇮🇹 Italiano</p>
+                      <textarea value={bio} onChange={e => setBio(e.target.value)} rows={4}
+                        className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold resize-none"
+                        placeholder={d.bioPlaceholder} />
+                    </div>
+                    <div>
+                      <p className="text-muted/60 text-xs mb-1.5">🇬🇧 English</p>
+                      <textarea value={bioEn} onChange={e => setBioEn(e.target.value)} rows={4}
+                        className="w-full bg-bg border border-border/60 rounded-xl px-4 py-3 text-cream/80 text-sm focus:outline-none focus:border-gold/60 resize-none"
+                        placeholder="Describe yourself... (or use Translate in ✨ Info)" />
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="text-muted text-xs uppercase tracking-wider block mb-2">{d.phoneLabel}</label>
