@@ -479,7 +479,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     if (!session) return
     // Carica tutte le conversazioni raggruppate per coppia
     const { data } = await supabase.from('messages')
-      .select('*')
+      .select('*, couples(partner1, partner2)')
       .eq('vendor_user_id', session.user.id)
       .order('created_at', { ascending: false })
     if (data) {
@@ -492,6 +492,8 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
       const convs = Object.entries(byCouple).map(([userId, msgs]) => ({
         coupleUserId: userId,
         lastMessage: msgs[0],
+        partner1: (msgs[0] as any).couples?.partner1 || '',
+        partner2: (msgs[0] as any).couples?.partner2 || '',
         unread: msgs.filter((m: any) => !m.from_vendor).length,
       }))
       setChatConversations(convs)
@@ -726,7 +728,7 @@ const statusBadge = vendor.public_vendor_id
                         className="w-full text-left p-4 border-b border-border hover:bg-white/5 transition-colors">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="text-cream text-sm font-medium">Coppia</p>
+                            <p className="text-cream text-sm font-medium">{conv.partner1 && conv.partner2 ? `${conv.partner1} & ${conv.partner2}` : 'Sposi'}</p>
                             <p className="text-muted text-xs mt-0.5 truncate max-w-xs">{conv.lastMessage?.content}</p>
                           </div>
                           <div className="text-right shrink-0">
@@ -750,7 +752,7 @@ const statusBadge = vendor.public_vendor_id
               <div className="flex flex-col h-[600px]">
                 <div className="p-4 border-b border-border flex items-center gap-3">
                   <button onClick={() => setSelectedConv(null)} className="text-gold hover:opacity-70 text-sm">← Indietro</button>
-                  <h2 className="text-cream font-medium">Conversazione</h2>
+                  <h2 className="text-cream font-medium">{chatConversations.find(c => c.coupleUserId === selectedConv)?.partner1 && chatConversations.find(c => c.coupleUserId === selectedConv)?.partner2 ? `${chatConversations.find(c => c.coupleUserId === selectedConv)?.partner1} & ${chatConversations.find(c => c.coupleUserId === selectedConv)?.partner2}` : 'Conversazione'}</h2>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                   {chatMessages.length === 0 && (
