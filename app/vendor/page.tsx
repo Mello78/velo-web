@@ -332,6 +332,14 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
   const [newMsg, setNewMsg] = useState('')
   const [sendingMsg, setSendingMsg] = useState(false)
   const [chatLoaded, setChatLoaded] = useState(false)
+
+  // Auto-carica messaggi all'apertura del tab
+  useEffect(() => {
+    if (tab === 'messages' && !chatLoaded) {
+      loadConversations()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab])
   const [translateMsg, setTranslateMsg] = useState('')
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState(vendor.logo_url || '')
@@ -707,14 +715,7 @@ const statusBadge = vendor.public_vendor_id
                     Aggiorna
                   </button>
                 </div>
-                {!chatLoaded ? (
-                  <div className="p-8 text-center">
-                    <button onClick={loadConversations}
-                      className="bg-gold text-bg text-sm font-semibold px-6 py-3 rounded-full hover:opacity-90">
-                      Carica messaggi
-                    </button>
-                  </div>
-                ) : chatConversations.length === 0 ? (
+                {chatConversations.length === 0 ? (
                   <div className="p-12 text-center">
                     <p className="text-4xl mb-3">💬</p>
                     <p className="text-muted">Nessun messaggio ancora</p>
