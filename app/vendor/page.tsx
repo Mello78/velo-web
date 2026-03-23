@@ -450,9 +450,13 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
       )
       const data = await res.json()
       if (data.error) { setTranslateMsg('â Errore: ' + data.error); setTranslating(false); return }
+      // Aggiorna state locale con traduzioni ricevute
+      if (data.bio) setBioEn(data.bio)
+      if (data.specialties_custom?.length) setSpecialtiesCustomEn(data.specialties_custom)
+      if (data.awards?.length) setAwardsEn(data.awards)
       if (vendor.public_vendor_id) {
         await supabase.from('public_vendors').update({
-          description_en: data.description || null,
+          description_en: data.bio || data.description || null,
           specialties_en: data.specialties || [],
           awards_en: data.awards || [],
         }).eq('id', vendor.public_vendor_id)
@@ -681,6 +685,15 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                         placeholder="Describe yourself... (or use Translate in ✨ Info)" />
                     </div>
                   </div>
+                  {vendor.public_vendor_id && (
+                    <div className="mt-2">
+                      <button onClick={translateToEnglish} disabled={translating}
+                        className="w-full py-2 rounded-xl border border-gold/30 text-gold text-xs hover:bg-gold/10 transition-colors disabled:opacity-50">
+                        {translating ? '🌐 Traduzione in corso...' : '🌐 Traduci descrizione in inglese'}
+                      </button>
+                      {translateMsg && <p className="text-center text-xs mt-1 text-green-400">{translateMsg}</p>}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-muted text-xs uppercase tracking-wider block mb-2">{d.phoneLabel}</label>
