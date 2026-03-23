@@ -8,12 +8,12 @@ import SimpleNav from '../../components/SimpleNav'
 import LangToggle from '../../components/LangToggle'
 
 const CATEGORIES = [
-  'ð· Fotografia', 'ð¬ Video', 'ð¸ Floral Design', 'ð½ï¸ Catering', 'ðµ Musica',
-  'ðï¸ Location', 'ð Partecipazioni', 'ð Torta', 'ð Fiori', 'ð Auto',
-  'ð Trucco & Parrucco', 'ð Abiti', 'ð Animazione', 'ð Bomboniere', 'ð Wedding Planner',
+  '📷 Fotografia', '🎬 Video', '🌸 Floral Design', '🍽️ Catering', '🎵 Musica',
+  '🏛️ Location', '💌 Partecipazioni', '🎂 Torta', '🌺 Fiori', '🚗 Auto',
+  '💄 Trucco & Parrucco', '👗 Abiti', '🎉 Animazione', '🎁 Bomboniere', '📋 Wedding Planner',
 ]
 
-const LINGUE = ['Italiano', 'English', 'FranÃ§ais', 'Deutsch', 'EspaÃ±ol', 'PortuguÃªs', 'ä¸­æ', 'Ø§ÙØ¹Ø±Ø¨ÙØ©']
+const LINGUE = ['Italiano', 'English', 'Français', 'Deutsch', 'Español', 'Português', '中文', 'العربية']
 const SPECIALITA_PER_CATEGORIA: Record<string, string[]> = {
   '📷 Fotografia': ['Reportage naturale', 'Fine Art', 'Stile romantico', 'Stile documentario', 'Luxury & Editoriale', 'Bianco e nero', 'Film analogico', 'Drone'],
   '🎬 Video': ['Cinematic', 'Reportage', 'Drone aereo', 'Super 8 / Film', 'Short film', 'Highlight 3 min', 'Full day'],
@@ -87,10 +87,10 @@ export default function VendorPage() {
         setUserId(uid)
         setEmail(data.session.user.email || '')
         const { data: va } = await supabase.from('vendor_accounts').select('*').eq('user_id', uid).single()
-        // Vai alla dashboard SOLO se ha giÃ  un profilo vendor
-        // Se ha una sessione ma non Ã¨ un vendor, resta sulla schermata login
+        // Vai alla dashboard SOLO se ha già un profilo vendor
+        // Se ha una sessione ma non è un vendor, resta sulla schermata login
         if (va) { setVendorData(va); setMode('dashboard') }
-        // NON andare a 'setup' in automatico â solo dopo login esplicito
+        // NON andare a 'setup' in automatico — solo dopo login esplicito
       }
     })
   }, [])
@@ -107,7 +107,7 @@ export default function VendorPage() {
     } else {
       const { error: err } = await supabase.auth.signUp({ email, password })
       if (err) setError(err.message)
-      else setSuccess("â Registrazione completata! Controlla la tua email e clicca sul link di conferma, poi torna qui ad accedere. Se non trovi l'email, controlla la cartella spam.")
+      else setSuccess("✅ Registrazione completata! Controlla la tua email e clicca sul link di conferma, poi torna qui ad accedere. Se non trovi l'email, controlla la cartella spam.")
     }
     setLoading(false)
   }
@@ -145,7 +145,7 @@ export default function VendorPage() {
                 <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.passwordLabel}</label>
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)}
                   className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
-                  placeholder="â¢â¢â¢â¢â¢â¢â¢â¢" onKeyDown={e => e.key === 'Enter' && handle()} />
+                  placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handle()} />
               </div>
             </div>
             {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
@@ -154,20 +154,20 @@ export default function VendorPage() {
               className="w-full bg-gold text-bg font-semibold py-4 rounded-xl mt-6 hover:opacity-90 disabled:opacity-50">
               {loading ? tr.vendor.loading : isLogin ? tr.vendor.loginBtn : tr.vendor.registerBtn}
             </button>
-            {/* Toggle login/registrazione â link secondario */}
+            {/* Toggle login/registrazione — link secondario */}
             <p className="text-center text-muted text-sm mt-5">
               {isLogin ? (
                 <>Nuovo su VELO?{' '}
                   <button onClick={() => { setIsLogin(false); setError(''); setSuccess('') }}
                     className="text-gold hover:opacity-70 transition-opacity underline underline-offset-2">
-                    Crea il tuo profilo gratuito â
+                    Crea il tuo profilo gratuito →
                   </button>
                 </>
               ) : (
-                <>Hai giÃ  un account?{' '}
+                <>Hai già un account?{' '}
                   <button onClick={() => { setIsLogin(true); setError(''); setSuccess('') }}
                     className="text-gold hover:opacity-70 transition-opacity underline underline-offset-2">
-                    Accedi â
+                    Accedi →
                   </button>
                 </>
               )}
@@ -203,8 +203,8 @@ function ProfileSetup({ locale, userId, onComplete }: {
   }
 
   const save = async () => {
-    if (!businessName.trim()) { setError("Il nome dell'attivitÃ  Ã¨ obbligatorio"); return }
-    if (!location.trim()) { setError('La cittÃ  Ã¨ obbligatoria'); return }
+    if (!businessName.trim()) { setError("Il nome dell'attività è obbligatorio"); return }
+    if (!location.trim()) { setError('La città è obbligatoria'); return }
     setSaving(true); setError('')
     const coords = await geocodeCity(location)
     let logoUrl: string | null = null
@@ -228,7 +228,7 @@ function ProfileSetup({ locale, userId, onComplete }: {
       <div className="max-w-lg mx-auto px-6 pt-28 pb-16">
         <p className="text-gold text-xs tracking-[0.3em] uppercase mb-2">Configurazione profilo</p>
         <h1 className="text-3xl font-light mb-2">Crea il tuo profilo fornitore</h1>
-        <p className="text-muted text-sm mb-8">Il profilo sarÃ  visibile dopo la revisione del team VELO</p>
+        <p className="text-muted text-sm mb-8">Il profilo sarà visibile dopo la revisione del team VELO</p>
         <div className="bg-dark border border-border rounded-2xl p-6 space-y-5">
           <div>
             <label className="text-muted text-xs uppercase tracking-wider block mb-3">Logo</label>
@@ -243,7 +243,7 @@ function ProfileSetup({ locale, userId, onComplete }: {
             </div>
           </div>
           <div>
-            <label className="text-muted text-xs uppercase tracking-wider block mb-2">Nome attivitÃ  *</label>
+            <label className="text-muted text-xs uppercase tracking-wider block mb-2">Nome attività *</label>
             <input type="text" value={businessName} onChange={e => setBusinessName(e.target.value)}
               className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
               placeholder="Es. Studio Fotografico Rossi" />
@@ -256,7 +256,7 @@ function ProfileSetup({ locale, userId, onComplete }: {
             </select>
           </div>
           <div>
-            <label className="text-muted text-xs uppercase tracking-wider block mb-2">CittÃ  *</label>
+            <label className="text-muted text-xs uppercase tracking-wider block mb-2">Città *</label>
             <input type="text" value={location} onChange={e => setLocation(e.target.value)}
               className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
               placeholder="Es. Firenze" />
@@ -277,7 +277,7 @@ function ProfileSetup({ locale, userId, onComplete }: {
           {error && <p className="text-red-400 text-sm">{error}</p>}
           <button onClick={save} disabled={saving}
             className="w-full bg-gold text-bg font-semibold py-4 rounded-xl hover:opacity-90 disabled:opacity-50">
-            {saving ? 'Salvataggio in corso...' : 'Crea profilo â'}
+            {saving ? 'Salvataggio in corso...' : 'Crea profilo →'}
           </button>
         </div>
       </div>
@@ -361,7 +361,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     }).eq('id', vendor.id).select().single()
     if (data) {
       onUpdate({ ...vendor, ...data })
-      // Aggiorna anche public_vendors se il vendor Ã¨ in vetrina
+      // Aggiorna anche public_vendors se il vendor è in vetrina
       if (vendor.public_vendor_id) {
         await supabase.from('public_vendors').update({
           photo1_url: urls[0] || null,
@@ -369,7 +369,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           photo3_url: urls[2] || null,
         }).eq('id', vendor.public_vendor_id)
       }
-      setPhotoMsg('â Foto salvate')
+      setPhotoMsg('✓ Foto salvate')
     }
     setPhotoSaving(false); setTimeout(() => setPhotoMsg(''), 3000)
   }
@@ -402,7 +402,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     const { data } = await supabase.from('vendor_accounts').update(payload).eq('id', vendor.id).select().single()
     if (data) {
       onUpdate({ ...vendor, ...data })
-      // Sincronizza automaticamente con public_vendors se il vendor Ã¨ in vetrina
+      // Sincronizza automaticamente con public_vendors se il vendor è in vetrina
       if (vendor.public_vendor_id) {
         await supabase.from('public_vendors').update({
           name: businessName,
@@ -430,7 +430,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
         }).eq('id', vendor.public_vendor_id)
       }
-      setSavedMsg('â')
+      setSavedMsg('✓')
     }
     setEditing(false); setSaving(false); setLogoFile(null)
     setTimeout(() => setSavedMsg(''), 2000)
@@ -461,16 +461,16 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           awards_en: data.awards || [],
         }).eq('id', vendor.public_vendor_id)
       }
-      setTranslateMsg('â Traduzione salvata in inglese')
+      setTranslateMsg('✓ Traduzione salvata in inglese')
       setTimeout(() => setTranslateMsg(''), 3000)
     } catch (e) { setTranslateMsg('â Errore di rete') }
     setTranslating(false)
   }
 
   const statusBadge = vendor.public_vendor_id
-    ? { label: 'â In vetrina', cls: 'text-green-400 border-green-400/30 bg-green-400/5' }
+    ? { label: '✓ In vetrina', cls: 'text-green-400 border-green-400/30 bg-green-400/5' }
     : vendor.verified
-    ? { label: 'â Verificato Â· in attesa di pubblicazione', cls: 'text-gold border-gold/30 bg-gold/5' }
+    ? { label: '✓ Verificato · in attesa di pubblicazione', cls: 'text-gold border-gold/30 bg-gold/5' }
     : { label: 'â³ In attesa di approvazione', cls: 'text-muted border-border bg-transparent' }
 
   return (
@@ -494,7 +494,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-3xl font-light">{vendor.business_name}</h1>
-              <p className="text-muted mt-1">{vendor.category} Â· {vendor.location}</p>
+              <p className="text-muted mt-1">{vendor.category} · {vendor.location}</p>
               <span className={`inline-block mt-2 text-xs border rounded-full px-3 py-1 ${statusBadge.cls}`}>{statusBadge.label}</span>
             </div>
             <div className="bg-gold/5 border border-gold/20 rounded-xl p-4 text-right shrink-0">
@@ -508,7 +508,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           {(['profile', 'info', 'photos', 'social', 'availability', 'stats'] as const).map(t => (
             <button key={t} onClick={() => { setTab(t); setEditing(false) }}
               className={`px-4 py-2 rounded-full text-sm transition-colors ${tab === t ? 'bg-gold text-bg font-semibold' : 'border border-border text-muted hover:text-cream'}`}>
-              {t === 'profile' ? d.tabProfile : t === 'info' ? 'â¨ Info' : t === 'photos' ? 'ð¸ Foto' : t === 'social' ? d.tabSocial : t === 'availability' ? d.tabAvailability : d.tabStats}
+              {t === 'profile' ? d.tabProfile : t === 'info' ? '✨ Info' : t === 'photos' ? '📸 Foto' : t === 'social' ? d.tabSocial : t === 'availability' ? d.tabAvailability : d.tabStats}
             </button>
           ))}
         </div>
@@ -517,16 +517,16 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
         {tab === 'info' && (
           <div className="bg-dark border border-border rounded-2xl p-6 space-y-8">
             <div className="flex justify-between items-center">
-              <h2 className="text-cream font-medium">â¨ Info vetrina</h2>
+              <h2 className="text-cream font-medium">✨ Info vetrina</h2>
               <button onClick={save} disabled={saving}
                 className="text-sm px-4 py-2 rounded-full bg-gold text-bg font-semibold hover:opacity-90 disabled:opacity-50">
                 {saving ? d.saving : savedMsg || d.save}
               </button>
             </div>
 
-            {/* SpecialitÃ  â max 5 */}
+            {/* Specialità — max 5 */}
             <div>
-              <p className="text-muted text-xs uppercase tracking-wider mb-1">Punti di forza / SpecialitÃ  <span className="text-gold">(max 5)</span></p>
+              <p className="text-muted text-xs uppercase tracking-wider mb-1">Punti di forza / Specialità <span className="text-gold">(max 5)</span></p>
               <p className="text-muted/60 text-xs mb-3">Seleziona fino a 5 che ti rappresentano meglio</p>
               <p className="text-muted/60 text-xs mb-3">
                 Lista per: <strong className="text-cream/80">{category || vendor.category}</strong>
@@ -617,11 +617,11 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
               <div className="pt-4 border-t border-border">
                 <button onClick={translateToEnglish} disabled={translating}
                   className="w-full py-3 rounded-xl border border-gold/40 text-gold text-sm hover:bg-gold/10 transition-colors disabled:opacity-50">
-                  {translating ? 'ð Traduzione in corso...' : 'ð Traduci automaticamente in inglese'}
+                  {translating ? '🌐 Traduzione in corso...' : '🌐 Traduci automaticamente in inglese'}
                 </button>
                 {translateMsg && <p className="text-center text-xs mt-2 text-green-400">{translateMsg}</p>}
                 <p className="text-muted/60 text-xs text-center mt-1">
-                  Descrizione, specialitÃ  e riconoscimenti vengono tradotti con AI
+                  Descrizione, specialità e riconoscimenti vengono tradotti con AI
                 </p>
               </div>
             )}
@@ -653,7 +653,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                   </div>
                 </div>
                 <div>
-                  <label className="text-muted text-xs uppercase tracking-wider block mb-2">Nome attivitÃ </label>
+                  <label className="text-muted text-xs uppercase tracking-wider block mb-2">Nome attività</label>
                   <input type="text" value={businessName} onChange={e => setBusinessName(e.target.value)}
                     className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold" />
                 </div>
@@ -665,7 +665,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                   </select>
                 </div>
                 <div>
-                  <label className="text-muted text-xs uppercase tracking-wider block mb-2">CittÃ </label>
+                  <label className="text-muted text-xs uppercase tracking-wider block mb-2">Città</label>
                   <input type="text" value={location} onChange={e => setLocation(e.target.value)}
                     className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold" placeholder="Es. Firenze" />
                 </div>
@@ -713,11 +713,11 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                       className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold" />
                   </div>
                 </div>
-                {/* Max ospiti â per location e catering */}
+                {/* Max ospiti — per location e catering */}
                 {['location', 'catering'].some(t => (category || vendor.category || '').toLowerCase().includes(t)) && (
                   <div>
                     <label className="text-muted text-xs uppercase tracking-wider block mb-2">
-                      ð¥ Numero massimo ospiti
+                      👥 Numero massimo ospiti
                     </label>
                     <input type="number" value={maxGuests} onChange={e => setMaxGuests(e.target.value)}
                       className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
@@ -737,10 +737,10 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                 {[
                   ['Nome', vendor.business_name],
                   [d.category, vendor.category],
-                  ['CittÃ ', vendor.location || 'â'],
-                  [d.phone, vendor.phone || 'â'],
-                  [d.prices, vendor.price_from ? `â¬${vendor.price_from}${vendor.price_to ? ` â â¬${vendor.price_to}` : ''}` : 'â'],
-                  [d.bio, vendor.bio || 'â'],
+                  ['Città', vendor.location || '—'],
+                  [d.phone, vendor.phone || '—'],
+                  [d.prices, vendor.price_from ? `€${vendor.price_from}${vendor.price_to ? ` → €${vendor.price_to}` : ''}` : '—'],
+                  [d.bio, vendor.bio || '—'],
                 ].map(([label, value]) => (
                   <div key={label} className="flex justify-between py-3 border-b border-border last:border-0 gap-4">
                     <span className="text-muted text-sm shrink-0">{label}</span>
@@ -756,7 +756,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
         {tab === 'photos' && (
           <div className="bg-dark border border-border rounded-2xl p-6">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-cream font-medium">ð¸ Foto del portfolio</h2>
+              <h2 className="text-cream font-medium">📸 Foto del portfolio</h2>
               <button onClick={savePhotos} disabled={photoSaving}
                 className="text-sm px-4 py-2 rounded-full bg-gold text-bg font-semibold hover:opacity-90 disabled:opacity-50">
                 {photoSaving ? 'Salvataggio...' : photoMsg || 'Salva foto'}
@@ -769,7 +769,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                   <div className="aspect-video rounded-xl border border-border bg-bg overflow-hidden flex items-center justify-center relative group">
                     {photoPreviews[i]
                       ? <img src={photoPreviews[i]} className="w-full h-full object-cover" alt={`foto ${i + 1}`} />
-                      : <span className="text-4xl opacity-20">ð·</span>}
+                      : <span className="text-4xl opacity-20">📷</span>}
                     <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                       <span className="text-cream text-xs border border-cream/50 rounded-full px-3 py-1">{photoPreviews[i] ? 'Cambia' : 'Carica'}</span>
                       <input type="file" accept="image/*" onChange={handlePhotoChange(i)} className="hidden" />
@@ -811,12 +811,12 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
               </div>
             ) : (
               <div>
-                {[['ð· Instagram', vendor.instagram], ['ð Facebook', vendor.facebook],
-                  ['ðµ TikTok', vendor.tiktok], ['ð Sito web', vendor.website], ['ð¬ WhatsApp', vendor.whatsapp],
+                {[['📷 Instagram', vendor.instagram], ['📘 Facebook', vendor.facebook],
+                  ['🎵 TikTok', vendor.tiktok], ['🌐 Sito web', vendor.website], ['ð¬ WhatsApp', vendor.whatsapp],
                 ].map(([label, value]) => (
                   <div key={label} className="flex justify-between py-3 border-b border-border last:border-0">
                     <span className="text-muted text-sm">{label}</span>
-                    <span className={`text-sm ${!value ? 'text-muted' : 'text-blue-400'}`}>{value || 'â'}</span>
+                    <span className={`text-sm ${!value ? 'text-muted' : 'text-blue-400'}`}>{value || '—'}</span>
                   </div>
                 ))}
               </div>
@@ -855,7 +855,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                 [d.statsMessages, 'text-blue-400'], [d.statsViews, 'text-cream'],
               ].map(([label, cls]) => (
                 <div key={label} className="bg-dark border border-border rounded-2xl p-6 text-center">
-                  <p className={`text-3xl font-light ${cls}`}>â</p>
+                  <p className={`text-3xl font-light ${cls}`}>—</p>
                   <p className="text-muted text-sm mt-1">{label}</p>
                 </div>
               ))}
