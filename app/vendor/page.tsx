@@ -291,7 +291,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
 }) {
   const tr = getT(locale)
   const d = tr.vendor.dashboard
-  const [tab, setTab] = useState<'profile' | 'info' | 'photos' | 'social' | 'availability' | 'stats'>('profile')
+  const [tab, setTab] = useState<'profile' | 'info' | 'messages' | 'photos' | 'social' | 'availability' | 'stats'>('profile')
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savedMsg, setSavedMsg] = useState('')
@@ -326,6 +326,12 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
   )
   const [bioEn, setBioEn] = useState(vendor.bio_en || '')
   const [translating, setTranslating] = useState(false)
+  const [chatMessages, setChatMessages] = useState<any[]>([])
+  const [chatConversations, setChatConversations] = useState<any[]>([])
+  const [selectedConv, setSelectedConv] = useState<any>(null)
+  const [newMsg, setNewMsg] = useState('')
+  const [sendingMsg, setSendingMsg] = useState(false)
+  const [chatLoaded, setChatLoaded] = useState(false)
   const [translateMsg, setTranslateMsg] = useState('')
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState(vendor.logo_url || '')
@@ -467,7 +473,64 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     setTranslating(false)
   }
 
-  const statusBadge = vendor.public_vendor_id
+  
+  const loadConversations = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    // Carica tutte le conversazioni raggruppate per coppia
+    const { data } = await supabase.from('messages')
+      .select('*')
+      .eq('vendor_user_id', session.user.id)
+      .order('created_at', { ascending: false })
+    if (data) {
+      // Raggruppa per user_id (coppia)
+      const byCouple: Record<string, any[]> = {}
+      data.forEach((m: any) => {
+        if (!byCouple[m.user_id]) byCouple[m.user_id] = []
+        byCouple[m.user_id].push(m)
+      })
+      const convs = Object.entries(byCouple).map(([userId, msgs]) => ({
+        coupleUserId: userId,
+        lastMessage: msgs[0],
+        unread: msgs.filter((m: any) => !m.from_vendor).length,
+      }))
+      setChatConversations(convs)
+    }
+    setChatLoaded(true)
+  }
+
+  const loadChatWithCouple = async (coupleUserId: string) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    const { data } = await supabase.from('messages')
+      .select('*')
+      .eq('vendor_user_id', session.user.id)
+      .eq('user_id', coupleUserId)
+      .order('created_at', { ascending: true })
+    if (data) setChatMessages(data)
+    setSelectedConv(coupleUserId)
+  }
+
+  const sendVendorMessage = async () => {
+    if (!newMsg.trim() || !selectedConv) return
+    setSendingMsg(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    // Trova un vendor_id per questa conversazione
+    const existing = chatMessages[0]
+    const { data } = await supabase.from('messages').insert({
+      content: newMsg.trim(),
+      vendor_id: existing?.vendor_id || null,
+      user_id: selectedConv,
+      vendor_user_id: session.user.id,
+      from_vendor: true,
+    }).select().single()
+    if (data) setChatMessages(prev => [...prev, data])
+    setNewMsg('')
+    setSendingMsg(false)
+  }
+
+const statusBadge = vendor.public_vendor_id
     ? { label: '✓ In vetrina', cls: 'text-green-400 border-green-400/30 bg-green-400/5' }
     : vendor.verified
     ? { label: '✓ Verificato · in attesa di pubblicazione', cls: 'text-gold border-gold/30 bg-gold/5' }
@@ -505,10 +568,10 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           </div>
         </div>
         <div className="flex gap-2 mb-8 flex-wrap">
-          {(['profile', 'info', 'photos', 'social', 'availability', 'stats'] as const).map(t => (
+          {(['profile', 'info', 'messages', 'photos', 'social', 'availability', 'stats'] as const).map(t => (
             <button key={t} onClick={() => { setTab(t); setEditing(false) }}
               className={`px-4 py-2 rounded-full text-sm transition-colors ${tab === t ? 'bg-gold text-bg font-semibold' : 'border border-border text-muted hover:text-cream'}`}>
-              {t === 'profile' ? d.tabProfile : t === 'info' ? '✨ Info' : t === 'photos' ? '📸 Foto' : t === 'social' ? d.tabSocial : t === 'availability' ? d.tabAvailability : d.tabStats}
+              {t === 'profile' ? d.tabProfile : t === 'info' ? '✨ Info' : t === 'messages' ? '💬 Messaggi' : t === 'photos' ? '📸 Foto' : t === 'social' ? d.tabSocial : t === 'availability' ? d.tabAvailability : d.tabStats}
             </button>
           ))}
         </div>
@@ -623,6 +686,101 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                 <p className="text-muted/60 text-xs text-center mt-1">
                   Descrizione, specialità e riconoscimenti vengono tradotti con AI
                 </p>
+              </div>
+            )}
+          </div>
+        )}
+
+
+        {/* MESSAGGI */}
+        {tab === 'messages' && (
+          <div className="bg-dark border border-border rounded-2xl overflow-hidden">
+            {!selectedConv ? (
+              // Lista conversazioni
+              <div>
+                <div className="p-4 border-b border-border flex items-center justify-between">
+                  <h2 className="text-cream font-medium">💬 Messaggi dalle coppie</h2>
+                  <button onClick={loadConversations}
+                    className="text-xs text-gold border border-gold/30 rounded-full px-3 py-1 hover:bg-gold/10">
+                    Aggiorna
+                  </button>
+                </div>
+                {!chatLoaded ? (
+                  <div className="p-8 text-center">
+                    <button onClick={loadConversations}
+                      className="bg-gold text-bg text-sm font-semibold px-6 py-3 rounded-full hover:opacity-90">
+                      Carica messaggi
+                    </button>
+                  </div>
+                ) : chatConversations.length === 0 ? (
+                  <div className="p-12 text-center">
+                    <p className="text-4xl mb-3">💬</p>
+                    <p className="text-muted">Nessun messaggio ancora</p>
+                    <p className="text-muted/60 text-xs mt-1">Quando una coppia ti scrive, appare qui</p>
+                  </div>
+                ) : (
+                  <div>
+                    {chatConversations.map((conv: any) => (
+                      <button key={conv.coupleUserId}
+                        onClick={() => loadChatWithCouple(conv.coupleUserId)}
+                        className="w-full text-left p-4 border-b border-border hover:bg-white/5 transition-colors">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-cream text-sm font-medium">Coppia</p>
+                            <p className="text-muted text-xs mt-0.5 truncate max-w-xs">{conv.lastMessage?.content}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-muted/60 text-xs">
+                              {new Date(conv.lastMessage?.created_at).toLocaleDateString('it-IT')}
+                            </p>
+                            {conv.unread > 0 && (
+                              <span className="inline-block mt-1 bg-gold text-bg text-xs rounded-full px-2 py-0.5 font-semibold">
+                                {conv.unread}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Chat con una coppia
+              <div className="flex flex-col h-[600px]">
+                <div className="p-4 border-b border-border flex items-center gap-3">
+                  <button onClick={() => setSelectedConv(null)} className="text-gold hover:opacity-70 text-sm">← Indietro</button>
+                  <h2 className="text-cream font-medium">Conversazione</h2>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {chatMessages.length === 0 && (
+                    <p className="text-muted text-sm text-center py-8">Nessun messaggio in questa conversazione</p>
+                  )}
+                  {chatMessages.map((m: any) => (
+                    <div key={m.id} className={`flex ${m.from_vendor ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-xs px-4 py-2.5 rounded-2xl text-sm ${
+                        m.from_vendor
+                          ? 'bg-gold text-bg rounded-br-sm'
+                          : 'bg-white/10 text-cream rounded-bl-sm border border-border'
+                      }`}>
+                        <p>{m.content}</p>
+                        <p className={`text-xs mt-1 opacity-60`}>
+                          {new Date(m.created_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="p-4 border-t border-border flex gap-3">
+                  <input type="text" value={newMsg} onChange={e => setNewMsg(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendVendorMessage()}
+                    className="flex-1 bg-bg border border-border rounded-xl px-4 py-2.5 text-cream text-sm focus:outline-none focus:border-gold"
+                    placeholder="Scrivi una risposta..." />
+                  <button onClick={sendVendorMessage} disabled={!newMsg.trim() || sendingMsg}
+                    className="bg-gold text-bg font-semibold px-5 py-2.5 rounded-xl hover:opacity-90 disabled:opacity-40 text-sm">
+                    {sendingMsg ? '...' : '→'}
+                  </button>
+                </div>
               </div>
             )}
           </div>
