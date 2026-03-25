@@ -330,6 +330,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
   const [selectedConv, setSelectedConv] = useState<any>(null)
   const [newMsg, setNewMsg] = useState('')
   const [sendingMsg, setSendingMsg] = useState(false)
+  const [uploadingImg, setUploadingImg] = useState(false)
   const [chatLoaded, setChatLoaded] = useState(false)
 
   // Auto-carica messaggi all'apertura del tab
@@ -550,6 +551,30 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     if (data) setChatMessages(prev => [...prev, data])
     setNewMsg('')
     setSendingMsg(false)
+  }
+
+  const sendImageAsVendor = async (file: File) => {
+    if (!selectedConv || !file) return
+    if (file.size > 5 * 1024 * 1024) { alert('Il file supera i 5MB'); return }
+    setUploadingImg(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { setUploadingImg(false); return }
+    const ext = file.name.split('.').pop() || 'jpg'
+    const filePath = `${session.user.id}/chat_${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from('chat-images').upload(filePath, file, { upsert: true })
+    if (error) { alert('Errore upload: ' + error.message); setUploadingImg(false); return }
+    const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(filePath)
+    const existing = chatMessages[0]
+    const { data } = await supabase.from('messages').insert({
+      content: null,
+      image_url: publicUrl,
+      vendor_id: existing?.vendor_id || null,
+      user_id: selectedConv,
+      vendor_user_id: session.user.id,
+      from_vendor: true,
+    }).select().single()
+    if (data) setChatMessages(prev => [...prev, data])
+    setUploadingImg(false)
   }
 
 const statusBadge = vendor.public_vendor_id
@@ -792,7 +817,13 @@ const statusBadge = vendor.public_vendor_id
                     </div>
                   ))}
                 </div>
-                <div className="p-4 border-t border-border flex gap-3">
+                                <div className="p-4 border-t border-border flex gap-3 items-end">
+                  <label className={`w-10 h-10 rounded-xl border flex items-center justify-center cursor-pointer transition-colors ${uploadingImg ? 'border-border opacity-40 cursor-not-allowed' : 'border-border hover:border-gold/50'}`}>
+                    <span className="text-lg">{uploadingImg ? '⏳' : '📷'}</span>
+                    <input type="file" accept="image/*,image/heic" className="hidden"
+                      disabled={uploadingImg}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) sendImageAsVendor(f); e.target.value = '' }} />
+                  </label>
                   <input type="text" value={newMsg} onChange={e => setNewMsg(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendVendorMessage()}
                     className="flex-1 bg-bg border border-border rounded-xl px-4 py-2.5 text-cream text-sm focus:outline-none focus:border-gold"
