@@ -129,7 +129,7 @@ export default function VendorPage() {
           <div className="text-center mb-10">
             <p className="text-gold text-xs tracking-[0.3em] uppercase mb-3">{tr.vendor.title}</p>
             <h1 className="text-3xl font-light text-cream">
-              {isLogin ? d.loginTitle : d.registerTitle}
+              {isLogin ? tr.vendor.dashboard.loginTitle : tr.vendor.dashboard.registerTitle}
             </h1>
           </div>
           <div className="bg-dark border border-border rounded-2xl p-8">
@@ -156,14 +156,14 @@ export default function VendorPage() {
             {/* Toggle login/registrazione — link secondario */}
             <p className="text-center text-muted text-sm mt-5">
               {isLogin ? (
-                <>{d.newToVelo}{' '}
+                <>{tr.vendor.dashboard.newToVelo}{' '}
                   <button onClick={() => { setIsLogin(false); setError(''); setSuccess('') }}
                     className="text-gold hover:opacity-70 transition-opacity underline underline-offset-2">
                     Crea il tuo profilo gratuito →
                   </button>
                 </>
               ) : (
-                <>{d.alreadyAccount}{' '}
+                <>{tr.vendor.dashboard.alreadyAccount}{' '}
                   <button onClick={() => { setIsLogin(true); setError(''); setSuccess('') }}
                     className="text-gold hover:opacity-70 transition-opacity underline underline-offset-2">
                     Accedi →
@@ -186,6 +186,7 @@ export default function VendorPage() {
 function ProfileSetup({ locale, userId, onComplete }: {
   locale: string; userId: string; onComplete: (va: any) => void
 }) {
+  const tr = getT(locale)
   const [businessName, setBusinessName] = useState('')
   const [category, setCategory] = useState(CATEGORIES[0])
   const [location, setLocation] = useState('')
@@ -225,9 +226,9 @@ function ProfileSetup({ locale, userId, onComplete }: {
     <main className="min-h-screen bg-bg text-cream">
       <SimpleNav locale={locale} />
       <div className="max-w-lg mx-auto px-6 pt-28 pb-16">
-        <p className="text-gold text-xs tracking-[0.3em] uppercase mb-2">{d.label}</p>
-        <h1 className="text-3xl font-light mb-2">{d.setupTitle}</h1>
-        <p className="text-muted text-sm mb-8">{d.setupSubtitle}</p>
+        <p className="text-gold text-xs tracking-[0.3em] uppercase mb-2">{tr.vendor.dashboard.label}</p>
+        <h1 className="text-3xl font-light mb-2">{tr.vendor.dashboard.setupTitle}</h1>
+        <p className="text-muted text-sm mb-8">{tr.vendor.dashboard.setupSubtitle}</p>
         <div className="bg-dark border border-border rounded-2xl p-6 space-y-5">
           <div>
             <label className="text-muted text-xs uppercase tracking-wider block mb-3">Logo</label>
@@ -242,10 +243,10 @@ function ProfileSetup({ locale, userId, onComplete }: {
             </div>
           </div>
           <div>
-            <label className="text-muted text-xs uppercase tracking-wider block mb-2">{d.nameLabel} *</label>
+            <label className="text-muted text-xs uppercase tracking-wider block mb-2">{tr.vendor.dashboard.nameLabel} *</label>
             <input type="text" value={businessName} onChange={e => setBusinessName(e.target.value)}
               className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
-              placeholder={d.namePlaceholder} />
+              placeholder={tr.vendor.dashboard.namePlaceholder} />
           </div>
           <div>
             <label className="text-muted text-xs uppercase tracking-wider block mb-2">Categoria *</label>
@@ -255,10 +256,10 @@ function ProfileSetup({ locale, userId, onComplete }: {
             </select>
           </div>
           <div>
-            <label className="text-muted text-xs uppercase tracking-wider block mb-2">{d.cityLabel} *</label>
+            <label className="text-muted text-xs uppercase tracking-wider block mb-2">{tr.vendor.dashboard.cityLabel} *</label>
             <input type="text" value={location} onChange={e => setLocation(e.target.value)}
               className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
-              placeholder={d.cityPlaceholder} />
+              placeholder={tr.vendor.dashboard.cityPlaceholder} />
           </div>
           <div>
             <label className="text-muted text-xs uppercase tracking-wider block mb-2">Telefono</label>
