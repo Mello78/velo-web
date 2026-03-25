@@ -23,8 +23,7 @@ export default function AdminPage() {
     const { data: adminRow, error: adminErr } = await supabase
       .from('admin_users').select('id').eq('user_id', data.user.id).single()
     if (adminErr || !adminRow) {
-      await supabase.auth.signOut()
-      setError('Accesso non autorizzato'); setLoading(false); return
+      await supabase.auth.signOut(); setError('Accesso non autorizzato'); setLoading(false); return
     }
     setAuthed(true)
     const [c, va, m, g, inv, cv] = await Promise.all([
@@ -39,11 +38,10 @@ export default function AdminPage() {
     if (va.data) setVendors(va.data)
     if (inv.data) setInvites(inv.data)
     if (cv.data) setCustomVendors(cv.data)
-    // Conta inviti: custom_vendors non ancora inviati + vendor_invites
-    const pendingInvites = (cv.data || []).filter((v: any) => !v.invite_sent).length
+    // "Da contattare" = segnalati dalla coppia (invite_sent=true) ma admin non ha ancora agito
+    const pending = (cv.data || []).filter((v: any) => v.invite_sent && !v.admin_contacted).length
     setStats({ couples: c.data?.length||0, vendors: va.data?.length||0,
-      messages: m.data?.length||0, guests: g.data?.length||0,
-      invites: pendingInvites + (inv.data?.length||0) })
+      messages: m.data?.length||0, guests: g.data?.length||0, invites: pending })
     setLoading(false)
   }
 
@@ -69,11 +67,11 @@ export default function AdminPage() {
     }
     if (v.public_vendor_id) {
       const { error: updErr } = await supabase.from('public_vendors').update(payload).eq('id', v.public_vendor_id)
-      if (updErr) { alert('Errore aggiornamento: ' + updErr.message); return }
+      if (updErr) { alert('Errore: ' + updErr.message); return }
       await supabase.from('vendor_accounts').update({ verified: true }).eq('id', v.id)
     } else {
       const { data: pv, error: insErr } = await supabase.from('public_vendors').insert(payload).select().single()
-      if (insErr) { alert('Errore inserimento: ' + insErr.message); return }
+      if (insErr) { alert('Errore: ' + insErr.message); return }
       if (pv) {
         await supabase.from('vendor_accounts').update({ verified: true, public_vendor_id: pv.id }).eq('id', v.id)
         setVendors(prev => prev.map(x => x.id === v.id ? { ...x, verified: true, public_vendor_id: pv.id } : x))
@@ -83,24 +81,19 @@ export default function AdminPage() {
     setVendors(prev => prev.map(x => x.id === v.id ? { ...x, verified: true } : x))
   }
 
-
-  // Rimuovi dalla vetrina (mantiene vendor_account, azzera public_vendor_id)
   const removeFromVetrina = async (v: any) => {
-    if (!confirm(`Rimuovere ${v.business_name} dalla vetrina? Il profilo rimarrà registrato.`)) return
+    if (!confirm(`Rimuovere ${v.business_name} dalla vetrina?`)) return
     const { error: delErr } = await supabase.from('public_vendors').delete().eq('id', v.public_vendor_id)
     if (delErr) { alert('Errore: ' + delErr.message); return }
     await supabase.from('vendor_accounts').update({ public_vendor_id: null, verified: false }).eq('id', v.id)
     setVendors(prev => prev.map(x => x.id === v.id ? { ...x, public_vendor_id: null, verified: false } : x))
   }
 
-  // Elimina fornitore completamente (vendor_account + public_vendors)
   const deleteVendor = async (v: any) => {
     if (!confirm(`ELIMINARE DEFINITIVAMENTE ${v.business_name}?\nQuesta azione non è reversibile.`)) return
-    if (v.public_vendor_id) {
-      await supabase.from('public_vendors').delete().eq('id', v.public_vendor_id)
-    }
+    if (v.public_vendor_id) await supabase.from('public_vendors').delete().eq('id', v.public_vendor_id)
     const { error: delErr } = await supabase.from('vendor_accounts').delete().eq('id', v.id)
-    if (delErr) { alert('Errore eliminazione: ' + delErr.message); return }
+    if (delErr) { alert('Errore: ' + delErr.message); return }
     setVendors(prev => prev.filter(x => x.id !== v.id))
   }
 
@@ -109,17 +102,19 @@ export default function AdminPage() {
     setInvites(prev => prev.map(i => i.id === id ? { ...i, registered: true } : i))
   }
 
-  const markCustomInviteSent = async (id: string) => {
-    await supabase.from('custom_vendors').update({ invite_sent: true }).eq('id', id)
-    setCustomVendors(prev => prev.map(v => v.id === id ? { ...v, invite_sent: true } : v))
+  // Admin ha contattato il fornitore custom — segna admin_contacted=true
+  const markAdminContacted = async (cv: any) => {
+    await supabase.from('custom_vendors').update({ admin_contacted: true }).eq('id', cv.id)
+    setCustomVendors(prev => prev.map(v => v.id === cv.id ? { ...v, admin_contacted: true } : v))
   }
+
 
   if (!authed) return (
     <main className="min-h-screen bg-bg text-cream flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link href="/" className="text-gold text-2xl tracking-[0.3em] font-light">VELO</Link>
-          <p className="text-muted text-sm mt-1 tracking-wide">Pannello Amministrativo</p>
+          <p className="text-muted text-sm mt-1">Pannello Amministrativo</p>
         </div>
         <div className="bg-dark border border-border rounded-2xl p-6 space-y-4">
           <input type="email" value={email} onChange={e => setEmail(e.target.value)}
@@ -134,7 +129,6 @@ export default function AdminPage() {
             {loading ? 'Attendere...' : 'Accedi'}
           </button>
         </div>
-        <p className="text-muted text-xs text-center mt-4">Accesso riservato agli amministratori VELO</p>
       </div>
     </main>
   )
@@ -147,20 +141,18 @@ export default function AdminPage() {
             <img src="/favicon.png" alt="" className="h-7 w-auto" />
             <span className="text-gold text-xl tracking-[0.3em] font-light">VELO</span>
           </Link>
-          <button onClick={() => { supabase.auth.signOut(); setAuthed(false) }}
-            className="text-red-400 text-sm hover:opacity-70">Esci</button>
+          <button onClick={() => { supabase.auth.signOut(); setAuthed(false) }} className="text-red-400 text-sm hover:opacity-70">Esci</button>
         </div>
       </nav>
       <div className="max-w-6xl mx-auto px-6 py-10">
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
           {[
             { label: 'Coppie', value: stats.couples, color: 'text-gold' },
             { label: 'Fornitori', value: stats.vendors, color: 'text-green-400' },
             { label: 'Messaggi', value: stats.messages, color: 'text-blue-400' },
             { label: 'Ospiti', value: stats.guests, color: 'text-cream' },
-            { label: 'Inviti pendenti', value: stats.invites, color: 'text-gold' },
+            { label: 'Da contattare', value: stats.invites, color: 'text-gold' },
           ].map(s => (
             <div key={s.label} className="bg-dark border border-border rounded-2xl p-5 text-center">
               <p className={`text-3xl font-light ${s.color}`}>{s.value}</p>
@@ -169,7 +161,6 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {/* Tab nav */}
         <div className="flex gap-2 mb-8 flex-wrap">
           {(['stats','vendors','couples','invites'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
@@ -183,7 +174,7 @@ export default function AdminPage() {
         {/* TAB FORNITORI */}
         {tab === 'vendors' && (
           <div className="space-y-3">
-            {[...vendors].sort((a, b) => (a.public_vendor_id ? 1 : -1) - (b.public_vendor_id ? 1 : -1)).map(v => (
+            {[...vendors].sort((a,b) => (a.public_vendor_id?1:-1)-(b.public_vendor_id?1:-1)).map(v => (
               <div key={v.id} className={`bg-dark border rounded-xl p-4 ${!v.public_vendor_id ? 'border-gold/30' : 'border-border'}`}>
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div>
@@ -200,20 +191,17 @@ export default function AdminPage() {
                       {v.public_vendor_id ? '✓ In vetrina' : 'Non in vetrina'}
                     </span>
                     {!v.public_vendor_id && (
-                      <button onClick={() => activateVendor(v)}
-                        className="text-xs px-3 py-1 rounded-full border border-gold text-gold hover:bg-gold/10 transition-colors font-medium">
-                        🚀 Attiva in vetrina
+                      <button onClick={() => activateVendor(v)} className="text-xs px-3 py-1 rounded-full border border-gold text-gold hover:bg-gold/10 transition-colors font-medium">
+                        🚀 Attiva
                       </button>
                     )}
                     {v.public_vendor_id && (
                       <>
-                        <button onClick={() => activateVendor(v)}
-                          className="text-xs px-3 py-1 rounded-full border border-border text-muted hover:border-gold hover:text-gold transition-colors">
+                        <button onClick={() => activateVendor(v)} className="text-xs px-3 py-1 rounded-full border border-border text-muted hover:border-gold hover:text-gold transition-colors">
                           🔄 Aggiorna
                         </button>
-                        <button onClick={() => removeFromVetrina(v)}
-                          className="text-xs px-3 py-1 rounded-full border border-orange-400/40 text-orange-400 hover:bg-orange-400/10 transition-colors">
-                          📤 Rimuovi vetrina
+                        <button onClick={() => removeFromVetrina(v)} className="text-xs px-3 py-1 rounded-full border border-orange-400/40 text-orange-400 hover:bg-orange-400/10 transition-colors">
+                          📤 Rimuovi
                         </button>
                       </>
                     )}
@@ -221,9 +209,8 @@ export default function AdminPage() {
                       className={`text-xs px-3 py-1 rounded-full border transition-colors ${v.verified ? 'border-green-400 text-green-400' : 'border-border text-muted hover:border-green-400 hover:text-green-400'}`}>
                       {v.verified ? '✓ Verificato' : 'Verifica'}
                     </button>
-                    <button onClick={() => deleteVendor(v)}
-                      className="text-xs px-3 py-1 rounded-full border border-red-400/40 text-red-400 hover:bg-red-400/10 transition-colors">
-                      🗑️ Elimina
+                    <button onClick={() => deleteVendor(v)} className="text-xs px-3 py-1 rounded-full border border-red-400/40 text-red-400 hover:bg-red-400/10 transition-colors">
+                      🗑️
                     </button>
                   </div>
                 </div>
@@ -254,84 +241,75 @@ export default function AdminPage() {
         )}
 
 
-        {/* TAB INVITI */}
+        {/* TAB INVITI — logica corretta:
+            invite_sent=true = coppia ha segnalato (da contattare dall'admin)
+            admin_contacted=true = admin ha già contattato
+            vendor_invites = email automatica già inviata dall'app */}
         {tab === 'invites' && (
           <div className="space-y-6">
 
-            {/* Sezione 1: custom_vendors non ancora invitati (segnalati dalle coppie) */}
-            {customVendors.filter(v => !v.invite_sent).length > 0 && (
-              <div>
-                <h3 className="text-cream font-medium mb-3">
-                  🔔 Da contattare ({customVendors.filter(v => !v.invite_sent).length})
-                </h3>
-                <p className="text-muted text-xs mb-4">Fornitori segnalati dalle coppie — invito non ancora inviato</p>
-                <div className="space-y-3">
-                  {customVendors.filter(v => !v.invite_sent).map(cv => (
-                    <div key={cv.id} className="bg-dark border border-gold/30 rounded-xl p-4 flex items-start justify-between gap-4 flex-wrap">
-                      <div>
-                        <p className="text-cream font-medium">{cv.name}</p>
-                        {cv.category && <p className="text-muted text-xs">{cv.category}</p>}
-                        {cv.email && (
-                          <a href={`mailto:${cv.email}?subject=Unisciti a VELO — la piattaforma per i matrimoni in Italia&body=Ciao,%0A%0ASei stato segnalato su VELO da una coppia.%0ARegistrati gratuitamente: https://velowedding.it/vendor%0A%0ATeam VELO`}
-                            className="text-blue-400 text-sm hover:opacity-70 block mt-1">✉️ {cv.email}</a>
-                        )}
-                        {cv.phone && (
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            <a href={`https://wa.me/${cv.phone.replace(/[^0-9]/g,'')}?text=Ciao! Sei stato segnalato su VELO. Registrati gratis: https://velowedding.it/vendor`}
-                              target="_blank" rel="noopener noreferrer"
-                              className="text-green-400 text-xs border border-green-400/30 rounded-full px-3 py-1 hover:opacity-70">
-                              📱 WhatsApp
-                            </a>
-                            <a href={`sms:${cv.phone}&body=Ciao! Sei stato segnalato su VELO. Registrati gratis: https://velowedding.it/vendor`}
-                              className="text-green-400 text-xs border border-green-400/30 rounded-full px-3 py-1 hover:opacity-70">
-                              💬 SMS
-                            </a>
-                            <span className="text-muted text-xs">{cv.phone}</span>
-                          </div>
-                        )}
-                        {cv.instagram && <p className="text-muted text-xs mt-1">📷 {cv.instagram}</p>}
-                        <p className="text-muted text-xs mt-1">{new Date(cv.created_at).toLocaleDateString('it-IT')}</p>
+            {/* 1. Da contattare: segnalati dalla coppia, admin non ancora intervenuto */}
+            {(() => {
+              const pending = customVendors.filter(v => v.invite_sent && !v.admin_contacted)
+              if (pending.length === 0) return null
+              return (
+                <div>
+                  <h3 className="text-cream font-medium mb-1">🔔 Da contattare ({pending.length})</h3>
+                  <p className="text-muted text-xs mb-4">Segnalati dalle coppie — il team VELO deve ancora contattarli</p>
+                  <div className="space-y-3">
+                    {pending.map(cv => (
+                      <div key={cv.id} className="bg-dark border border-gold/30 rounded-xl p-4 flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                          <p className="text-cream font-medium">{cv.name}</p>
+                          {cv.category && <p className="text-muted text-xs">{cv.category}</p>}
+                          {cv.email && (
+                            <a href={`mailto:${cv.email}?subject=Unisciti a VELO — la piattaforma per i matrimoni in Italia&body=Ciao,%0ASei stato segnalato su VELO. Registrati: https://velowedding.it/vendor%0ATeam VELO`}
+                              className="text-blue-400 text-sm hover:opacity-70 block mt-1">✉️ {cv.email}</a>
+                          )}
+                          {cv.phone && (
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              <a href={`https://wa.me/${cv.phone.replace(/[^0-9]/g,'')}?text=Ciao! Sei stato segnalato su VELO da una coppia. Registrati gratis: https://velowedding.it/vendor`}
+                                target="_blank" rel="noopener noreferrer"
+                                className="text-green-400 text-xs border border-green-400/30 rounded-full px-3 py-1 hover:opacity-70">📱 WhatsApp</a>
+                              <a href={`sms:${cv.phone}&body=Ciao! Sei stato segnalato su VELO. Registrati gratis: https://velowedding.it/vendor`}
+                                className="text-green-400 text-xs border border-green-400/30 rounded-full px-3 py-1 hover:opacity-70">💬 SMS</a>
+                              <span className="text-muted text-xs">{cv.phone}</span>
+                            </div>
+                          )}
+                          {cv.instagram && <p className="text-muted text-xs mt-1">📷 {cv.instagram}</p>}
+                          <p className="text-muted text-xs mt-1">{new Date(cv.created_at).toLocaleDateString('it-IT')}</p>
+                        </div>
+                        <button onClick={() => markAdminContacted(cv)}
+                          className="text-xs px-3 py-1 rounded-full border border-gold/40 text-gold hover:bg-gold/10 shrink-0">
+                          ✓ Contattato
+                        </button>
                       </div>
-                      <button onClick={() => markCustomInviteSent(cv.id)}
-                        className="text-xs px-3 py-1 rounded-full border border-gold/40 text-gold hover:bg-gold/10 shrink-0">
-                        ✓ Segna inviato
-                      </button>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            })()}
 
-            {/* Sezione 2: vendor_invites (email automatiche già inviate) */}
+            {/* 2. vendor_invites: email automatica inviata dall'app */}
             {invites.length > 0 && (
               <div>
-                <h3 className="text-cream font-medium mb-3">📬 Inviti inviati ({invites.length})</h3>
-                <p className="text-muted text-xs mb-4">Email automatiche già inviate tramite VELO</p>
+                <h3 className="text-cream font-medium mb-1">📬 Email automatica inviata ({invites.length})</h3>
+                <p className="text-muted text-xs mb-4">Notificati direttamente dall'app tramite VELO</p>
                 <div className="space-y-3">
                   {invites.map(i => (
                     <div key={i.id} className="bg-dark border border-border rounded-xl p-4 flex items-start justify-between gap-4 flex-wrap">
                       <div>
                         <p className="text-cream font-medium">{i.vendor_name}</p>
-                        {i.vendor_email && (
-                          <a href={`mailto:${i.vendor_email}`} className="text-blue-400 text-sm hover:opacity-70">
-                            ✉️ {i.vendor_email}
-                          </a>
-                        )}
+                        {i.vendor_email && <a href={`mailto:${i.vendor_email}`} className="text-blue-400 text-sm hover:opacity-70">✉️ {i.vendor_email}</a>}
                         {i.vendor_phone && (
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            <a href={`https://wa.me/${i.vendor_phone.replace(/[^0-9]/g,'')}?text=Ciao! Follow-up da VELO — hai visto il nostro invito? Registrati gratis: https://velowedding.it/vendor`}
-                              target="_blank" rel="noopener noreferrer"
-                              className="text-green-400 text-xs border border-green-400/30 rounded-full px-3 py-1 hover:opacity-70">
-                              📱 Follow-up WA
-                            </a>
-                            <span className="text-muted text-xs">{i.vendor_phone}</span>
-                          </div>
+                          <a href={`https://wa.me/${i.vendor_phone.replace(/[^0-9]/g,'')}?text=Follow-up da VELO — hai visto il nostro invito? https://velowedding.it/vendor`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="text-green-400 text-xs border border-green-400/30 rounded-full px-3 py-1 hover:opacity-70 inline-block mt-1">📱 Follow-up WA</a>
                         )}
-                        <p className="text-muted text-xs mt-1">Da: {i.couple_names}</p>
-                        <p className="text-muted text-xs">{new Date(i.sent_at).toLocaleDateString('it-IT')}</p>
+                        <p className="text-muted text-xs mt-1">Da: {i.couple_names} · {new Date(i.sent_at).toLocaleDateString('it-IT')}</p>
                       </div>
                       <button onClick={() => markInviteRegistered(i.id)}
-                        className={`text-xs px-3 py-1 rounded-full border shrink-0 transition-colors ${i.registered ? 'border-green-400 text-green-400' : 'border-border text-muted hover:border-gold hover:text-gold'}`}>
+                        className={`text-xs px-3 py-1 rounded-full border shrink-0 ${i.registered ? 'border-green-400 text-green-400' : 'border-border text-muted hover:border-gold hover:text-gold'}`}>
                         {i.registered ? '✓ Registrato' : 'Segna registrato'}
                       </button>
                     </div>
@@ -340,25 +318,25 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* Sezione 3: custom_vendors già invitati */}
-            {customVendors.filter(v => v.invite_sent).length > 0 && (
+            {/* 3. Già contattati dall'admin */}
+            {customVendors.filter(v => v.invite_sent && v.admin_contacted).length > 0 && (
               <div>
-                <h3 className="text-muted font-medium mb-3 text-sm">✓ Già contattati manualmente ({customVendors.filter(v => v.invite_sent).length})</h3>
+                <h3 className="text-muted text-sm font-medium mb-3">✓ Già contattati ({customVendors.filter(v => v.invite_sent && v.admin_contacted).length})</h3>
                 <div className="space-y-2">
-                  {customVendors.filter(v => v.invite_sent).map(cv => (
-                    <div key={cv.id} className="bg-dark/50 border border-border/50 rounded-xl p-3 flex items-center justify-between gap-4">
+                  {customVendors.filter(v => v.invite_sent && v.admin_contacted).map(cv => (
+                    <div key={cv.id} className="bg-dark/50 border border-border/50 rounded-xl p-3 flex items-center justify-between">
                       <div>
-                        <p className="text-muted text-sm">{cv.name} {cv.category ? `· ${cv.category}` : ''}</p>
+                        <p className="text-muted text-sm">{cv.name}{cv.category ? ` · ${cv.category}` : ''}</p>
                         {cv.email && <p className="text-muted/60 text-xs">{cv.email}</p>}
                       </div>
-                      <span className="text-muted/60 text-xs shrink-0">Contattato</span>
+                      <span className="text-muted/60 text-xs">Contattato</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {customVendors.length === 0 && invites.length === 0 && (
+            {customVendors.filter(v => v.invite_sent).length === 0 && invites.length === 0 && (
               <p className="text-muted text-center py-12">Nessun invito ancora</p>
             )}
           </div>
@@ -382,10 +360,11 @@ export default function AdminPage() {
               {[
                 ['🇮🇹 Coppie italiane', couples.filter(c => c.nationality==='italian').length, 'text-cream'],
                 ['🌍 Destination wedding', couples.filter(c => c.nationality==='foreign').length, 'text-cream'],
-                ['✓ Fornitori in vetrina', vendors.filter(v => v.public_vendor_id).length, 'text-green-400'],
-                ['✓ Fornitori verificati', vendors.filter(v => v.verified).length, 'text-green-400'],
-                ['📬 Da contattare', customVendors.filter(v => !v.invite_sent).length, 'text-gold'],
-                ['📬 Inviti email inviati', invites.length, 'text-muted'],
+                ['✓ In vetrina', vendors.filter(v => v.public_vendor_id).length, 'text-green-400'],
+                ['✓ Verificati', vendors.filter(v => v.verified).length, 'text-green-400'],
+                ['🔔 Da contattare', customVendors.filter(v => v.invite_sent && !v.admin_contacted).length, 'text-gold'],
+                ['📬 Email invito inviate', invites.length, 'text-muted'],
+                ['✓ Admin contattati', customVendors.filter(v => v.admin_contacted).length, 'text-muted'],
               ].map(([label, value, cls]) => (
                 <div key={label as string} className="flex justify-between py-2 border-b border-border last:border-0">
                   <span className="text-muted text-sm">{label}</span>
