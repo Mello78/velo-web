@@ -332,6 +332,7 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
   const [newMsg, setNewMsg] = useState('')
   const [sendingMsg, setSendingMsg] = useState(false)
   const [uploadingImg, setUploadingImg] = useState(false)
+  const [translatingMsg, setTranslatingMsg] = useState<string | null>(null)
   const [chatLoaded, setChatLoaded] = useState(false)
 
   // Auto-carica messaggi all'apertura del tab
@@ -578,6 +579,30 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     setUploadingImg(false)
   }
 
+  const translateChatMessage = async (msgId: string, content: string) => {
+    if (!content?.trim()) return
+    setTranslatingMsg(msgId)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const targetLang = locale === 'it' ? 'en' : 'it'
+      const res = await fetch(
+        'https://jogsdrxnqrbbqieozlmo.supabase.co/functions/v1/velo-translate-message',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+          body: JSON.stringify({ text: content, target_lang: targetLang }),
+        }
+      )
+      const data = await res.json()
+      if (data.translated) {
+        setChatMessages(prev => prev.map(m =>
+          m.id === msgId ? { ...m, _translated: data.translated } : m
+        ))
+      }
+    } catch {}
+    setTranslatingMsg(null)
+  }
+
 const statusBadge = vendor.public_vendor_id
     ? { label: '✓ In vetrina', cls: 'text-green-400 border-green-400/30 bg-green-400/5' }
     : vendor.verified
@@ -810,6 +835,18 @@ const statusBadge = vendor.public_vendor_id
                           <img src={m.image_url} alt="immagine" className="rounded-xl max-w-full" style={{ maxHeight: 200 }} />
                         ) : (
                           <p>{m.content}</p>
+                        )}
+                        {!m.image_url && (
+                          <button
+                            onClick={() => translateChatMessage(m.id, m._translated || m.content)}
+                            className="text-xs opacity-40 hover:opacity-80 mt-1 transition-opacity"
+                            disabled={translatingMsg === m.id}
+                          >
+                            {translatingMsg === m.id ? '...' : '🌐'}
+                          </button>
+                        )}
+                        {m._translated && (
+                          <p className="text-xs mt-1 opacity-70 border-t border-white/10 pt-1 italic">{m._translated}</p>
                         )}
                         <p className={`text-xs mt-1 opacity-60`}>
                           {new Date(m.created_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
