@@ -125,33 +125,47 @@ export default async function VendorDetailPage({
             )}
 
             {/* About */}
-            {(locale === 'en' ? vendor.description_en : vendor.description) && (
+            {(locale === 'en'
+              ? (vendor.description_en || vendor.bio_en || vendor.description)
+              : vendor.description) && (
               <section>
                 <h2 className="text-xs text-gold tracking-[0.3em] uppercase mb-4">{tr.vendorDetail.about}</h2>
                 <p className="text-muted leading-relaxed text-base">
-                  {locale === 'en' && vendor.description_en ? vendor.description_en : vendor.description}
+                  {locale === 'en'
+                    ? (vendor.description_en || vendor.bio_en || vendor.description)
+                    : vendor.description}
                 </p>
               </section>
             )}
 
             {/* Specialties */}
-            {((locale === 'en' ? vendor.specialties_en : vendor.specialties) || vendor.specialties)?.length > 0 && (
-              <section>
-                <h2 className="text-xs text-gold tracking-[0.3em] uppercase mb-4">{tr.vendorDetail.specialties}</h2>
-                <div className="flex flex-wrap gap-2">
-                  {(locale === 'en' && vendor.specialties_en?.length ? vendor.specialties_en : vendor.specialties).map((s: string, i: number) => (
-                    <span key={i} className="border border-border rounded-full px-4 py-1.5 text-sm text-muted">{s}</span>
-                  ))}
-                </div>
-              </section>
-            )}
+            {(() => {
+              const presets = (locale === 'en' && vendor.specialties_en?.length)
+                ? vendor.specialties_en
+                : (vendor.specialties || [])
+              const custom = (locale === 'en' && vendor.specialties_custom_en?.length)
+                ? vendor.specialties_custom_en.filter(Boolean)
+                : (vendor.specialties_custom?.filter(Boolean) || [])
+              const all = [...presets, ...custom]
+              if (!all.length) return null
+              return (
+                <section>
+                  <h2 className="text-xs text-gold tracking-[0.3em] uppercase mb-4">{tr.vendorDetail.specialties}</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {all.map((s: string, i: number) => (
+                      <span key={i} className="border border-border rounded-full px-4 py-1.5 text-sm text-muted">{s}</span>
+                    ))}
+                  </div>
+                </section>
+              )
+            })()}
 
             {/* Awards */}
             {vendor.awards?.length > 0 && (
               <section>
                 <h2 className="text-xs text-gold tracking-[0.3em] uppercase mb-4">{tr.vendorDetail.awards}</h2>
                 <div className="flex flex-wrap gap-2">
-                  {vendor.awards.map((a: string, i: number) => (
+                  {(locale === 'en' && vendor.awards_en?.length ? vendor.awards_en : vendor.awards).map((a: string, i: number) => (
                     <span key={i} className="bg-gold/10 border border-gold/25 text-gold rounded-full px-4 py-1.5 text-sm">🏆 {a}</span>
                   ))}
                 </div>

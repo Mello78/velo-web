@@ -1,5 +1,4 @@
 'use client'
-'use client'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import Link from 'next/link'
@@ -485,24 +484,29 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
   const loadConversations = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
-    // Carica tutte le conversazioni raggruppate per coppia
     const { data } = await supabase.from('messages')
-      .select('*, couples(partner1, partner2)')
+      .select('id, user_id, vendor_id, content, image_url, created_at, from_vendor, is_read')
       .eq('vendor_user_id', session.user.id)
       .order('created_at', { ascending: false })
     if (data) {
-      // Raggruppa per user_id (coppia)
       const byCouple: Record<string, any[]> = {}
       data.forEach((m: any) => {
         if (!byCouple[m.user_id]) byCouple[m.user_id] = []
         byCouple[m.user_id].push(m)
       })
-      const convs = Object.entries(byCouple).map(([userId, msgs]) => ({
-        coupleUserId: userId,
+      const userIds = Object.keys(byCouple)
+      let couplesMap: Record<string, { partner1: string; partner2: string }> = {}
+      if (userIds.length > 0) {
+        const { data: couplesData } = await supabase.from('couples')
+          .select('user_id, partner1, partner2').in('user_id', userIds)
+        couplesData?.forEach((c: any) => { couplesMap[c.user_id] = { partner1: c.partner1 || '', partner2: c.partner2 || '' } })
+      }
+      const convs = Object.entries(byCouple).map(([uid, msgs]) => ({
+        coupleUserId: uid,
         lastMessage: msgs[0],
-        partner1: (msgs[0] as any).couples?.partner1 || '',
-        partner2: (msgs[0] as any).couples?.partner2 || '',
-        unread: msgs.filter((m: any) => !m.from_vendor).length,
+        partner1: couplesMap[uid]?.partner1 || '',
+        partner2: couplesMap[uid]?.partner2 || '',
+        unread: msgs.filter((m: any) => !m.from_vendor && !m.is_read).length,
       }))
       setChatConversations(convs)
     }
@@ -512,12 +516,20 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
   const loadChatWithCouple = async (coupleUserId: string) => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
-    const { data } = await supabase.from('messages')
-      .select('*')
+    const { data } = await supabase.from('messages').select('*')
       .eq('vendor_user_id', session.user.id)
-      .eq('user_id', coupleUserId)
-      .order('created_at', { ascending: true })
-    if (data) setChatMessages(data)
+      .eq('user_id', coupleUserId).order('created_at', { ascending: true })
+    if (data) {
+      setChatMessages(data)
+      // Marca i messaggi della coppia come letti
+      const unreadIds = data.filter((m: any) => !m.from_vendor && !m.is_read).map((m: any) => m.id)
+      if (unreadIds.length > 0) {
+        await supabase.from('messages').update({ is_read: true }).in('id', unreadIds)
+        setChatConversations((prev: any[]) => prev.map((c: any) =>
+          c.coupleUserId === coupleUserId ? { ...c, unread: 0 } : c
+        ))
+      }
+    }
     setSelectedConv(coupleUserId)
   }
 
@@ -730,7 +742,9 @@ const statusBadge = vendor.public_vendor_id
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className="text-cream text-sm font-medium">{conv.partner1 && conv.partner2 ? `${conv.partner1} & ${conv.partner2}` : 'Sposi'}</p>
-                            <p className="text-muted text-xs mt-0.5 truncate max-w-xs">{conv.lastMessage?.content}</p>
+                            <p className="text-muted text-xs mt-0.5 truncate max-w-xs">
+                              {conv.lastMessage?.content || (conv.lastMessage?.image_url ? '📷 Immagine' : '')}
+                            </p>
                           </div>
                           <div className="text-right shrink-0">
                             <p className="text-muted/60 text-xs">
@@ -766,7 +780,11 @@ const statusBadge = vendor.public_vendor_id
                           ? 'bg-gold text-bg rounded-br-sm'
                           : 'bg-white/10 text-cream rounded-bl-sm border border-border'
                       }`}>
-                        <p>{m.content}</p>
+                        {m.image_url ? (
+                          <img src={m.image_url} alt="immagine" className="rounded-xl max-w-full" style={{ maxHeight: 200 }} />
+                        ) : (
+                          <p>{m.content}</p>
+                        )}
                         <p className={`text-xs mt-1 opacity-60`}>
                           {new Date(m.created_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
                         </p>
@@ -1010,23 +1028,61 @@ const statusBadge = vendor.public_vendor_id
 
         {/* STATISTICHE */}
         {tab === 'stats' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              {[[d.statsCouples, 'text-gold'], [d.statsConfirmed, 'text-green-400'],
-                [d.statsMessages, 'text-blue-400'], [d.statsViews, 'text-cream'],
-              ].map(([label, cls]) => (
-                <div key={label} className="bg-dark border border-border rounded-2xl p-6 text-center">
-                  <p className={`text-3xl font-light ${cls}`}>—</p>
-                  <p className="text-muted text-sm mt-1">{label}</p>
-                </div>
-              ))}
-            </div>
-            <div className="bg-dark border border-border rounded-2xl p-6">
-              <p className="text-muted text-sm text-center">{d.statsNote}</p>
-            </div>
-          </div>
+          <StatsPanel vendorUserId={vendor.user_id} publicVendorId={vendor.public_vendor_id} d={d} />
         )}
       </div>
     </main>
+  )
+}
+
+// --- STATS PANEL ---
+function StatsPanel({ vendorUserId, publicVendorId, d }: { vendorUserId: string; publicVendorId: string | null; d: any }) {
+  const [stats, setStats] = useState<{ couples: number; messages: number; unread: number; thisWeek: number } | null>(null)
+
+  useEffect(() => {
+    const load = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const [msgsRes, unreadRes] = await Promise.all([
+        supabase.from('messages').select('id, user_id, created_at, from_vendor').eq('vendor_user_id', session.user.id),
+        supabase.from('messages').select('id', { count: 'exact', head: true })
+          .eq('vendor_user_id', session.user.id).eq('from_vendor', false).eq('is_read', false),
+      ])
+      const msgs = msgsRes.data || []
+      const couples = new Set(msgs.map((m: any) => m.user_id)).size
+      const week = new Date(); week.setDate(week.getDate() - 7)
+      const thisWeek = msgs.filter((m: any) => new Date(m.created_at) > week).length
+      setStats({ couples, messages: msgs.length, unread: unreadRes.count ?? 0, thisWeek })
+    }
+    load()
+  }, [])
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        {[
+          { label: 'Coppie in contatto', value: stats?.couples ?? '—', cls: 'text-gold' },
+          { label: 'Messaggi non letti', value: stats?.unread ?? '—', cls: stats?.unread ? 'text-gold' : 'text-cream' },
+          { label: 'Messaggi totali', value: stats?.messages ?? '—', cls: 'text-blue-400' },
+          { label: 'Attività questa settimana', value: stats?.thisWeek ?? '—', cls: 'text-green-400' },
+        ].map(({ label, value, cls }) => (
+          <div key={label} className="bg-dark border border-border rounded-2xl p-6 text-center">
+            <p className={`text-3xl font-light ${cls}`}>{String(value)}</p>
+            <p className="text-muted text-sm mt-1">{label}</p>
+          </div>
+        ))}
+      </div>
+      {publicVendorId ? (
+        <div className="bg-dark border border-border rounded-2xl p-6">
+          <p className="text-gold text-xs tracking-widest uppercase mb-2">✓ In vetrina VELO</p>
+          <p className="text-muted text-sm">Il tuo profilo è visibile a tutte le coppie che pianificano il matrimonio con VELO.</p>
+        </div>
+      ) : (
+        <div className="bg-gold/5 border border-gold/20 rounded-2xl p-6">
+          <p className="text-gold text-xs tracking-widest uppercase mb-2">⏳ Non ancora in vetrina</p>
+          <p className="text-muted text-sm">Completa il profilo e contatta il team VELO per l'attivazione.</p>
+        </div>
+      )}
+    </div>
   )
 }
