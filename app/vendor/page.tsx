@@ -129,7 +129,7 @@ export default function VendorPage() {
           <div className="text-center mb-10">
             <p className="text-gold text-xs tracking-[0.3em] uppercase mb-3">{tr.vendor.title}</p>
             <h1 className="text-3xl font-light text-cream">
-              {isLogin ? 'Accedi alla tua area' : 'Crea il tuo profilo'}
+              {isLogin ? d.loginTitle : d.registerTitle}
             </h1>
           </div>
           <div className="bg-dark border border-border rounded-2xl p-8">
@@ -156,14 +156,14 @@ export default function VendorPage() {
             {/* Toggle login/registrazione — link secondario */}
             <p className="text-center text-muted text-sm mt-5">
               {isLogin ? (
-                <>Nuovo su VELO?{' '}
+                <>{d.newToVelo}{' '}
                   <button onClick={() => { setIsLogin(false); setError(''); setSuccess('') }}
                     className="text-gold hover:opacity-70 transition-opacity underline underline-offset-2">
                     Crea il tuo profilo gratuito →
                   </button>
                 </>
               ) : (
-                <>Hai già un account?{' '}
+                <>{d.alreadyAccount}{' '}
                   <button onClick={() => { setIsLogin(true); setError(''); setSuccess('') }}
                     className="text-gold hover:opacity-70 transition-opacity underline underline-offset-2">
                     Accedi →
@@ -225,9 +225,9 @@ function ProfileSetup({ locale, userId, onComplete }: {
     <main className="min-h-screen bg-bg text-cream">
       <SimpleNav locale={locale} />
       <div className="max-w-lg mx-auto px-6 pt-28 pb-16">
-        <p className="text-gold text-xs tracking-[0.3em] uppercase mb-2">Configurazione profilo</p>
-        <h1 className="text-3xl font-light mb-2">Crea il tuo profilo fornitore</h1>
-        <p className="text-muted text-sm mb-8">Il profilo sarà visibile dopo la revisione del team VELO</p>
+        <p className="text-gold text-xs tracking-[0.3em] uppercase mb-2">{d.label}</p>
+        <h1 className="text-3xl font-light mb-2">{d.setupTitle}</h1>
+        <p className="text-muted text-sm mb-8">{d.setupSubtitle}</p>
         <div className="bg-dark border border-border rounded-2xl p-6 space-y-5">
           <div>
             <label className="text-muted text-xs uppercase tracking-wider block mb-3">Logo</label>
@@ -242,10 +242,10 @@ function ProfileSetup({ locale, userId, onComplete }: {
             </div>
           </div>
           <div>
-            <label className="text-muted text-xs uppercase tracking-wider block mb-2">Nome attività *</label>
+            <label className="text-muted text-xs uppercase tracking-wider block mb-2">{d.nameLabel} *</label>
             <input type="text" value={businessName} onChange={e => setBusinessName(e.target.value)}
               className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
-              placeholder="Es. Studio Fotografico Rossi" />
+              placeholder={d.namePlaceholder} />
           </div>
           <div>
             <label className="text-muted text-xs uppercase tracking-wider block mb-2">Categoria *</label>
@@ -255,10 +255,10 @@ function ProfileSetup({ locale, userId, onComplete }: {
             </select>
           </div>
           <div>
-            <label className="text-muted text-xs uppercase tracking-wider block mb-2">Città *</label>
+            <label className="text-muted text-xs uppercase tracking-wider block mb-2">{d.cityLabel} *</label>
             <input type="text" value={location} onChange={e => setLocation(e.target.value)}
               className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
-              placeholder="Es. Firenze" />
+              placeholder={d.cityPlaceholder} />
           </div>
           <div>
             <label className="text-muted text-xs uppercase tracking-wider block mb-2">Telefono</label>
@@ -618,7 +618,7 @@ const statusBadge = vendor.public_vendor_id
           {(['profile', 'info', 'messages', 'photos', 'social', 'availability', 'stats'] as const).map(t => (
             <button key={t} onClick={() => { setTab(t); setEditing(false) }}
               className={`px-4 py-2 rounded-full text-sm transition-colors ${tab === t ? 'bg-gold text-bg font-semibold' : 'border border-border text-muted hover:text-cream'}`}>
-              {t === 'profile' ? d.tabProfile : t === 'info' ? '✨ Info' : t === 'messages' ? '💬 Messaggi' : t === 'photos' ? '📸 Foto' : t === 'social' ? d.tabSocial : t === 'availability' ? d.tabAvailability : d.tabStats}
+              {t === 'profile' ? d.tabProfile : t === 'info' ? d.tabInfo : t === 'messages' ? d.tabMessages : t === 'photos' ? d.tabPhotos : t === 'social' ? d.tabSocial : t === 'availability' ? d.tabAvailability : d.tabStats}
             </button>
           ))}
         </div>
@@ -627,7 +627,7 @@ const statusBadge = vendor.public_vendor_id
         {tab === 'info' && (
           <div className="bg-dark border border-border rounded-2xl p-6 space-y-8">
             <div className="flex justify-between items-center">
-              <h2 className="text-cream font-medium">✨ Info vetrina</h2>
+              <h2 className="text-cream font-medium">{d.tabInfo} {d.infoTitle}</h2>
               <button onClick={save} disabled={saving}
                 className="text-sm px-4 py-2 rounded-full bg-gold text-bg font-semibold hover:opacity-90 disabled:opacity-50">
                 {saving ? d.saving : savedMsg || d.save}
@@ -636,8 +636,8 @@ const statusBadge = vendor.public_vendor_id
 
             {/* Specialità — max 5 */}
             <div>
-              <p className="text-muted text-xs uppercase tracking-wider mb-1">Punti di forza / Specialità <span className="text-gold">(max 5)</span></p>
-              <p className="text-muted/60 text-xs mb-3">Seleziona fino a 5 che ti rappresentano meglio</p>
+              <p className="text-muted text-xs uppercase tracking-wider mb-1">{d.specialtiesLabel} <span className="text-gold">({d.specialtiesMax})</span></p>
+              <p className="text-muted/60 text-xs mb-3">{d.specialtiesHint}</p>
               <p className="text-muted/60 text-xs mb-3">
                 Lista per: <strong className="text-cream/80">{category || vendor.category}</strong>
               </p>
@@ -657,7 +657,7 @@ const statusBadge = vendor.public_vendor_id
 
               {/* Specialità custom — campi liberi */}
               <div className="mt-4 space-y-2">
-                <p className="text-muted/60 text-xs">✎ Aggiungi le tue specialità (non in lista)</p>
+                <p className="text-muted/60 text-xs">{d.specialtiesCustomLabel}</p>
                 {[0, 1, 2].map(i => (
                   <div key={i} className="grid grid-cols-2 gap-2">
                     <input type="text" value={specialtiesCustom[i] || ''}
@@ -676,20 +676,20 @@ const statusBadge = vendor.public_vendor_id
 
             {/* Anni esperienza */}
             <div>
-              <p className="text-muted text-xs uppercase tracking-wider mb-3">Anni di esperienza</p>
+              <p className="text-muted text-xs uppercase tracking-wider mb-3">{d.yearsLabel}</p>
               <div className="flex items-center gap-4">
                 <button onClick={() => setYearsExp(v => Math.max(0, parseInt(v||'0') - 1).toString())}
                   className="w-9 h-9 rounded-full border border-gold text-gold text-lg hover:bg-gold/10 flex items-center justify-center">â</button>
                 <span className="text-3xl font-light text-cream w-12 text-center">{yearsExp || '0'}</span>
                 <button onClick={() => setYearsExp(v => (parseInt(v||'0') + 1).toString())}
                   className="w-9 h-9 rounded-full border border-gold text-gold text-lg hover:bg-gold/10 flex items-center justify-center">+</button>
-                <span className="text-muted text-sm">anni nel settore wedding</span>
+                <span className="text-muted text-sm">{d.yearsUnit}</span>
               </div>
             </div>
 
             {/* Lingue */}
             <div>
-              <p className="text-muted text-xs uppercase tracking-wider mb-3">Lingue parlate</p>
+              <p className="text-muted text-xs uppercase tracking-wider mb-3">{d.languagesLabel}</p>
               <div className="flex flex-wrap gap-2">
                 {LINGUE.map(lang => {
                   const on = languages.includes(lang)
@@ -706,8 +706,8 @@ const statusBadge = vendor.public_vendor_id
 
             {/* Riconoscimenti */}
             <div>
-              <p className="text-muted text-xs uppercase tracking-wider mb-1">🏆 Riconoscimenti <span className="text-muted/60">(opzionale)</span></p>
-              <p className="text-muted/60 text-xs mb-3">Premi, pubblicazioni su riviste, certificazioni — fino a 3</p>
+              <p className="text-muted text-xs uppercase tracking-wider mb-1">{d.awardsLabel} <span className="text-muted/60">(opzionale)</span></p>
+              <p className="text-muted/60 text-xs mb-3">{d.awardsHint}</p>
               <div className="space-y-2">
                 {[0, 1, 2].map(i => (
                   <div key={i} className="grid grid-cols-2 gap-2">
@@ -727,11 +727,11 @@ const statusBadge = vendor.public_vendor_id
               <div className="pt-4 border-t border-border">
                 <button onClick={translateToEnglish} disabled={translating}
                   className="w-full py-3 rounded-xl border border-gold/40 text-gold text-sm hover:bg-gold/10 transition-colors disabled:opacity-50">
-                  {translating ? '🌐 Traduzione in corso...' : '🌐 Traduci automaticamente in inglese'}
+                  {translating ? d.translating : d.translateBtn}
                 </button>
                 {translateMsg && <p className="text-center text-xs mt-2 text-green-400">{translateMsg}</p>}
                 <p className="text-muted/60 text-xs text-center mt-1">
-                  Descrizione, specialità e riconoscimenti vengono tradotti con AI
+                  {d.translateHint}
                 </p>
               </div>
             )}
@@ -746,7 +746,7 @@ const statusBadge = vendor.public_vendor_id
               // Lista conversazioni
               <div>
                 <div className="p-4 border-b border-border flex items-center justify-between">
-                  <h2 className="text-cream font-medium">💬 Messaggi dalle coppie</h2>
+                  <h2 className="text-cream font-medium">{d.messagesTitle}</h2>
                   <button onClick={loadConversations}
                     className="text-xs text-gold border border-gold/30 rounded-full px-3 py-1 hover:bg-gold/10">
                     Aggiorna
@@ -755,8 +755,8 @@ const statusBadge = vendor.public_vendor_id
                 {chatConversations.length === 0 ? (
                   <div className="p-12 text-center">
                     <p className="text-4xl mb-3">💬</p>
-                    <p className="text-muted">Nessun messaggio ancora</p>
-                    <p className="text-muted/60 text-xs mt-1">Quando una coppia ti scrive, appare qui</p>
+                    <p className="text-muted">{d.messagesEmpty}</p>
+                    <p className="text-muted/60 text-xs mt-1">{d.messagesEmptyDesc}</p>
                   </div>
                 ) : (
                   <div>
@@ -827,7 +827,7 @@ const statusBadge = vendor.public_vendor_id
                   <input type="text" value={newMsg} onChange={e => setNewMsg(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendVendorMessage()}
                     className="flex-1 bg-bg border border-border rounded-xl px-4 py-2.5 text-cream text-sm focus:outline-none focus:border-gold"
-                    placeholder="Scrivi una risposta..." />
+                    placeholder={d.messagesPlaceholder} />
                   <button onClick={sendVendorMessage} disabled={!newMsg.trim() || sendingMsg}
                     className="bg-gold text-bg font-semibold px-5 py-2.5 rounded-xl hover:opacity-90 disabled:opacity-40 text-sm">
                     {sendingMsg ? '...' : '→'}
@@ -863,7 +863,7 @@ const statusBadge = vendor.public_vendor_id
                   </div>
                 </div>
                 <div>
-                  <label className="text-muted text-xs uppercase tracking-wider block mb-2">Nome attività</label>
+                  <label className="text-muted text-xs uppercase tracking-wider block mb-2">{d.nameLabel}</label>
                   <input type="text" value={businessName} onChange={e => setBusinessName(e.target.value)}
                     className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold" />
                 </div>
@@ -875,7 +875,7 @@ const statusBadge = vendor.public_vendor_id
                   </select>
                 </div>
                 <div>
-                  <label className="text-muted text-xs uppercase tracking-wider block mb-2">Città</label>
+                  <label className="text-muted text-xs uppercase tracking-wider block mb-2">{d.cityLabel}</label>
                   <input type="text" value={location} onChange={e => setLocation(e.target.value)}
                     className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold" placeholder="Es. Firenze" />
                 </div>
@@ -966,13 +966,13 @@ const statusBadge = vendor.public_vendor_id
         {tab === 'photos' && (
           <div className="bg-dark border border-border rounded-2xl p-6">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-cream font-medium">📸 Foto del portfolio</h2>
+              <h2 className="text-cream font-medium">{d.photosTitle}</h2>
               <button onClick={savePhotos} disabled={photoSaving}
                 className="text-sm px-4 py-2 rounded-full bg-gold text-bg font-semibold hover:opacity-90 disabled:opacity-50">
                 {photoSaving ? 'Salvataggio...' : photoMsg || 'Salva foto'}
               </button>
             </div>
-            <p className="text-muted text-xs mb-6">Fino a 3 foto per il portfolio. Formato consigliato: 16:9, max 5MB.</p>
+            <p className="text-muted text-xs mb-6">{d.photosHint}</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[0, 1, 2].map(i => (
                 <div key={i} className="space-y-2">
@@ -1092,10 +1092,10 @@ function StatsPanel({ vendorUserId, publicVendorId, d }: { vendorUserId: string;
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         {[
-          { label: 'Coppie in contatto', value: stats?.couples ?? '—', cls: 'text-gold' },
-          { label: 'Messaggi non letti', value: stats?.unread ?? '—', cls: stats?.unread ? 'text-gold' : 'text-cream' },
-          { label: 'Messaggi totali', value: stats?.messages ?? '—', cls: 'text-blue-400' },
-          { label: 'Attività questa settimana', value: stats?.thisWeek ?? '—', cls: 'text-green-400' },
+          { label: d.statsCouples, value: stats?.couples ?? '—', cls: 'text-gold' },
+          { label: d.statsConfirmed, value: stats?.unread ?? '—', cls: stats?.unread ? 'text-gold' : 'text-cream' },
+          { label: d.statsMessages, value: stats?.messages ?? '—', cls: 'text-blue-400' },
+          { label: d.statsViews, value: stats?.thisWeek ?? '—', cls: 'text-green-400' },
         ].map(({ label, value, cls }) => (
           <div key={label} className="bg-dark border border-border rounded-2xl p-6 text-center">
             <p className={`text-3xl font-light ${cls}`}>{String(value)}</p>
