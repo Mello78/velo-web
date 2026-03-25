@@ -13,39 +13,37 @@ export default function AdminPage() {
   const [vendors, setVendors] = useState<any[]>([])
   const [couples, setCouples] = useState<any[]>([])
   const [invites, setInvites] = useState<any[]>([])
+  const [customVendors, setCustomVendors] = useState<any[]>([])
   const [stats, setStats] = useState({ couples:0, vendors:0, messages:0, guests:0, invites:0 })
 
   const login = async () => {
     setLoading(true); setError('')
     const { data, error: err } = await supabase.auth.signInWithPassword({ email, password })
     if (err) { setError(err.message); setLoading(false); return }
-
-    // Controlla nella tabella admin_users invece di hardcodare l'email
     const { data: adminRow, error: adminErr } = await supabase
-      .from('admin_users')
-      .select('id')
-      .eq('user_id', data.user.id)
-      .single()
-
+      .from('admin_users').select('id').eq('user_id', data.user.id).single()
     if (adminErr || !adminRow) {
       await supabase.auth.signOut()
-      setError('Accesso non autorizzato')
-      setLoading(false)
-      return
+      setError('Accesso non autorizzato'); setLoading(false); return
     }
-
     setAuthed(true)
-    const [c, va, m, g, inv] = await Promise.all([
+    const [c, va, m, g, inv, cv] = await Promise.all([
       supabase.from('couples').select('*').order('created_at', { ascending: false }),
       supabase.from('vendor_accounts').select('*').order('created_at', { ascending: false }),
       supabase.from('messages').select('id'),
       supabase.from('guests').select('id'),
       supabase.from('vendor_invites').select('*').order('sent_at', { ascending: false }),
+      supabase.from('custom_vendors').select('*').order('created_at', { ascending: false }),
     ])
     if (c.data) setCouples(c.data)
     if (va.data) setVendors(va.data)
     if (inv.data) setInvites(inv.data)
-    setStats({ couples: c.data?.length||0, vendors: va.data?.length||0, messages: m.data?.length||0, guests: g.data?.length||0, invites: inv.data?.length||0 })
+    if (cv.data) setCustomVendors(cv.data)
+    // Conta inviti: custom_vendors non ancora inviati + vendor_invites
+    const pendingInvites = (cv.data || []).filter((v: any) => !v.invite_sent).length
+    setStats({ couples: c.data?.length||0, vendors: va.data?.length||0,
+      messages: m.data?.length||0, guests: g.data?.length||0,
+      invites: pendingInvites + (inv.data?.length||0) })
     setLoading(false)
   }
 
@@ -55,44 +53,27 @@ export default function AdminPage() {
   }
 
   const activateVendor = async (v: any) => {
-    // Upsert su public_vendors con i dati del vendor_account
     const payload = {
-      name: v.business_name,
-      category: v.category,
-      location: v.location || '',
-      region: v.regione || v.region || '',
-      province: v.province || null,
-      description: v.bio || '',
-      phone: v.phone || null,
-      instagram: v.instagram || null,
-      facebook: v.facebook || null,
-      tiktok: v.tiktok || null,
-      website: v.website || null,
-      whatsapp: v.whatsapp || null,
-      price_from: v.price_from || null,
-      price_to: v.price_to || null,
-      logo_url: v.logo_url || null,
-      photo1_url: v.photo1_url || null,
-      photo2_url: v.photo2_url || null,
-      photo3_url: v.photo3_url || null,
-      specialties: v.specialties || [],
-      languages: v.languages || [],
-      years_experience: v.years_experience || 0,
-      awards: v.awards || [],
-      lat: v.lat || null,
-      lng: v.lng || null,
-      rating: 5.0,
-      review_count: 0,
-      verified: true,
-      featured: false,
+      name: v.business_name, category: v.category, location: v.location || '',
+      region: v.regione || v.region || '', province: v.province || null,
+      description: v.bio || '', phone: v.phone || null, instagram: v.instagram || null,
+      facebook: v.facebook || null, tiktok: v.tiktok || null,
+      website: v.website || null, whatsapp: v.whatsapp || null,
+      price_from: v.price_from || null, price_to: v.price_to || null,
+      logo_url: v.logo_url || null, photo1_url: v.photo1_url || null,
+      photo2_url: v.photo2_url || null, photo3_url: v.photo3_url || null,
+      specialties: v.specialties || [], languages: v.languages || [],
+      years_experience: v.years_experience || 0, awards: v.awards || [],
+      lat: v.lat || null, lng: v.lng || null,
+      rating: 5.0, review_count: 0, verified: true, featured: false,
     }
     if (v.public_vendor_id) {
       const { error: updErr } = await supabase.from('public_vendors').update(payload).eq('id', v.public_vendor_id)
-      if (updErr) { alert('Errore aggiornamento: ' + updErr.message); return; }
+      if (updErr) { alert('Errore aggiornamento: ' + updErr.message); return }
       await supabase.from('vendor_accounts').update({ verified: true }).eq('id', v.id)
     } else {
       const { data: pv, error: insErr } = await supabase.from('public_vendors').insert(payload).select().single()
-      if (insErr) { alert('Errore inserimento: ' + insErr.message); return; }
+      if (insErr) { alert('Errore inserimento: ' + insErr.message); return }
       if (pv) {
         await supabase.from('vendor_accounts').update({ verified: true, public_vendor_id: pv.id }).eq('id', v.id)
         setVendors(prev => prev.map(x => x.id === v.id ? { ...x, verified: true, public_vendor_id: pv.id } : x))
@@ -102,9 +83,35 @@ export default function AdminPage() {
     setVendors(prev => prev.map(x => x.id === v.id ? { ...x, verified: true } : x))
   }
 
+
+  // Rimuovi dalla vetrina (mantiene vendor_account, azzera public_vendor_id)
+  const removeFromVetrina = async (v: any) => {
+    if (!confirm(`Rimuovere ${v.business_name} dalla vetrina? Il profilo rimarrà registrato.`)) return
+    const { error: delErr } = await supabase.from('public_vendors').delete().eq('id', v.public_vendor_id)
+    if (delErr) { alert('Errore: ' + delErr.message); return }
+    await supabase.from('vendor_accounts').update({ public_vendor_id: null, verified: false }).eq('id', v.id)
+    setVendors(prev => prev.map(x => x.id === v.id ? { ...x, public_vendor_id: null, verified: false } : x))
+  }
+
+  // Elimina fornitore completamente (vendor_account + public_vendors)
+  const deleteVendor = async (v: any) => {
+    if (!confirm(`ELIMINARE DEFINITIVAMENTE ${v.business_name}?\nQuesta azione non è reversibile.`)) return
+    if (v.public_vendor_id) {
+      await supabase.from('public_vendors').delete().eq('id', v.public_vendor_id)
+    }
+    const { error: delErr } = await supabase.from('vendor_accounts').delete().eq('id', v.id)
+    if (delErr) { alert('Errore eliminazione: ' + delErr.message); return }
+    setVendors(prev => prev.filter(x => x.id !== v.id))
+  }
+
   const markInviteRegistered = async (id: string) => {
     await supabase.from('vendor_invites').update({ registered: true }).eq('id', id)
     setInvites(prev => prev.map(i => i.id === id ? { ...i, registered: true } : i))
+  }
+
+  const markCustomInviteSent = async (id: string) => {
+    await supabase.from('custom_vendors').update({ invite_sent: true }).eq('id', id)
+    setCustomVendors(prev => prev.map(v => v.id === id ? { ...v, invite_sent: true } : v))
   }
 
   if (!authed) return (
@@ -116,14 +123,14 @@ export default function AdminPage() {
         </div>
         <div className="bg-dark border border-border rounded-2xl p-6 space-y-4">
           <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-            className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold transition-colors"
+            className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
             placeholder="Email admin" onKeyDown={e => e.key === 'Enter' && login()} />
           <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-            className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold transition-colors"
+            className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
             placeholder="Password" onKeyDown={e => e.key === 'Enter' && login()} />
-          {error && <p className="text-red text-sm">{error}</p>}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
           <button onClick={login} disabled={loading}
-            className="w-full bg-gold text-bg font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50">
+            className="w-full bg-gold text-bg font-semibold py-3 rounded-xl hover:opacity-90 disabled:opacity-50">
             {loading ? 'Attendere...' : 'Accedi'}
           </button>
         </div>
@@ -140,17 +147,20 @@ export default function AdminPage() {
             <img src="/favicon.png" alt="" className="h-7 w-auto" />
             <span className="text-gold text-xl tracking-[0.3em] font-light">VELO</span>
           </Link>
-          <button onClick={() => { supabase.auth.signOut(); setAuthed(false) }} className="text-red text-sm hover:opacity-70 transition-opacity">Esci</button>
+          <button onClick={() => { supabase.auth.signOut(); setAuthed(false) }}
+            className="text-red-400 text-sm hover:opacity-70">Esci</button>
         </div>
       </nav>
       <div className="max-w-6xl mx-auto px-6 py-10">
+
+        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
           {[
             { label: 'Coppie', value: stats.couples, color: 'text-gold' },
-            { label: 'Fornitori', value: stats.vendors, color: 'text-green' },
-            { label: 'Messaggi', value: stats.messages, color: 'text-blue' },
+            { label: 'Fornitori', value: stats.vendors, color: 'text-green-400' },
+            { label: 'Messaggi', value: stats.messages, color: 'text-blue-400' },
             { label: 'Ospiti', value: stats.guests, color: 'text-cream' },
-            { label: 'Inviti vendor', value: stats.invites, color: 'text-gold' },
+            { label: 'Inviti pendenti', value: stats.invites, color: 'text-gold' },
           ].map(s => (
             <div key={s.label} className="bg-dark border border-border rounded-2xl p-5 text-center">
               <p className={`text-3xl font-light ${s.color}`}>{s.value}</p>
@@ -158,6 +168,8 @@ export default function AdminPage() {
             </div>
           ))}
         </div>
+
+        {/* Tab nav */}
         <div className="flex gap-2 mb-8 flex-wrap">
           {(['stats','vendors','couples','invites'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
@@ -167,9 +179,10 @@ export default function AdminPage() {
           ))}
         </div>
 
+
+        {/* TAB FORNITORI */}
         {tab === 'vendors' && (
           <div className="space-y-3">
-            {/* Pending prima */}
             {[...vendors].sort((a, b) => (a.public_vendor_id ? 1 : -1) - (b.public_vendor_id ? 1 : -1)).map(v => (
               <div key={v.id} className={`bg-dark border rounded-xl p-4 ${!v.public_vendor_id ? 'border-gold/30' : 'border-border'}`}>
                 <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -183,7 +196,7 @@ export default function AdminPage() {
                     <p className="text-muted text-xs mt-1">{new Date(v.created_at).toLocaleDateString('it-IT')} · {v.plan || 'free'}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
-                    <span className={`text-xs px-3 py-1 rounded-full border ${v.public_vendor_id ? 'border-green text-green' : 'border-border text-muted'}`}>
+                    <span className={`text-xs px-3 py-1 rounded-full border ${v.public_vendor_id ? 'border-green-400 text-green-400' : 'border-border text-muted'}`}>
                       {v.public_vendor_id ? '✓ In vetrina' : 'Non in vetrina'}
                     </span>
                     {!v.public_vendor_id && (
@@ -193,14 +206,24 @@ export default function AdminPage() {
                       </button>
                     )}
                     {v.public_vendor_id && (
-                      <button onClick={() => activateVendor(v)}
-                        className="text-xs px-3 py-1 rounded-full border border-border text-muted hover:border-gold hover:text-gold transition-colors">
-                        🔄 Aggiorna vetrina
-                      </button>
+                      <>
+                        <button onClick={() => activateVendor(v)}
+                          className="text-xs px-3 py-1 rounded-full border border-border text-muted hover:border-gold hover:text-gold transition-colors">
+                          🔄 Aggiorna
+                        </button>
+                        <button onClick={() => removeFromVetrina(v)}
+                          className="text-xs px-3 py-1 rounded-full border border-orange-400/40 text-orange-400 hover:bg-orange-400/10 transition-colors">
+                          📤 Rimuovi vetrina
+                        </button>
+                      </>
                     )}
                     <button onClick={() => verifyVendor(v.id, v.verified)}
-                      className={`text-xs px-3 py-1 rounded-full border transition-colors ${v.verified ? 'border-green text-green' : 'border-border text-muted hover:border-green hover:text-green'}`}>
+                      className={`text-xs px-3 py-1 rounded-full border transition-colors ${v.verified ? 'border-green-400 text-green-400' : 'border-border text-muted hover:border-green-400 hover:text-green-400'}`}>
                       {v.verified ? '✓ Verificato' : 'Verifica'}
+                    </button>
+                    <button onClick={() => deleteVendor(v)}
+                      className="text-xs px-3 py-1 rounded-full border border-red-400/40 text-red-400 hover:bg-red-400/10 transition-colors">
+                      🗑️ Elimina
                     </button>
                   </div>
                 </div>
@@ -210,6 +233,7 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* TAB COPPIE */}
         {tab === 'couples' && (
           <div className="space-y-3">
             {couples.map(c => (
@@ -219,7 +243,7 @@ export default function AdminPage() {
                     <p className="text-cream font-medium">{c.partner1} & {c.partner2}</p>
                     <p className="text-muted text-sm">{c.nationality === 'foreign' ? '🌍 Destination' : '🇮🇹 Italiana'} · {c.wedding_region || '—'}</p>
                     {c.wedding_date && <p className="text-muted text-xs mt-1">💍 {new Date(c.wedding_date).toLocaleDateString('it-IT', { day:'numeric', month:'long', year:'numeric' })}</p>}
-                    {c.budget && <p className="text-gold text-xs mt-1">💶 Budget: €{parseInt(c.budget).toLocaleString('it-IT')}</p>}
+                    {c.budget && <p className="text-gold text-xs mt-1">💶 €{parseInt(c.budget).toLocaleString('it-IT')}</p>}
                   </div>
                   <p className="text-muted text-xs shrink-0">{new Date(c.created_at).toLocaleDateString('it-IT')}</p>
                 </div>
@@ -229,46 +253,119 @@ export default function AdminPage() {
           </div>
         )}
 
+
+        {/* TAB INVITI */}
         {tab === 'invites' && (
-          <div className="space-y-3">
-            <p className="text-muted text-sm mb-4">Fornitori segnalati dalle coppie — da contattare per invitarli su VELO</p>
-            {invites.map(i => (
-              <div key={i.id} className="bg-dark border border-border rounded-xl p-4 flex items-start justify-between gap-4 flex-wrap">
-                <div>
-                  <p className="text-cream font-medium">{i.vendor_name}</p>
-                  {i.vendor_email && (
-                    <a href={`mailto:${i.vendor_email}?subject=Unisciti a VELO — la piattaforma per i matrimoni in Italia&body=Ciao,%0A%0ASei stato segnalato su VELO da una coppia che ha pianificato il proprio matrimonio in Italia.%0A%0AVELO è la piattaforma italiana per la pianificazione di matrimoni.%0ARegistrati gratuitamente: https://velowedding.it/vendor%0A%0ATeam VELO`}
-                      className="text-blue-400 text-sm hover:opacity-70 transition-opacity">
-                      ✉️ {i.vendor_email}
-                    </a>
-                  )}
-                  {i.vendor_phone && (
-                    <div className="flex items-center gap-3 mt-1 flex-wrap">
-                      <a href={`sms:${i.vendor_phone}&body=Ciao! Sei stato segnalato su VELO da una coppia. Registrati gratis come fornitore: https://velowedding.it/vendor`}
-                        className="text-green-400 text-xs hover:opacity-70 transition-opacity border border-green-400/30 rounded-full px-3 py-1">
-                        💬 SMS
-                      </a>
-                      <a href={`https://wa.me/${i.vendor_phone.replace(/[^0-9]/g, '')}?text=Ciao! Sei stato segnalato su VELO da una coppia che pianifica il matrimonio in Italia. Registrati gratis: https://velowedding.it/vendor`}
-                        target="_blank" rel="noopener noreferrer"
-                        className="text-green-400 text-xs hover:opacity-70 transition-opacity border border-green-400/30 rounded-full px-3 py-1">
-                        📱 WhatsApp
-                      </a>
-                      <span className="text-muted text-xs">{i.vendor_phone}</span>
+          <div className="space-y-6">
+
+            {/* Sezione 1: custom_vendors non ancora invitati (segnalati dalle coppie) */}
+            {customVendors.filter(v => !v.invite_sent).length > 0 && (
+              <div>
+                <h3 className="text-cream font-medium mb-3">
+                  🔔 Da contattare ({customVendors.filter(v => !v.invite_sent).length})
+                </h3>
+                <p className="text-muted text-xs mb-4">Fornitori segnalati dalle coppie — invito non ancora inviato</p>
+                <div className="space-y-3">
+                  {customVendors.filter(v => !v.invite_sent).map(cv => (
+                    <div key={cv.id} className="bg-dark border border-gold/30 rounded-xl p-4 flex items-start justify-between gap-4 flex-wrap">
+                      <div>
+                        <p className="text-cream font-medium">{cv.name}</p>
+                        {cv.category && <p className="text-muted text-xs">{cv.category}</p>}
+                        {cv.email && (
+                          <a href={`mailto:${cv.email}?subject=Unisciti a VELO — la piattaforma per i matrimoni in Italia&body=Ciao,%0A%0ASei stato segnalato su VELO da una coppia.%0ARegistrati gratuitamente: https://velowedding.it/vendor%0A%0ATeam VELO`}
+                            className="text-blue-400 text-sm hover:opacity-70 block mt-1">✉️ {cv.email}</a>
+                        )}
+                        {cv.phone && (
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <a href={`https://wa.me/${cv.phone.replace(/[^0-9]/g,'')}?text=Ciao! Sei stato segnalato su VELO. Registrati gratis: https://velowedding.it/vendor`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="text-green-400 text-xs border border-green-400/30 rounded-full px-3 py-1 hover:opacity-70">
+                              📱 WhatsApp
+                            </a>
+                            <a href={`sms:${cv.phone}&body=Ciao! Sei stato segnalato su VELO. Registrati gratis: https://velowedding.it/vendor`}
+                              className="text-green-400 text-xs border border-green-400/30 rounded-full px-3 py-1 hover:opacity-70">
+                              💬 SMS
+                            </a>
+                            <span className="text-muted text-xs">{cv.phone}</span>
+                          </div>
+                        )}
+                        {cv.instagram && <p className="text-muted text-xs mt-1">📷 {cv.instagram}</p>}
+                        <p className="text-muted text-xs mt-1">{new Date(cv.created_at).toLocaleDateString('it-IT')}</p>
+                      </div>
+                      <button onClick={() => markCustomInviteSent(cv.id)}
+                        className="text-xs px-3 py-1 rounded-full border border-gold/40 text-gold hover:bg-gold/10 shrink-0">
+                        ✓ Segna inviato
+                      </button>
                     </div>
-                  )}
-                  <p className="text-muted text-xs mt-1">Segnalato da: {i.couple_names}</p>
-                  <p className="text-muted text-xs">{new Date(i.sent_at).toLocaleDateString('it-IT')}</p>
+                  ))}
                 </div>
-                <button onClick={() => markInviteRegistered(i.id)}
-                  className={`text-xs px-3 py-1 rounded-full border shrink-0 transition-colors ${i.registered ? 'border-green text-green' : 'border-border text-muted hover:border-gold hover:text-gold'}`}>
-                  {i.registered ? '✓ Registrato' : 'Segna registrato'}
-                </button>
               </div>
-            ))}
-            {invites.length === 0 && <p className="text-muted text-center py-12">Nessun invito ancora</p>}
+            )}
+
+            {/* Sezione 2: vendor_invites (email automatiche già inviate) */}
+            {invites.length > 0 && (
+              <div>
+                <h3 className="text-cream font-medium mb-3">📬 Inviti inviati ({invites.length})</h3>
+                <p className="text-muted text-xs mb-4">Email automatiche già inviate tramite VELO</p>
+                <div className="space-y-3">
+                  {invites.map(i => (
+                    <div key={i.id} className="bg-dark border border-border rounded-xl p-4 flex items-start justify-between gap-4 flex-wrap">
+                      <div>
+                        <p className="text-cream font-medium">{i.vendor_name}</p>
+                        {i.vendor_email && (
+                          <a href={`mailto:${i.vendor_email}`} className="text-blue-400 text-sm hover:opacity-70">
+                            ✉️ {i.vendor_email}
+                          </a>
+                        )}
+                        {i.vendor_phone && (
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <a href={`https://wa.me/${i.vendor_phone.replace(/[^0-9]/g,'')}?text=Ciao! Follow-up da VELO — hai visto il nostro invito? Registrati gratis: https://velowedding.it/vendor`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="text-green-400 text-xs border border-green-400/30 rounded-full px-3 py-1 hover:opacity-70">
+                              📱 Follow-up WA
+                            </a>
+                            <span className="text-muted text-xs">{i.vendor_phone}</span>
+                          </div>
+                        )}
+                        <p className="text-muted text-xs mt-1">Da: {i.couple_names}</p>
+                        <p className="text-muted text-xs">{new Date(i.sent_at).toLocaleDateString('it-IT')}</p>
+                      </div>
+                      <button onClick={() => markInviteRegistered(i.id)}
+                        className={`text-xs px-3 py-1 rounded-full border shrink-0 transition-colors ${i.registered ? 'border-green-400 text-green-400' : 'border-border text-muted hover:border-gold hover:text-gold'}`}>
+                        {i.registered ? '✓ Registrato' : 'Segna registrato'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sezione 3: custom_vendors già invitati */}
+            {customVendors.filter(v => v.invite_sent).length > 0 && (
+              <div>
+                <h3 className="text-muted font-medium mb-3 text-sm">✓ Già contattati manualmente ({customVendors.filter(v => v.invite_sent).length})</h3>
+                <div className="space-y-2">
+                  {customVendors.filter(v => v.invite_sent).map(cv => (
+                    <div key={cv.id} className="bg-dark/50 border border-border/50 rounded-xl p-3 flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-muted text-sm">{cv.name} {cv.category ? `· ${cv.category}` : ''}</p>
+                        {cv.email && <p className="text-muted/60 text-xs">{cv.email}</p>}
+                      </div>
+                      <span className="text-muted/60 text-xs shrink-0">Contattato</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {customVendors.length === 0 && invites.length === 0 && (
+              <p className="text-muted text-center py-12">Nessun invito ancora</p>
+            )}
           </div>
         )}
 
+
+        {/* TAB STATS */}
         {tab === 'stats' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-dark border border-border rounded-2xl p-6">
@@ -282,14 +379,23 @@ export default function AdminPage() {
             </div>
             <div className="bg-dark border border-border rounded-2xl p-6">
               <h2 className="text-cream font-medium mb-6">Panoramica</h2>
-              <div className="flex justify-between py-2 border-b border-border"><span className="text-muted text-sm">🇮🇹 Coppie italiane</span><span className="text-cream text-sm">{couples.filter(c => c.nationality==='italian').length}</span></div>
-              <div className="flex justify-between py-2 border-b border-border"><span className="text-muted text-sm">🌍 Destination wedding</span><span className="text-cream text-sm">{couples.filter(c => c.nationality==='foreign').length}</span></div>
-              <div className="flex justify-between py-2 border-b border-border"><span className="text-muted text-sm">✓ Fornitori verificati</span><span className="text-green text-sm">{vendors.filter(v => v.verified).length}</span></div>
-              <div className="flex justify-between py-2 border-b border-border"><span className="text-muted text-sm">📬 Vendor da contattare</span><span className="text-gold text-sm">{invites.filter(i => !i.registered).length}</span></div>
-              <div className="flex justify-between py-2"><span className="text-muted text-sm">✓ In vetrina</span><span className="text-cream text-sm">{vendors.filter(v => v.public_vendor_id).length}</span></div>
+              {[
+                ['🇮🇹 Coppie italiane', couples.filter(c => c.nationality==='italian').length, 'text-cream'],
+                ['🌍 Destination wedding', couples.filter(c => c.nationality==='foreign').length, 'text-cream'],
+                ['✓ Fornitori in vetrina', vendors.filter(v => v.public_vendor_id).length, 'text-green-400'],
+                ['✓ Fornitori verificati', vendors.filter(v => v.verified).length, 'text-green-400'],
+                ['📬 Da contattare', customVendors.filter(v => !v.invite_sent).length, 'text-gold'],
+                ['📬 Inviti email inviati', invites.length, 'text-muted'],
+              ].map(([label, value, cls]) => (
+                <div key={label as string} className="flex justify-between py-2 border-b border-border last:border-0">
+                  <span className="text-muted text-sm">{label}</span>
+                  <span className={`text-sm ${cls}`}>{value}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
+
       </div>
     </main>
   )
