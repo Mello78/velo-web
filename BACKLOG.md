@@ -1,9 +1,10 @@
-# VELO — Backlog appunti Mello (22 marzo 2026)
+# VELO — Backlog aggiornato (25 marzo 2026)
 
 ---
 
-## ✅ COMPLETATI in sessione 22 marzo 2026
+## ✅ COMPLETATI (tutte le sessioni)
 
+### Sessione 22 marzo 2026
 - [x] Build Vercel: fix tutti gli import @/ → percorsi relativi
 - [x] Vendor portal web: registrazione, logo, foto, tutti i campi editabili
 - [x] Admin: pulsante "Attiva in vetrina" + "Aggiorna vetrina" + email cliccabile inviti
@@ -20,118 +21,74 @@
 - [x] DB: colonna deposit_type aggiunta a vendor_reminders
 - [x] Google OAuth: fix parsing token dal fragment + redirect dopo login
 
----
-
-
-
-- [ ] Da web non si possono aggiungere foto al profilo fornitore
-- [ ] Nessun campo per il logo nella registrazione fornitore
-- [ ] Una volta compilato il profilo, il fornitore NON appare nella lista fornitori visibili
-- [ ] Nessun modo per approvare/attivare un fornitore dall'admin
-- [ ] Ci sono campi nel frontend fornitori che non si possono compilare → tutto ciò che è visibile deve essere editabile
-- [ ] Il fornitore deve potersi iscrivere anche da web (non solo da app)
-- [ ] Il fornitore deve poter fare tutto sia da app che da web (parità funzionale)
-- [ ] Non funziona sull'app la filtrazione fornitori in base alla città cercata (coppia italiana)
-- [ ] Una volta scelto un fornitore e aggiunto alla lista, non c'è modo di eliminarlo
-- [ ] Fornitore proposto per invito: non visibile nell'admin per inviare la mail
-- [ ] Invito fornitore: attivare anche via cellulare (SMS o WhatsApp)
-- [ ] Non funziona il login con Apple
-- [ ] Non funziona il login con Google
-
----
-
-## 🟡 IMPORTANTE — Geolocalizzazione e ricerca
-
-- [ ] Rimuovere le "zone VELO" come sistema primario → passare a province e regioni standard
-- [ ] Le zone restano SOLO come suggerimento per gli stranieri (location belle)
-- [ ] Coppie italiane: inseriscono il comune → tutto geolocalizzato su province/regioni
-- [ ] Stranieri: possono scegliere location suggerite OPPURE qualsiasi comune → geolocalizzato
-- [ ] Fornitori: indicano il comune dove sono + le province/regioni dove operano
-- [ ] Ricerca custom nel campo: se l'utente cerca un comune, disabilita automaticamente il filtro zona precedente (es. ho selezionato "Lago di Como" poi cerco "Cuneo" → "Lago di Como" viene rimosso)
-- [ ] Location: devono indicare numero massimo di ospiti → per ricerca intelligente
+### Sessione 25 marzo 2026
+- [x] Bug vetrina fornitori: specialità custom non visibili → fix sincronizzazione vendor_accounts → public_vendors
+- [x] Bug chat fornitori ↔ sposi: join couples senza FK rimosso, query separata, RLS corretta
+- [x] Chat: immagini (upload su bucket chat-images), traduzione messaggi on-demand (velo-translate-message)
+- [x] Chat: badge messaggi non letti (tab Fornitori app + vendor home), mark-as-read automatico
+- [x] Bug login fornitore app: race condition token refresh → checkingRef guard + cache AsyncStorage
+- [x] App vendor/availability: bug pulsante − non salvava → fix salvataggio diretto su click
+- [x] App vendor/index: rimossa sezione "Messaggi recenti" ridondante
+- [x] Realtime messaggi abilitato su Supabase (supabase_realtime publication)
+- [x] Dashboard web fornitori: tab Messaggi, Info, Foto, Stats, disponibilità — parità funzionale con app
+- [x] Web vendor chat: immagini in upload e visualizzazione
+- [x] Web: fix cache no-store su Supabase client (specialità custom visibili in tempo reale)
+- [x] Web: specialties_custom + bio_en/description_en + awards_en nella pagina dettaglio fornitore
+- [x] Geolocalizzazione: verificato — province/regioni standard come sistema primario, zone VELO solo suggerimento stranieri ✓ nessuna modifica necessaria
+- [x] Traduzioni IT/EN sito web: completate per tutta la dashboard fornitore (35 nuove chiavi)
+- [x] Edge function velo-translate-message: deployata e attiva
+- [x] Resend email: velo-send-emails già costruita (auguri + review request) — cron job giornaliero 09:00 UTC attivato
+- [x] Invito fornitore: send-vendor-invite aggiornata con Resend (email branded); admin ha link mailto + SMS + WhatsApp ✓
+- [x] Login Google/Apple: confermato — funziona solo in build pubblicata, non in Expo Go locale (by design)
 
 ---
 
-## 🟡 IMPORTANTE — Traduzione automatica vetrina fornitore
+## 🔴 DA FARE — Alta priorità
 
-- [ ] Quello che il fornitore scrive in italiano nella sua vetrina → tradotto automaticamente in inglese (AI)
-- [ ] In alternativa: aggiungere campi duplicati per la versione inglese
-
----
-
-## 🟡 IMPORTANTE — Budget e preventivi
-
-- [ ] Come gestire il budget dei fornitori già in lista (vendor)? Valutare se lasciare manuale
-- [ ] Implementare analisi AI del preventivo esterno (upload PDF → VELO AI lo analizza)
-- [ ] VELO AI suggerisce → migliorare i messaggi oppure disabilitare temporaneamente
+- [ ] **RESEND_API_KEY secret da aggiungere** su Supabase Dashboard → Edge Functions → Secrets
+  - Nome: `RESEND_API_KEY`
+  - Serve per: velo-send-emails (auguri + review) e send-vendor-invite
+  - Setup Resend: resend.com → API Keys → crea chiave → verifica dominio velowedding.it
 
 ---
 
-## 🟡 IMPORTANTE — Conferma fornitore con controllo categoria
+## 🟡 IN ATTESA (decisioni esterne)
 
-- [ ] Se confermo un fotografo, il sistema deve controllare se ne ho già confermato un altro della stessa categoria e chiedere ulteriore conferma
-- [ ] Categorie da definire: ricevimento, partecipazioni, bomboniere, foto, musica, auto, animazione, fiori, video, torte, trucco, parrucco, abiti
-
----
-
-## 🟡 IMPORTANTE — Varie app
-
-- [ ] Inserimento ospiti: aggiungere select per tipo (famiglia, parenti, amici, colleghi) per velocizzare
-- [ ] Date bloccate: formato data italiano (gg/mm/aaaa)
-- [ ] Promemoria conferma fornitore: campo libero OPPURE due campi per l'acconto (cifra fissa o percentuale sul preventivo)
-- [ ] Road map: tradurre i vari punti sull'app
+- [ ] **Partita IVA**: selezione codice ATECO pendente — aprire quando pronto
+- [ ] **Trademark EUIPO**: attendere avanzamento registrazione nazionale UIBM prima di procedere a livello europeo
 
 ---
 
-## 🟢 SEO / Naming
+## 🟡 IMPORTANTE — Da fare
 
-- [ ] Valutare cambio nome/tagline: "wedding planner per l'Italia" → qualcosa senza "wedding planner" (meglio per SEO?)
-- [ ] Gestire meglio la parte geografica per il SEO (province, regioni, comuni come keyword)
-
----
-
-*Aggiornato: 22 marzo 2026*
+- [ ] **Login Apple**: non funziona (da verificare in build pubblicata — potrebbe essere by design come Google)
+- [ ] **Analisi AI preventivo esterno**: upload PDF → VELO AI analizza e suggerisce (struttura base già presente con QuoteAnalyzer)
+- [ ] **SEO**: gestire province/regioni/comuni come keyword; valutare tagline senza "wedding planner"
+- [ ] **Notifiche push**: nessun sistema di notifica push implementato — le coppie non ricevono notifica quando arriva un messaggio dal fornitore (solo badge all'apertura dell'app)
 
 ---
 
-## 🔧 MIGRATION SQL necessaria (da eseguire su Supabase)
+## 🟢 COMPLETATO MA DA MONITORARE
 
-Aggiungere colonne foto al vendor_accounts (serve per il nuovo flusso upload foto dal web):
-
-```sql
-ALTER TABLE vendor_accounts
-  ADD COLUMN IF NOT EXISTS photo1_url TEXT,
-  ADD COLUMN IF NOT EXISTS photo2_url TEXT,
-  ADD COLUMN IF NOT EXISTS photo3_url TEXT;
-```
-
-Eseguirla da: Supabase Dashboard → SQL Editor
+- [ ] **Geolocalizzazione**: sistema province/regioni verificato ✓ — monitorare feedback utenti
+- [ ] **Zone VELO**: usate solo come suggerimento per stranieri ✓ — non rimuovere
 
 ---
 
-*Aggiornato: 22 marzo 2026 — sessione autonoma*
+## 📧 EMAIL — Setup Resend (10 minuti)
+
+**Stato**: edge functions pronte, cron job attivo. Manca solo la API key.
+
+1. Crea account su resend.com (gratis fino a 3.000 email/mese)
+2. API Keys → crea chiave → copia
+3. Supabase Dashboard → Edge Functions → Secrets → aggiungi `RESEND_API_KEY`
+4. Verifica dominio velowedding.it in Resend (record TXT nel DNS)
+
+**Email attive** (si attivano appena si aggiunge la key):
+- Auguri matrimonio il giorno delle nozze
+- Richiesta recensione +7 giorni dopo
+- Invito fornitore quando una coppia lo segnala
 
 ---
 
-## 📧 EMAIL — Setup Resend (10 minuti quando sei pronto)
-
-Resend è un servizio email gratuito fino a 3.000 email/mese.
-Sito: https://resend.com
-
-### Setup:
-1. Crea account su resend.com (gratis)
-2. Vai su "API Keys" → crea una chiave → copiala
-3. Supabase Dashboard → Edge Functions → send-vendor-invite → Secrets
-4. Aggiungi: RESEND_API_KEY = <la tua chiave>
-5. Verifica il dominio velowedding.it in Resend (DNS record TXT)
-
-### Email da implementare:
-- **Auguri matrimonio** (giorno del matrimonio) → "Auguri da VELO 💛"
-- **Richiesta review** (+7 giorni) → link diretto all'app per recensire i fornitori  
-- **Invito vendor** → già strutturata, basta aggiungere Resend
-
-### Già fatto senza email:
-- Modal auguri nell'app (appare il giorno del matrimonio)
-- Schermata review nell'app (appare +7 giorni dopo)
-- Tabella reviews nel DB con trigger aggiornamento rating automatico
-
+*Aggiornato: 25 marzo 2026*
