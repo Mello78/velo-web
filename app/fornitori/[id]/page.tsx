@@ -11,6 +11,27 @@ async function getVendor(id: string) {
   return data
 }
 
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const vendor = await getVendor(params.id)
+  if (!vendor) return {}
+  const categoryClean = vendor.category.replace(/[^\w\s]/g, '').trim()
+  const title = `${vendor.name} — ${categoryClean} a ${vendor.location}`
+  const description = vendor.description
+    ? vendor.description.slice(0, 155)
+    : `${vendor.name}: ${categoryClean} per matrimoni a ${vendor.location}, ${vendor.region}. Scopri il profilo su VELO Wedding.`
+  return {
+    title,
+    description,
+    alternates: { canonical: `/fornitori/${params.id}` },
+    openGraph: {
+      title,
+      description,
+      url: `https://velowedding.it/fornitori/${params.id}`,
+      images: vendor.photo1_url ? [{ url: vendor.photo1_url }] : [{ url: '/logo_velo.png' }],
+    },
+  }
+}
+
 export default async function VendorDetailPage({
   params,
 }: {
@@ -29,8 +50,36 @@ export default async function VendorDetailPage({
     vendor.website && { icon: '🌐', label: 'Website', url: vendor.website.startsWith('http') ? vendor.website : `https://${vendor.website}`, handle: vendor.website },
   ].filter(Boolean)
 
+  // JSON-LD structured data per Google rich snippets
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: vendor.name,
+    description: vendor.description ?? undefined,
+    image: vendor.photo1_url ?? undefined,
+    url: `https://velowedding.it/fornitori/${vendor.id}`,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: vendor.location,
+      addressCountry: 'IT',
+    },
+    ...(vendor.rating ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: vendor.rating,
+        reviewCount: vendor.review_count || 1,
+        bestRating: 5,
+      },
+    } : {}),
+    ...(vendor.instagram ? { sameAs: [`https://instagram.com/${vendor.instagram.replace('@', '')}`] } : {}),
+  }
+
   return (
     <main className="min-h-screen bg-bg text-cream">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <SimpleNav
         locale={locale}
         backHref="/fornitori"

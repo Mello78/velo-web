@@ -7,13 +7,12 @@ import SimpleNav from '../../components/SimpleNav'
 
 const CATEGORIES_IT = ['Tutti', '📷 Fotografia', '🌸 Floral Design', '🍽️ Catering', '🎵 Musica', '🏛️ Location', '💌 Partecipazioni', '🎂 Torta']
 const CATEGORIES_EN = ['All', '📷 Photography', '🌸 Floral Design', '🍽️ Catering', '🎵 Music', '🏛️ Venue', '💌 Stationery', '🎂 Cake']
+// VELO Zones — corrispondono a public_vendors.region e work_regions nel DB
 const REGIONS = [
   'Tutte / All',
-  'Piemonte', 'Valle d\'Aosta', 'Liguria', 'Lombardia',
-  'Trentino-Alto Adige', 'Veneto', 'Friuli-Venezia Giulia',
-  'Emilia-Romagna', 'Toscana', 'Marche', 'Umbria', 'Lazio',
-  'Abruzzo', 'Molise', 'Campania', 'Puglia',
-  'Basilicata', 'Calabria', 'Sicilia', 'Sardegna',
+  'Langhe & Piemonte', 'Lago di Como', 'Lago di Garda',
+  'Venezia & Veneto', 'Toscana', 'Umbria',
+  'Roma & Lazio', 'Amalfi Coast', 'Puglia', 'Sicilia', 'Liguria',
 ]
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {

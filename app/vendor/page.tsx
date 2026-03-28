@@ -1105,42 +1105,114 @@ const statusBadge = vendor.public_vendor_id
 }
 
 // --- STATS PANEL ---
+type EngagementStatus = 'lead' | 'quote_sent' | 'agreed' | 'booked' | 'completed' | 'cancelled'
+type StatsData = {
+  couples: number
+  messages: number
+  booked: number
+  thisWeek: number
+  byStatus: Record<EngagementStatus, number>
+}
+
 function StatsPanel({ vendorUserId, publicVendorId, d }: { vendorUserId: string; publicVendorId: string | null; d: any }) {
-  const [stats, setStats] = useState<{ couples: number; messages: number; unread: number; thisWeek: number } | null>(null)
+  const [stats, setStats] = useState<StatsData | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-      const [msgsRes, unreadRes] = await Promise.all([
-        supabase.from('messages').select('id, user_id, created_at, from_vendor').eq('vendor_user_id', session.user.id),
-        supabase.from('messages').select('id', { count: 'exact', head: true })
-          .eq('vendor_user_id', session.user.id).eq('from_vendor', false).eq('is_read', false),
+      if (!session) { setLoading(false); return }
+
+      // Step 1 — trova tutti i vendors.id collegati a questo vendor pubblico
+      // (una coppia per ogni coppia che ha aggiunto questo vendor alla propria lista)
+      const vendorRowsRes = publicVendorId
+        ? await supabase.from('vendors').select('id').eq('public_vendor_id', publicVendorId)
+        : { data: [] }
+      const vendorIds: string[] = (vendorRowsRes.data || []).map((r: any) => r.id)
+
+      if (vendorIds.length === 0) {
+        setStats({ couples: 0, messages: 0, booked: 0, thisWeek: 0, byStatus: { lead: 0, quote_sent: 0, agreed: 0, booked: 0, completed: 0, cancelled: 0 } })
+        setLoading(false)
+        return
+      }
+
+      // Step 2 — messaggi e engagement in parallelo
+      const [msgsRes, engsRes] = await Promise.all([
+        supabase.from('messages').select('id, user_id, created_at').in('vendor_id', vendorIds),
+        supabase.from('engagements').select('id, status, user_id').in('vendor_id', vendorIds),
       ])
+
       const msgs = msgsRes.data || []
+      const engs = engsRes.data || []
+
       const couples = new Set(msgs.map((m: any) => m.user_id)).size
       const week = new Date(); week.setDate(week.getDate() - 7)
       const thisWeek = msgs.filter((m: any) => new Date(m.created_at) > week).length
-      setStats({ couples, messages: msgs.length, unread: unreadRes.count ?? 0, thisWeek })
+      const booked = engs.filter((e: any) => e.status === 'booked').length
+
+      const byStatus: Record<EngagementStatus, number> = { lead: 0, quote_sent: 0, agreed: 0, booked: 0, completed: 0, cancelled: 0 }
+      engs.forEach((e: any) => { if (e.status in byStatus) byStatus[e.status as EngagementStatus]++ })
+
+      setStats({ couples, messages: msgs.length, booked, thisWeek, byStatus })
+      setLoading(false)
     }
     load()
-  }, [])
+  }, [publicVendorId])
+
+  const STATUS_LABELS: Record<EngagementStatus, string> = {
+    lead: 'Aggiunti', quote_sent: 'Preventivo', agreed: 'Accordo',
+    booked: 'Confermati', completed: 'Completati', cancelled: 'Annullati',
+  }
+  const STATUS_COLORS: Record<EngagementStatus, string> = {
+    lead: 'text-muted', quote_sent: 'text-blue-400', agreed: 'text-gold',
+    booked: 'text-green-400', completed: 'text-green-400', cancelled: 'text-red-400',
+  }
+
+  if (loading) return <div className="text-center py-16 text-muted text-sm">Caricamento statistiche...</div>
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Metriche principali */}
       <div className="grid grid-cols-2 gap-4">
         {[
-          { label: d.statsCouples, value: stats?.couples ?? '—', cls: 'text-gold' },
-          { label: d.statsConfirmed, value: stats?.unread ?? '—', cls: stats?.unread ? 'text-gold' : 'text-cream' },
-          { label: d.statsMessages, value: stats?.messages ?? '—', cls: 'text-blue-400' },
-          { label: d.statsViews, value: stats?.thisWeek ?? '—', cls: 'text-green-400' },
+          { label: d.statsCouples ?? 'Coppie che ti seguono', value: stats?.couples ?? 0, cls: 'text-gold' },
+          { label: d.statsConfirmed ?? 'Conferme ricevute', value: stats?.booked ?? 0, cls: stats?.booked ? 'text-green-400' : 'text-cream' },
+          { label: d.statsMessages ?? 'Messaggi totali', value: stats?.messages ?? 0, cls: 'text-blue-400' },
+          { label: d.statsViews ?? 'Messaggi ultimi 7 gg', value: stats?.thisWeek ?? 0, cls: 'text-green-400' },
         ].map(({ label, value, cls }) => (
           <div key={label} className="bg-dark border border-border rounded-2xl p-6 text-center">
-            <p className={`text-3xl font-light ${cls}`}>{String(value)}</p>
+            <p className={`text-3xl font-light ${cls}`}>{value}</p>
             <p className="text-muted text-sm mt-1">{label}</p>
           </div>
         ))}
       </div>
+
+      {/* Pipeline engagement */}
+      {stats && Object.values(stats.byStatus).some(v => v > 0) && (
+        <div className="bg-dark border border-border rounded-2xl p-6">
+          <p className="text-gold text-xs tracking-widest uppercase mb-4">Pipeline coppie</p>
+          <div className="space-y-3">
+            {(Object.entries(stats.byStatus) as [EngagementStatus, number][])
+              .filter(([, count]) => count > 0)
+              .map(([status, count]) => (
+                <div key={status} className="flex items-center justify-between">
+                  <span className="text-sm text-muted">{STATUS_LABELS[status]}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-24 h-1.5 bg-border rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gold/60 rounded-full"
+                        style={{ width: `${Math.min(100, (count / (stats.couples || 1)) * 100)}%` }}
+                      />
+                    </div>
+                    <span className={`text-sm font-medium w-4 text-right ${STATUS_COLORS[status]}`}>{count}</span>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* Stato vetrina */}
       {publicVendorId ? (
         <div className="bg-dark border border-border rounded-2xl p-6">
           <p className="text-gold text-xs tracking-widest uppercase mb-2">✓ In vetrina VELO</p>
