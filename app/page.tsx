@@ -52,7 +52,7 @@ export default function Home() {
           <div className="max-w-[520px]">
             <p className="text-gold text-xs tracking-[0.3em] uppercase mb-5">{tr.hero.label}</p>
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-light leading-[1.05] mb-6">
-              {tr.hero.title1} <span className="text-gold">sì</span><br />{tr.hero.title2}
+              {tr.hero.title1} <span className="text-gold">{tr.hero.tagWord}</span><br />{tr.hero.title2}
             </h1>
             <p className="text-muted text-base sm:text-lg leading-relaxed mb-8 max-w-md">{tr.hero.desc}</p>
             <div className="flex flex-col sm:flex-row gap-3" id="download">

@@ -116,11 +116,13 @@ export default async function VendorDetailPage({
             </div>
             <p className="text-muted mb-3">{vendor.category} · {vendor.location}, {vendor.region}</p>
             <div className="flex items-center gap-4 flex-wrap">
+              {(vendor.review_count ?? 0) > 0 && (
               <div className="flex items-center gap-2">
                 <span className="text-gold text-lg">★</span>
                 <span className="text-cream font-medium">{vendor.rating}</span>
                 <span className="text-muted text-sm">({vendor.review_count} {tr.vendorDetail.reviews})</span>
               </div>
+              )}
               {vendor.price_from && (
                 <span className="text-gold text-sm border border-gold/30 rounded-full px-4 py-1">
                   {tr.vendorDetail.priceFrom} €{vendor.price_from}
@@ -141,11 +143,9 @@ export default async function VendorDetailPage({
         <div className="my-10 bg-gradient-to-r from-gold/10 to-gold/5 border border-gold/25 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6">
           <div className="text-3xl shrink-0">💍</div>
           <div className="flex-1 text-center sm:text-left">
-            <p className="text-gold text-xs tracking-[0.2em] uppercase mb-1">Ti interessa questo fornitore?</p>
-            <h3 className="text-cream text-lg font-light mb-1">
-              Scarica VELO e inizia a pianificare il tuo matrimonio
-            </h3>
-            <p className="text-muted text-sm">Planning, fornitori, ospiti e budget — tutto in un posto. Gratis.</p>
+            <p className="text-gold text-xs tracking-[0.2em] uppercase mb-1">{tr.vendorDetail.appCtaBadge}</p>
+            <h3 className="text-cream text-lg font-light mb-1">{tr.vendorDetail.appCtaTitle}</h3>
+            <p className="text-muted text-sm">{tr.vendorDetail.appCtaDesc}</p>
           </div>
           <div className="flex gap-3 shrink-0">
             <a href="#" className="flex items-center gap-2 bg-cream text-bg text-xs font-semibold px-4 py-2.5 rounded-full hover:opacity-90 transition-opacity whitespace-nowrap">
@@ -238,8 +238,8 @@ export default async function VendorDetailPage({
               <div><p className="text-muted text-xs mb-1">{tr.vendorDetail.area}</p>
                 <p className="text-cream text-sm">{vendor.location}, {vendor.region}</p></div>
               {vendor.max_guests && (
-                <div><p className="text-muted text-xs mb-1">👥 Capienza massima</p>
-                  <p className="text-cream text-sm">{vendor.max_guests} ospiti</p></div>
+                <div><p className="text-muted text-xs mb-1">👥 {tr.vendorDetail.capacity}</p>
+                  <p className="text-cream text-sm">{vendor.max_guests} {tr.vendorDetail.guests}</p></div>
               )}
               {vendor.work_regions?.length > 0 && (
                 <div className="flex flex-wrap gap-1">

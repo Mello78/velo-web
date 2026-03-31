@@ -7,6 +7,20 @@ import SimpleNav from '../../components/SimpleNav'
 
 const CATEGORIES_IT = ['Tutti', '📷 Fotografia', '🌸 Floral Design', '🍽️ Catering', '🎵 Musica', '🏛️ Location', '💌 Partecipazioni', '🎂 Torta']
 const CATEGORIES_EN = ['All', '📷 Photography', '🌸 Floral Design', '🍽️ Catering', '🎵 Music', '🏛️ Venue', '💌 Stationery', '🎂 Cake']
+
+// Canonical map to match both emoji-prefixed chip labels and plain DB values
+const CATEGORY_CANONICAL: Record<string, string> = {
+  '📷 Fotografia': 'photo', 'Fotografo': 'photo', 'Fotografa': 'photo', '📷 Photography': 'photo',
+  '🌸 Floral Design': 'flowers', 'Fiorista': 'flowers', 'Floral Design': 'flowers',
+  '🍽️ Catering': 'catering', 'Catering': 'catering',
+  '🎵 Musica': 'music', 'Musica': 'music', '🎵 Music': 'music', 'DJ': 'music',
+  '🏛️ Location': 'venue', 'Location': 'venue', '🏛️ Venue': 'venue',
+  '💌 Partecipazioni': 'stationery', '💌 Stationery': 'stationery',
+  '🎂 Torta': 'cake', '🎂 Cake': 'cake', 'Pasticceria': 'cake', 'Torta Nuziale': 'cake',
+  '📋 Wedding Planner': 'planner', 'Wedding Planner': 'planner',
+  '💄 Trucco & Parrucco': 'beauty', 'Hair & Beauty': 'beauty',
+  '🎬 Video': 'video', 'Videografo': 'video', 'Videografa': 'video',
+}
 // VELO Zones — corrispondono a public_vendors.region e work_regions nel DB
 const REGIONS = [
   'Tutte / All',
@@ -112,8 +126,9 @@ export default function FornitoriPage() {
       v.region === activeRegion ||
       v.work_regions?.includes(activeRegion) ||
       v.serves_regioni?.includes(activeRegion)
-    const matchC = activeCategory === allCatLabel || v.category === activeCategory ||
-      (locale === 'en' && activeCategory !== 'All' && v.category.includes(activeCategory.replace(/[^\w\s]/g, '').trim()))
+    const chipKey = CATEGORY_CANONICAL[activeCategory] ?? activeCategory
+    const vendorKey = CATEGORY_CANONICAL[v.category] ?? v.category
+    const matchC = activeCategory === allCatLabel || chipKey === vendorKey
     // Filtra location per capienza ospiti
     const matchGuests = !guestCount ||
       (!v.category?.toLowerCase().includes('location') && !v.category?.toLowerCase().includes('catering')) ||
@@ -125,7 +140,7 @@ export default function FornitoriPage() {
 
   if (loading) return (
     <main className="min-h-screen bg-bg text-cream flex items-center justify-center">
-      <div className="text-gold text-sm">Caricamento...</div>
+      <div className="text-gold text-sm">{tr.fornitori.loading}</div>
     </main>
   )
 
@@ -155,19 +170,19 @@ export default function FornitoriPage() {
                 value={citySearch}
                 onChange={e => setCitySearch(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleCitySearch()}
-                placeholder="Cerca per città (es. Milano, Firenze...)"
+                placeholder={tr.fornitori.searchPlaceholder}
                 className="w-full bg-dark border border-border rounded-2xl px-5 py-4 text-cream placeholder-muted focus:outline-none focus:border-gold transition-colors pr-32"
               />
               <button
                 onClick={handleCitySearch}
                 className="absolute right-2 top-2 bg-gold text-bg text-xs font-semibold px-4 py-2 rounded-xl hover:opacity-90 transition-opacity"
               >
-                Cerca
+                {tr.fornitori.searchBtn}
               </button>
             </div>
             {searchCity && (
               <p className="text-muted text-xs mt-2 px-1">
-                Risultati vicino a {searchCity}
+                {tr.fornitori.nearCity} {searchCity}
                 <button onClick={clearCitySearch} className="text-gold ml-2 hover:opacity-70">✕</button>
               </p>
             )}
@@ -236,8 +251,12 @@ export default function FornitoriPage() {
                     {v.verified && <span className="text-green text-xs bg-green/10 border border-green/20 px-2 py-1 rounded-full shrink-0">{tr.vendorDetail.verified}</span>}
                   </div>
                   <div className="flex items-center gap-2 mb-3 flex-wrap">
-                    <span className="text-gold text-sm">⭐ {v.rating}</span>
-                    <span className="text-muted text-xs">({v.review_count} {tr.vendorDetail.reviews})</span>
+                    {(v.review_count ?? 0) > 0 && (
+                      <>
+                        <span className="text-gold text-sm">⭐ {v.rating}</span>
+                        <span className="text-muted text-xs">({v.review_count} {tr.vendorDetail.reviews})</span>
+                      </>
+                    )}
                     {v.price_from && <span className="text-gold text-xs ml-auto">{tr.vendorDetail.priceFrom} €{v.price_from}</span>}
                     {(v as any)._distKm && (v as any)._distKm < 9999 && (
                       <span className="text-xs text-muted border border-border rounded-full px-3 py-1">
@@ -245,7 +264,11 @@ export default function FornitoriPage() {
                       </span>
                     )}
                   </div>
-                  {v.description && <p className="text-muted text-sm line-clamp-2 mb-4 leading-relaxed">{v.description}</p>}
+                  {(locale === 'en' ? (v.description_en || v.bio_en || v.description) : v.description) && (
+                    <p className="text-muted text-sm line-clamp-2 mb-4 leading-relaxed">
+                      {locale === 'en' ? (v.description_en || v.bio_en || v.description) : v.description}
+                    </p>
+                  )}
                   <div className="flex items-center justify-between pt-2 border-t border-border">
                     <span className="text-muted text-xs">{tr.fornitori.viewProfile}</span>
                     <span className="text-gold text-sm">→</span>

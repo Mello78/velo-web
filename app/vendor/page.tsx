@@ -424,7 +424,9 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
           name: businessName,
           category,
           location,
+          region: vendor.region,
           description: bio || null,
+          description_en: bioEn || null,
           phone: phone || null,
           instagram: instagram || null,
           facebook: facebook || null,
@@ -455,26 +457,27 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
   const translateToEnglish = async () => {
     setTranslating(true); setTranslateMsg('')
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch(
-        'https://jogsdrxnqrbbqieozlmo.supabase.co/functions/v1/velo-translate-vendor',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-          body: JSON.stringify({ bio, description: bio, specialties, specialties_custom: specialtiesCustom.filter(Boolean), awards: awards.filter(Boolean) }),
-        }
-      )
-      const data = await res.json()
-      if (data.error) { setTranslateMsg('â Errore: ' + data.error); setTranslating(false); return }
+      const { data, error } = await supabase.functions.invoke('velo-translate-vendor', {
+        body: { bio, description: bio, specialties, specialties_custom: specialtiesCustom.filter(Boolean), awards: awards.filter(Boolean) },
+      })
+      if (error || data?.error) { setTranslateMsg('✕ Errore: ' + (error?.message || data?.error)); setTranslating(false); return }
       // Aggiorna state locale con traduzioni ricevute
       if (data.bio) setBioEn(data.bio)
       if (data.specialties_custom?.length) setSpecialtiesCustomEn(data.specialties_custom)
       if (data.awards?.length) setAwardsEn(data.awards)
+      // Persiste subito su vendor_accounts per non perdere la traduzione al prossimo reload
+      await supabase.from('vendor_accounts').update({
+        bio_en: data.bio || null,
+        awards_en: data.awards?.filter(Boolean) || [],
+        specialties_custom_en: data.specialties_custom?.filter(Boolean) || [],
+      }).eq('id', vendor.id)
       if (vendor.public_vendor_id) {
         await supabase.from('public_vendors').update({
-          description_en: data.bio || data.description || null,
+          bio_en: data.bio || null,
+          description_en: data.bio || null,
           specialties_en: data.specialties || [],
           awards_en: data.awards || [],
+          specialties_custom_en: data.specialties_custom?.filter(Boolean) || [],
         }).eq('id', vendor.public_vendor_id)
       }
       setTranslateMsg('✓ Traduzione salvata in inglese')
@@ -583,17 +586,10 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
     if (!content?.trim()) return
     setTranslatingMsg(msgId)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
       const targetLang = locale === 'it' ? 'en' : 'it'
-      const res = await fetch(
-        'https://jogsdrxnqrbbqieozlmo.supabase.co/functions/v1/velo-translate-message',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-          body: JSON.stringify({ text: content, target_lang: targetLang }),
-        }
-      )
-      const data = await res.json()
+      const { data } = await supabase.functions.invoke('velo-translate-message', {
+        body: { text: content, target_lang: targetLang },
+      })
       if (data.translated) {
         setChatMessages(prev => prev.map(m =>
           m.id === msgId ? { ...m, _translated: data.translated } : m
@@ -1160,25 +1156,25 @@ function StatsPanel({ vendorUserId, publicVendorId, d }: { vendorUserId: string;
   }, [publicVendorId])
 
   const STATUS_LABELS: Record<EngagementStatus, string> = {
-    lead: 'Aggiunti', quote_sent: 'Preventivo', agreed: 'Accordo',
-    booked: 'Confermati', completed: 'Completati', cancelled: 'Annullati',
+    lead: d.pipelineLead, quote_sent: d.pipelineQuoteSent, agreed: d.pipelineAgreed,
+    booked: d.pipelineBooked, completed: d.pipelineCompleted, cancelled: d.pipelineCancelled,
   }
   const STATUS_COLORS: Record<EngagementStatus, string> = {
     lead: 'text-muted', quote_sent: 'text-blue-400', agreed: 'text-gold',
     booked: 'text-green-400', completed: 'text-green-400', cancelled: 'text-red-400',
   }
 
-  if (loading) return <div className="text-center py-16 text-muted text-sm">Caricamento statistiche...</div>
+  if (loading) return <div className="text-center py-16 text-muted text-sm">{d.statsLoading}</div>
 
   return (
     <div className="space-y-6">
       {/* Metriche principali */}
       <div className="grid grid-cols-2 gap-4">
         {[
-          { label: d.statsCouples ?? 'Coppie che ti seguono', value: stats?.couples ?? 0, cls: 'text-gold' },
-          { label: d.statsConfirmed ?? 'Conferme ricevute', value: stats?.booked ?? 0, cls: stats?.booked ? 'text-green-400' : 'text-cream' },
-          { label: d.statsMessages ?? 'Messaggi totali', value: stats?.messages ?? 0, cls: 'text-blue-400' },
-          { label: d.statsViews ?? 'Messaggi ultimi 7 gg', value: stats?.thisWeek ?? 0, cls: 'text-green-400' },
+          { label: d.statsCouples, value: stats?.couples ?? 0, cls: 'text-gold' },
+          { label: d.statsConfirmed, value: stats?.booked ?? 0, cls: stats?.booked ? 'text-green-400' : 'text-cream' },
+          { label: d.statsMessages, value: stats?.messages ?? 0, cls: 'text-blue-400' },
+          { label: d.statsViews, value: stats?.thisWeek ?? 0, cls: 'text-green-400' },
         ].map(({ label, value, cls }) => (
           <div key={label} className="bg-dark border border-border rounded-2xl p-6 text-center">
             <p className={`text-3xl font-light ${cls}`}>{value}</p>
@@ -1190,7 +1186,7 @@ function StatsPanel({ vendorUserId, publicVendorId, d }: { vendorUserId: string;
       {/* Pipeline engagement */}
       {stats && Object.values(stats.byStatus).some(v => v > 0) && (
         <div className="bg-dark border border-border rounded-2xl p-6">
-          <p className="text-gold text-xs tracking-widest uppercase mb-4">Pipeline coppie</p>
+          <p className="text-gold text-xs tracking-widest uppercase mb-4">{d.statsPipeline}</p>
           <div className="space-y-3">
             {(Object.entries(stats.byStatus) as [EngagementStatus, number][])
               .filter(([, count]) => count > 0)
@@ -1215,13 +1211,13 @@ function StatsPanel({ vendorUserId, publicVendorId, d }: { vendorUserId: string;
       {/* Stato vetrina */}
       {publicVendorId ? (
         <div className="bg-dark border border-border rounded-2xl p-6">
-          <p className="text-gold text-xs tracking-widest uppercase mb-2">✓ In vetrina VELO</p>
-          <p className="text-muted text-sm">Il tuo profilo è visibile a tutte le coppie che pianificano il matrimonio con VELO.</p>
+          <p className="text-gold text-xs tracking-widest uppercase mb-2">{d.statsLiveTitle}</p>
+          <p className="text-muted text-sm">{d.statsLiveDesc}</p>
         </div>
       ) : (
         <div className="bg-gold/5 border border-gold/20 rounded-2xl p-6">
-          <p className="text-gold text-xs tracking-widest uppercase mb-2">⏳ Non ancora in vetrina</p>
-          <p className="text-muted text-sm">Completa il profilo e contatta il team VELO per l'attivazione.</p>
+          <p className="text-gold text-xs tracking-widest uppercase mb-2">{d.statsNotLiveTitle}</p>
+          <p className="text-muted text-sm">{d.statsNotLiveDesc}</p>
         </div>
       )}
     </div>
