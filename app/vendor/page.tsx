@@ -740,75 +740,76 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-24 pb-16">
 
         {/* ══ HERO DASHBOARD ══════════════════════════════════════ */}
-        <div className="rounded-2xl border border-border bg-dark p-6 mb-6">
+        <div className="rounded-2xl border border-border bg-dark p-6 sm:p-8 mb-6">
           {/* Identity row */}
-          <div className="flex items-start gap-4 mb-5">
+          <div className="flex items-start gap-5 mb-6">
             {vendor.logo_url ? (
-              <div className="w-14 h-14 rounded-xl overflow-hidden border border-border shrink-0">
+              <div className="w-16 h-16 rounded-xl overflow-hidden border border-border shrink-0">
                 <img src={vendor.logo_url} alt="" className="w-full h-full object-cover" />
               </div>
             ) : (
-              <div className="w-14 h-14 rounded-xl border border-dashed border-border flex items-center justify-center shrink-0">
-                <span className="text-muted text-xs">Logo</span>
+              <div className="w-16 h-16 rounded-xl border border-dashed border-border/60 flex items-center justify-center shrink-0 bg-bg/40">
+                <span className="text-muted/50 text-xs">Logo</span>
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-light text-cream leading-tight">{vendor.business_name}</h1>
-              <p className="text-muted text-sm mt-1">{vendor.category} · {vendor.location}</p>
-              <span className={`inline-flex mt-2 text-xs border rounded-full px-3 py-1 ${statusBadge.cls}`}>
+              <h1 className="text-[1.75rem] font-light text-cream leading-tight tracking-tight">{vendor.business_name}</h1>
+              <p className="text-muted text-sm mt-1.5">{vendor.category} · {vendor.location}</p>
+              <span className={`inline-flex mt-2.5 text-xs border rounded-full px-3 py-1 ${statusBadge.cls}`}>
                 {statusBadge.label}
               </span>
             </div>
             <div className="text-right shrink-0 hidden sm:block">
-              <p className="text-gold text-xs font-medium">{d.free}</p>
-              <p className="text-muted/60 text-xs mt-0.5">{d.freeTil}</p>
-              <p className="text-muted/50 text-xs">{d.then}</p>
+              <p className="text-gold text-xs font-semibold tracking-wide">{d.free}</p>
+              <p className="text-muted/60 text-xs mt-1">{d.freeTil}</p>
+              <p className="text-muted/40 text-xs mt-0.5">{d.then}</p>
             </div>
           </div>
           {/* Completion row */}
-          <div className="border-t border-border pt-5">
-            <div className="flex items-center gap-4 flex-wrap">
+          <div className="border-t border-border/60 pt-6">
+            <div className="flex items-center gap-5 flex-wrap">
               <div
-                className="w-14 h-14 rounded-full flex items-center justify-center shrink-0"
-                style={{ background: `conic-gradient(#C9A84C 0% ${completionScore}%, #2a2620 ${completionScore}% 100%)` }}
+                className="w-16 h-16 rounded-full flex items-center justify-center shrink-0"
+                style={{ background: `conic-gradient(#C9A84C 0% ${completionScore}%, #1e1c19 ${completionScore}% 100%)` }}
               >
-                <div className="w-10 h-10 bg-dark rounded-full flex items-center justify-center">
-                  <span className="text-xs font-semibold text-gold">{completionScore}%</span>
+                <div className="w-11 h-11 bg-dark rounded-full flex items-center justify-center">
+                  <span className="text-sm font-semibold text-gold">{completionScore}%</span>
                 </div>
               </div>
               <div className="flex-1 min-w-0">
                 {completionScore < 100 ? (
                   <>
-                    <p className="text-cream text-sm font-medium mb-2">
-                      {completionMissing.length} {locale === 'it'
-                        ? (completionMissing.length === 1 ? 'elemento mancante' : 'elementi mancanti')
-                        : (completionMissing.length === 1 ? 'item missing' : 'items missing')}
+                    <p className="text-cream/90 text-sm font-semibold mb-2.5">
+                      <span className="text-gold">{completionMissing.length}</span>{' '}
+                      {locale === 'it'
+                        ? (completionMissing.length === 1 ? 'elemento mancante nel profilo' : 'elementi mancanti nel profilo')
+                        : (completionMissing.length === 1 ? 'item missing from profile' : 'items missing from profile')}
                     </p>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                       {completionMissing.map(item => (
                         <button key={item.label}
                           onClick={() => { setTab('vetrina'); setEditingSection(item.section) }}
-                          className="text-xs border border-gold/30 text-gold rounded-full px-2.5 py-0.5 hover:bg-gold/10 transition-colors">
+                          className="text-xs border border-gold/40 text-gold rounded-full px-3 py-1 hover:bg-gold/10 transition-colors font-medium">
                           {item.label} →
                         </button>
                       ))}
                     </div>
                   </>
                 ) : (
-                  <p className="text-green-400 text-sm font-medium">{d.completionComplete}</p>
+                  <p className="text-green-400 text-sm font-semibold">{d.completionComplete}</p>
                 )}
               </div>
               <div className="flex items-center gap-3 shrink-0 flex-wrap">
                 {completionMissing.length > 0 && (
                   <button
                     onClick={() => { setTab('vetrina'); setEditingSection(completionMissing[0].section) }}
-                    className="bg-gold text-bg text-sm font-semibold px-5 py-2.5 rounded-xl hover:opacity-90 transition-opacity">
+                    className="bg-gold text-bg text-sm font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-opacity shadow-sm">
                     {locale === 'it' ? 'Completa vetrina →' : 'Complete showcase →'}
                   </button>
                 )}
                 {vendor.public_vendor_id && (
                   <a href={`/fornitori/${vendor.public_vendor_id}`} target="_blank" rel="noopener noreferrer"
-                    className="text-sm text-muted border border-border rounded-xl px-4 py-2.5 hover:text-cream hover:border-gold/30 transition-colors">
+                    className="text-sm text-muted/80 border border-border rounded-xl px-4 py-3 hover:text-cream hover:border-gold/30 transition-colors">
                     {locale === 'it' ? 'Vedi vetrina ↗' : 'View profile ↗'}
                   </a>
                 )}
@@ -1263,18 +1264,18 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
               {/* Left: Inbox list */}
               <div className={`flex flex-col border-r border-border ${selectedConv ? 'hidden lg:flex' : 'flex'}`} style={{ minHeight: 560 }}>
                 <div className="px-5 py-4 border-b border-border shrink-0">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-cream font-medium text-sm">{locale === 'it' ? 'Messaggi' : 'Messages'}</h2>
+                      <h2 className="text-cream font-semibold text-sm tracking-tight">{locale === 'it' ? 'Conversazioni' : 'Conversations'}</h2>
                       {chatConversations.length > 0 && (
                         <p className="text-muted text-xs mt-0.5">
-                          {chatConversations.length} {locale === 'it' ? 'conversazioni' : 'conversations'}
-                          {totalUnread > 0 && <span className="text-gold ml-2">· {totalUnread} {locale === 'it' ? 'da leggere' : 'unread'}</span>}
+                          {chatConversations.length} {locale === 'it' ? 'attive' : 'active'}
+                          {totalUnread > 0 && <span className="text-gold font-medium ml-2">· {totalUnread} {locale === 'it' ? 'non letti' : 'unread'}</span>}
                         </p>
                       )}
                     </div>
-                    <button onClick={loadConversations} className="text-muted hover:text-gold text-xs border border-border rounded-full px-3 py-1.5 transition-colors">
-                      {d.messagesRefresh}
+                    <button onClick={loadConversations} className="text-muted/70 hover:text-gold text-xs border border-border rounded-full px-3 py-1.5 transition-colors shrink-0">
+                      ↻
                     </button>
                   </div>
                 </div>
@@ -1283,11 +1284,11 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                     <div className="flex items-center justify-center py-16"><p className="text-muted text-sm">{locale === 'it' ? 'Caricamento...' : 'Loading...'}</p></div>
                   ) : chatConversations.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-                      <div className="w-14 h-14 rounded-full border border-border flex items-center justify-center mb-4">
-                        <span className="text-muted text-xl">✉</span>
+                      <div className="w-14 h-14 rounded-2xl border border-border/60 flex items-center justify-center mb-4 bg-bg/30">
+                        <span className="text-muted text-2xl">✉</span>
                       </div>
-                      <p className="text-cream text-sm font-light mb-1">{d.messagesEmpty}</p>
-                      <p className="text-muted text-xs leading-relaxed">{d.messagesEmptyDesc}</p>
+                      <p className="text-cream text-sm font-medium mb-1">{d.messagesEmpty}</p>
+                      <p className="text-muted/70 text-xs leading-relaxed max-w-[200px]">{d.messagesEmptyDesc}</p>
                     </div>
                   ) : chatConversations.map((conv: any) => {
                     const coupleName = conv.partner1 && conv.partner2 ? `${conv.partner1} & ${conv.partner2}` : conv.partner1 || (locale === 'it' ? 'Sposi' : 'Couple')
@@ -1296,22 +1297,26 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                     const needsReply = conv.lastMessage && !conv.lastMessage.from_vendor
                     return (
                       <button key={conv.coupleUserId} onClick={() => loadChatWithCouple(conv.coupleUserId)}
-                        className={`w-full text-left px-5 py-4 border-b border-border last:border-0 transition-colors ${isActive ? 'bg-gold/10' : conv.unread > 0 ? 'bg-gold/5 hover:bg-gold/10' : 'hover:bg-white/5'}`}>
+                        className={`w-full text-left px-4 py-3.5 border-b border-border/60 last:border-0 transition-colors border-l-2 ${
+                          isActive ? 'bg-gold/10 border-l-gold' : conv.unread > 0 ? 'bg-gold/5 hover:bg-gold/8 border-l-transparent' : 'hover:bg-white/4 border-l-transparent'
+                        }`}>
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-sm font-medium ${isActive ? 'bg-gold/30 text-gold' : conv.unread > 0 ? 'bg-gold/20 text-gold' : 'bg-border text-muted'}`}>{initial}</div>
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-sm font-semibold ${
+                            isActive ? 'bg-gold/30 text-gold' : conv.unread > 0 ? 'bg-gold/20 text-gold' : 'bg-border/80 text-muted'
+                          }`}>{initial}</div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 mb-0.5">
-                              <p className={`text-sm font-medium truncate ${conv.unread > 0 || isActive ? 'text-cream' : 'text-cream/80'}`}>{coupleName}</p>
+                              <p className={`text-sm truncate ${conv.unread > 0 || isActive ? 'text-cream font-semibold' : 'text-cream/80 font-medium'}`}>{coupleName}</p>
                               {conv.unread > 0 && <span className="shrink-0 bg-gold text-bg text-[9px] rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 font-bold">{conv.unread}</span>}
                             </div>
                             <div className="flex items-center gap-1">
-                              {conv.lastMessage?.from_vendor && <span className="text-muted/50 text-xs shrink-0">{locale === 'it' ? 'Tu: ' : 'You: '}</span>}
-                              <p className="text-muted text-xs truncate">{conv.lastMessage?.content || (conv.lastMessage?.image_url ? '📷' : '—')}</p>
+                              {conv.lastMessage?.from_vendor && <span className="text-muted/40 text-xs shrink-0">{locale === 'it' ? 'Tu: ' : 'You: '}</span>}
+                              <p className="text-muted/70 text-xs truncate">{conv.lastMessage?.content || (conv.lastMessage?.image_url ? '📷' : '—')}</p>
                             </div>
                           </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-muted/50 text-xs">{conv.lastMessage ? formatRelativeTime(conv.lastMessage.created_at, locale) : ''}</p>
-                            {needsReply && conv.unread === 0 && <span className="text-gold border border-gold/30 text-[9px] rounded-full px-1.5 py-0.5 mt-0.5 block">{d.needsReply}</span>}
+                          <div className="text-right shrink-0 ml-1">
+                            <p className="text-muted/40 text-[11px]">{conv.lastMessage ? formatRelativeTime(conv.lastMessage.created_at, locale) : ''}</p>
+                            {needsReply && conv.unread === 0 && <span className="text-gold/80 border border-gold/30 text-[9px] rounded-full px-1.5 py-0.5 mt-1 block">{d.needsReply}</span>}
                           </div>
                         </div>
                       </button>
@@ -1324,41 +1329,43 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
               <div className={`flex flex-col ${!selectedConv ? 'hidden lg:flex' : 'flex'}`} style={{ minHeight: 560 }}>
                 {!selectedConv ? (
                   <div className="flex flex-col items-center justify-center flex-1 py-16 px-8 text-center">
-                    <div className="w-16 h-16 rounded-full border border-border flex items-center justify-center mb-5">
-                      <span className="text-muted text-2xl">✉</span>
+                    <div className="w-16 h-16 rounded-2xl border border-border/60 flex items-center justify-center mb-5 bg-bg/30">
+                      <span className="text-muted/60 text-2xl">✉</span>
                     </div>
-                    <p className="text-cream text-sm font-light mb-1">{locale === 'it' ? 'Seleziona una conversazione' : 'Select a conversation'}</p>
-                    <p className="text-muted text-xs">{locale === 'it' ? 'Scegli dalla lista a sinistra' : 'Choose from the list on the left'}</p>
+                    <p className="text-cream text-sm font-medium mb-1.5">{locale === 'it' ? 'Nessuna conversazione selezionata' : 'No conversation selected'}</p>
+                    <p className="text-muted/60 text-xs leading-relaxed">{locale === 'it' ? 'Scegli una coppia dalla lista a sinistra' : 'Choose a couple from the list on the left'}</p>
                   </div>
                 ) : (
                   <>
-                    <div className="px-5 py-4 border-b border-border flex items-center gap-3 shrink-0">
-                      <button onClick={() => { setSelectedConv(null); setChatMessages([]) }} className="text-gold hover:opacity-70 text-sm shrink-0 transition-opacity lg:hidden">
-                        ← {locale === 'it' ? 'Indietro' : 'Back'}
+                    <div className="px-5 py-4 border-b border-border bg-dark/40 flex items-center gap-3 shrink-0">
+                      <button onClick={() => { setSelectedConv(null); setChatMessages([]) }} className="text-gold hover:opacity-70 text-sm shrink-0 transition-opacity lg:hidden mr-1">
+                        ←
                       </button>
-                      <div className="w-9 h-9 rounded-full bg-gold/20 flex items-center justify-center shrink-0 text-sm font-medium text-gold">
+                      <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center shrink-0 text-sm font-semibold text-gold">
                         {(currentConv?.partner1?.[0] || '?').toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h2 className="text-cream font-medium text-sm truncate">{currentCoupleName}</h2>
-                        <p className="text-muted/60 text-xs">{chatMessages.length} {locale === 'it' ? 'messaggi' : 'messages'}</p>
+                        <h2 className="text-cream font-semibold text-base truncate leading-tight">{currentCoupleName}</h2>
+                        <p className="text-muted/50 text-xs mt-0.5">{chatMessages.length} {locale === 'it' ? 'messaggi' : 'messages'}</p>
                       </div>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-5 space-y-3" style={{ minHeight: 0 }}>
-                      {chatMessages.length === 0 && <p className="text-muted text-sm text-center py-8">{d.messagesNone}</p>}
+                    <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3" style={{ minHeight: 0 }}>
+                      {chatMessages.length === 0 && (
+                        <p className="text-muted/60 text-sm text-center py-8 italic">{d.messagesNone}</p>
+                      )}
                       {chatMessages.map((m: any) => (
                         <div key={m.id} className={`flex ${m.from_vendor ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-[70%] px-4 py-3 rounded-2xl text-sm ${m.from_vendor ? 'bg-gold text-bg rounded-br-sm' : 'bg-white/10 text-cream rounded-bl-sm border border-border'}`}>
+                          <div className={`max-w-[72%] min-w-[80px] px-4 py-3 rounded-2xl text-sm ${m.from_vendor ? 'bg-gold text-bg rounded-br-sm' : 'bg-white/8 text-cream rounded-bl-sm border border-border/60'}`}>
                             {m.image_url
                               ? <img src={m.image_url} alt="" className="rounded-xl max-w-full" style={{ maxHeight: 220 }} />
                               : <p className="leading-relaxed">{m.content}</p>}
                             {!m.image_url && (
                               <button onClick={() => translateChatMessage(m.id, m._translated || m.content)}
-                                className={`text-xs mt-1.5 transition-opacity block ${m.from_vendor ? 'opacity-40 hover:opacity-70' : 'opacity-30 hover:opacity-60'}`}
+                                className={`text-xs mt-1.5 transition-opacity block ${m.from_vendor ? 'opacity-40 hover:opacity-70' : 'opacity-25 hover:opacity-55'}`}
                                 disabled={translatingMsg === m.id}>{translatingMsg === m.id ? '...' : '↔'}</button>
                             )}
                             {m._translated && <p className="text-xs mt-2 opacity-70 border-t border-white/10 pt-2 italic leading-relaxed">{m._translated}</p>}
-                            <p className={`text-xs mt-1 ${m.from_vendor ? 'opacity-50' : 'opacity-40'}`}>
+                            <p className={`text-[11px] mt-1.5 ${m.from_vendor ? 'opacity-50' : 'opacity-35'}`}>
                               {new Date(m.created_at).toLocaleTimeString(locale === 'it' ? 'it-IT' : 'en-GB', { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </div>
@@ -1366,18 +1373,18 @@ function VendorDashboard({ vendor, locale, onLogout, onUpdate }: {
                       ))}
                       <div ref={messagesBottomRef} />
                     </div>
-                    <div className="p-4 border-t border-border flex gap-3 items-end shrink-0">
-                      <label className={`w-10 h-10 rounded-xl border flex items-center justify-center cursor-pointer transition-colors shrink-0 ${uploadingImg ? 'border-border opacity-40 cursor-not-allowed' : 'border-border hover:border-gold/40'}`}>
-                        <span className="text-muted text-base">{uploadingImg ? '…' : '+'}</span>
+                    <div className="px-4 py-3.5 border-t border-border bg-dark/30 flex gap-3 items-center shrink-0">
+                      <label className={`w-10 h-10 rounded-xl border flex items-center justify-center cursor-pointer transition-colors shrink-0 ${uploadingImg ? 'border-border/40 opacity-40 cursor-not-allowed' : 'border-border hover:border-gold/50 hover:bg-gold/5'}`}>
+                        <span className="text-muted text-lg leading-none">{uploadingImg ? '…' : '+'}</span>
                         <input type="file" accept="image/*,image/heic" className="hidden" disabled={uploadingImg}
                           onChange={e => { const f = e.target.files?.[0]; if (f) sendImageAsVendor(f); e.target.value = '' }} />
                       </label>
                       <input type="text" value={newMsg} onChange={e => setNewMsg(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendVendorMessage()}
-                        className="flex-1 bg-bg border border-border rounded-xl px-4 py-2.5 text-cream text-sm focus:outline-none focus:border-gold"
+                        className="flex-1 bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold/60 placeholder:text-muted/50"
                         placeholder={d.messagesPlaceholder} />
                       <button onClick={sendVendorMessage} disabled={!newMsg.trim() || sendingMsg}
-                        className="bg-gold text-bg font-semibold px-5 py-2.5 rounded-xl hover:opacity-90 disabled:opacity-40 text-sm shrink-0 transition-opacity">
+                        className="bg-gold text-bg font-semibold px-5 py-3 rounded-xl hover:opacity-90 disabled:opacity-35 text-sm shrink-0 transition-opacity min-w-[48px] text-center">
                         {sendingMsg ? '…' : '→'}
                       </button>
                     </div>
@@ -1485,75 +1492,95 @@ function StatsPanel({ vendorUserId, publicVendorId, d, locale }: {
     booked: '#7A9E7E', completed: '#7A9E7E', cancelled: '#C4756A',
   }
 
-  if (loading) return <div className="text-center py-16 text-muted text-sm">{d.statsLoading}</div>
+  if (loading) return (
+    <div className="bg-dark border border-border rounded-2xl p-12 text-center">
+      <p className="text-muted text-sm">{d.statsLoading}</p>
+    </div>
+  )
 
   const hasData = stats && Object.values(stats.byStatus).some(v => v > 0)
+  const totalEngagements = stats ? Object.values(stats.byStatus).reduce((a, b) => a + b, 0) : 0
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
 
       {/* Pipeline — primary element */}
-      <div className="bg-dark border border-border rounded-2xl p-6">
-        <div className="flex items-start justify-between mb-5 gap-4 flex-wrap">
+      <div className="bg-dark border border-border rounded-2xl p-6 sm:p-8">
+        <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
-            <p className="text-muted text-xs uppercase tracking-widest mb-1">{d.statsPipeline}</p>
-            <p className="text-cream font-light text-base">{stats?.couples ?? 0} {locale === 'it' ? (stats?.couples === 1 ? 'coppia in contatto' : 'coppie in contatto') : (stats?.couples === 1 ? 'couple in contact' : 'couples in contact')}</p>
+            <p className="text-muted/70 text-[10px] uppercase tracking-[0.15em] mb-1.5">{d.statsPipeline}</p>
+            <p className="text-cream font-light text-lg leading-tight">
+              {stats?.couples ?? 0}{' '}
+              <span className="text-muted text-base">
+                {locale === 'it' ? (stats?.couples === 1 ? 'coppia in contatto' : 'coppie in contatto') : (stats?.couples === 1 ? 'couple in contact' : 'couples in contact')}
+              </span>
+            </p>
           </div>
           <div className="text-right">
-            <p className="text-3xl font-light text-green-400">{stats?.booked ?? 0}</p>
-            <p className="text-muted text-xs mt-0.5">{d.statsConfirmed}</p>
+            <p className="text-4xl font-light text-green-400 leading-none">{stats?.booked ?? 0}</p>
+            <p className="text-muted/70 text-xs mt-1.5 tracking-wide">{d.statsConfirmed}</p>
           </div>
         </div>
         {hasData ? (
-          <div className="space-y-3.5">
+          <div className="space-y-4">
             {(Object.entries(stats!.byStatus) as [EngagementStatus, number][])
               .filter(([, count]) => count > 0)
               .map(([status, count]) => (
-                <div key={status} className="flex items-center gap-3">
-                  <span className={`text-xs w-24 shrink-0 ${STATUS_COLORS[status]}`}>{STATUS_LABELS[status]}</span>
-                  <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
+                <div key={status} className="flex items-center gap-4">
+                  <span className={`text-xs w-28 shrink-0 font-medium ${STATUS_COLORS[status]}`}>{STATUS_LABELS[status]}</span>
+                  <div className="flex-1 h-1.5 bg-border/60 rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all duration-700"
-                      style={{ width: `${Math.min(100, (count / Math.max(stats!.couples, 1)) * 100)}%`, background: STATUS_BAR_COLORS[status] }} />
+                      style={{ width: `${Math.min(100, (count / Math.max(totalEngagements, 1)) * 100)}%`, background: STATUS_BAR_COLORS[status] }} />
                   </div>
-                  <span className={`text-sm font-medium w-5 text-right shrink-0 ${STATUS_COLORS[status]}`}>{count}</span>
+                  <span className={`text-sm font-semibold w-6 text-right shrink-0 tabular-nums ${STATUS_COLORS[status]}`}>{count}</span>
                 </div>
               ))}
           </div>
         ) : (
-          <p className="text-muted text-sm italic">{locale === 'it' ? 'Nessun dato ancora — i dati appaiono quando coppie interagiscono con il profilo' : 'No data yet — data appears when couples interact with your profile'}</p>
+          <div className="py-4 border-t border-border/40">
+            <p className="text-muted/60 text-sm italic leading-relaxed">
+              {locale === 'it'
+                ? 'Nessun dato ancora — i dati appaiono quando le coppie interagiscono con il profilo'
+                : 'No data yet — data appears when couples interact with your profile'}
+            </p>
+          </div>
         )}
       </div>
 
-      {/* Activity strip — 3 key metrics with context */}
+      {/* Activity strip — 3 metrics */}
       <div className="grid grid-cols-3 gap-3">
         {[
           { value: stats?.couples ?? 0, label: d.statsCouples, hint: locale === 'it' ? 'coppie che hanno scritto' : 'couples who messaged', color: 'text-gold' },
           { value: stats?.messages ?? 0, label: d.statsMessages, hint: locale === 'it' ? 'messaggi totali' : 'total messages', color: 'text-blue-400' },
-          { value: stats?.thisWeek ?? 0, label: d.statsViews, hint: locale === 'it' ? 'ultimi 7 giorni' : 'last 7 days', color: 'text-cream' },
+          { value: stats?.thisWeek ?? 0, label: d.statsViews, hint: locale === 'it' ? 'ultimi 7 giorni' : 'last 7 days', color: 'text-cream/90' },
         ].map(({ value, label, hint, color }) => (
-          <div key={label} className="bg-dark border border-border rounded-2xl p-4 text-center">
-            <p className={`text-3xl font-light ${color}`}>{value}</p>
-            <p className="text-muted text-xs mt-1.5 font-medium leading-snug">{label}</p>
-            <p className="text-muted/50 text-xs mt-0.5 leading-snug">{hint}</p>
+          <div key={label} className="bg-dark border border-border rounded-2xl p-5 text-center">
+            <p className={`text-4xl font-light leading-none ${color}`}>{value}</p>
+            <p className="text-muted/80 text-xs mt-2.5 font-medium leading-snug">{label}</p>
+            <p className="text-muted/40 text-[11px] mt-1 leading-snug">{hint}</p>
           </div>
         ))}
       </div>
 
       {/* Listing status */}
       {publicVendorId ? (
-        <div className="bg-dark border border-green-400/20 rounded-2xl p-5 flex items-start gap-3">
-          <span className="text-green-400 text-sm mt-0.5">✓</span>
-          <div>
-            <p className="text-cream text-sm font-medium">{locale === 'it' ? 'In vetrina VELO' : 'Live on VELO'}</p>
-            <p className="text-muted text-sm mt-0.5">{d.statsLiveDesc}</p>
+        <div className="bg-dark border border-green-400/20 rounded-2xl p-5 flex items-center gap-4">
+          <div className="w-8 h-8 rounded-full bg-green-400/10 flex items-center justify-center shrink-0">
+            <span className="text-green-400 text-sm font-bold">✓</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-cream text-sm font-semibold">{locale === 'it' ? 'Profilo in vetrina VELO' : 'Profile live on VELO'}</p>
+            <p className="text-muted/70 text-xs mt-0.5">{d.statsLiveDesc}</p>
           </div>
         </div>
       ) : (
-        <div className="bg-gold/5 border border-gold/20 rounded-2xl p-5 flex items-start gap-3">
-          <span className="text-gold text-sm mt-0.5">⏳</span>
-          <div>
-            <p className="text-cream text-sm font-medium">{locale === 'it' ? 'Non ancora in vetrina' : 'Not yet listed'}</p>
-            <p className="text-muted text-sm mt-0.5">{d.statsNotLiveDesc}</p>
+        <div className="bg-gold/5 border border-gold/20 rounded-2xl p-5 flex items-center gap-4">
+          <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center shrink-0">
+            <span className="text-gold text-sm">○</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-cream text-sm font-semibold">{locale === 'it' ? 'Profilo non ancora in vetrina' : 'Profile not yet listed'}</p>
+            <p className="text-muted/70 text-xs mt-0.5">{d.statsNotLiveDesc}</p>
           </div>
         </div>
       )}
