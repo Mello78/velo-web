@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import CoupleOnboarding from './CoupleOnboarding'
 
-type AuthState = 'loading' | 'login' | 'dashboard' | 'not_couple' | 'error'
+type AuthState = 'loading' | 'login' | 'dashboard' | 'vendor' | 'not_couple' | 'error'
 
 function useLocale() {
   const [locale, setLocale] = useState('en')
@@ -32,24 +32,42 @@ interface CoupleData {
 
 const COUPLE_SELECT = 'partner1, partner2, wedding_date, budget, wedding_city, wedding_region, wedding_style, ceremony_type, nationality'
 
-async function fetchCoupleData(userId: string): Promise<
+async function resolveAuthenticatedUser(userId: string): Promise<
   { state: 'dashboard'; couple: CoupleData } |
+  { state: 'vendor' } |
   { state: 'not_couple' } |
   { state: 'error' }
 > {
-  const { data, error } = await supabase
+  const { data: couples, error: coupleError } = await supabase
     .from('couples')
     .select(COUPLE_SELECT)
     .eq('user_id', userId)
-    .single()
+    .order('created_at', { ascending: false })
+    .limit(1)
 
-  if (error) {
-    if (error.code === 'PGRST116') return { state: 'not_couple' }
+  if (coupleError) {
     return { state: 'error' }
   }
 
-  if (!data) return { state: 'not_couple' }
-  return { state: 'dashboard', couple: data }
+  if (couples && couples.length > 0) {
+    return { state: 'dashboard', couple: couples[0] }
+  }
+
+  const { data: vendors, error: vendorError } = await supabase
+    .from('vendor_accounts')
+    .select('id')
+    .eq('user_id', userId)
+    .limit(1)
+
+  if (vendorError) {
+    return { state: 'error' }
+  }
+
+  if (vendors && vendors.length > 0) {
+    return { state: 'vendor' }
+  }
+
+  return { state: 'not_couple' }
 }
 
 export default function CoupleShell({ children }: { children: ReactNode }) {
@@ -77,7 +95,7 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
         return
       }
 
-      const result = await fetchCoupleData(session.user.id)
+      const result = await resolveAuthenticatedUser(session.user.id)
       if (!mounted) return
 
       if (result.state === 'dashboard') {
@@ -103,7 +121,7 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
       return
     }
 
-    const result = await fetchCoupleData(session.user.id)
+    const result = await resolveAuthenticatedUser(session.user.id)
     if (result.state === 'dashboard') {
       setCouple(result.couple)
       setAuthState('dashboard')
@@ -125,7 +143,7 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
       return
     }
 
-    const result = await fetchCoupleData(data.session.user.id)
+    const result = await resolveAuthenticatedUser(data.session.user.id)
     if (result.state === 'dashboard') {
       setCouple(result.couple)
       setAuthState('dashboard')
@@ -230,6 +248,41 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
         initialLocale={locale}
         onComplete={retryAuthenticatedLoad}
       />
+    )
+  }
+
+  if (authState === 'vendor') {
+    const title = locale === 'en' ? 'This account is set up as a vendor' : 'Questo account e impostato come fornitore'
+    const body = locale === 'en'
+      ? 'You are signed in with a vendor account, so the couple onboarding is not available here. Open your vendor area instead, or sign out to use a different account.'
+      : 'Hai effettuato l accesso con un account fornitore, quindi il percorso coppia non e disponibile qui. Apri la tua area fornitore oppure esci per usare un altro account.'
+
+    return (
+      <div style={{ minHeight: '100vh', background: '#0F0E0C', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <div style={{ width: '100%', maxWidth: 480, background: '#1A1915', border: '1px solid #2A2820', borderRadius: 12, padding: 36 }}>
+          <div style={{ fontSize: 11, letterSpacing: 3, color: '#C9A84C', textTransform: 'uppercase', marginBottom: 8 }}>
+            VELO
+          </div>
+          <h2 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 24, fontWeight: 400, color: '#F5EDD6', margin: '0 0 10px' }}>
+            {title}
+          </h2>
+          <p style={{ fontSize: 13, color: '#8A7E6A', lineHeight: 1.7, margin: '0 0 24px' }}>{body}</p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <Link
+              href="/vendor"
+              style={{ padding: '12px 16px', background: '#C9A84C', color: '#0F0E0C', borderRadius: 8, fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', textDecoration: 'none' }}
+            >
+              {locale === 'en' ? 'Open vendor area' : 'Apri area fornitore'}
+            </Link>
+            <button
+              onClick={handleLogout}
+              style={{ padding: '12px 16px', background: 'transparent', color: '#8A7E6A', border: '1px solid #2A2820', borderRadius: 8, fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}
+            >
+              {locale === 'en' ? 'Sign out' : 'Esci'}
+            </button>
+          </div>
+        </div>
+      </div>
     )
   }
 

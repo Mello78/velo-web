@@ -153,6 +153,8 @@ interface Props {
   onComplete: () => void
 }
 
+type ExistingCoupleRow = { id: string }
+
 export default function CoupleOnboarding({ initialLocale, onComplete }: Props) {
   const [locale, setLocale] = useState(initialLocale)
   const copy = getCopy(locale)
@@ -219,6 +221,18 @@ export default function CoupleOnboarding({ initialLocale, onComplete }: Props) {
     if (c.veloZona) setWeddingRegion(c.veloZona)
   }
 
+  const fetchExistingCouple = async (userId: string): Promise<ExistingCoupleRow | null> => {
+    const { data, error } = await supabase
+      .from('couples')
+      .select('id')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    if (error) throw error
+    return data && data.length > 0 ? data[0] : null
+  }
+
   // ─── Save — writes to couples table, same fields as mobile ───────────────
 
   const save = async () => {
@@ -227,8 +241,9 @@ export default function CoupleOnboarding({ initialLocale, onComplete }: Props) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('No session')
-      const { error } = await supabase.from('couples').insert({
-        user_id:         session.user.id,
+      const userId = session.user.id
+      const payload = {
+        user_id:         userId,
         partner1:        partner1.trim(),
         partner2:        partner2.trim(),
         wedding_date:    weddingDate || null,
@@ -242,8 +257,33 @@ export default function CoupleOnboarding({ initialLocale, onComplete }: Props) {
         wedding_province: weddingProvince || null,
         wedding_regione: weddingRegione || null,
         wedding_season:  weddingDate ? computeSeason(weddingDate) : null,
-      })
-      if (error) throw error
+      }
+
+      const existingCouple = await fetchExistingCouple(userId)
+      if (existingCouple) {
+        const { error: updateError } = await supabase
+          .from('couples')
+          .update(payload)
+          .eq('id', existingCouple.id)
+
+        if (updateError) throw updateError
+        onComplete()
+        return
+      }
+
+      const { error: insertError } = await supabase.from('couples').insert(payload)
+      if (insertError) {
+        const recoveredCouple = await fetchExistingCouple(userId)
+        if (!recoveredCouple) throw insertError
+
+        const { error: recoveryUpdateError } = await supabase
+          .from('couples')
+          .update(payload)
+          .eq('id', recoveredCouple.id)
+
+        if (recoveryUpdateError) throw recoveryUpdateError
+      }
+
       onComplete()
     } catch {
       setSaveError(copy.saveError)
