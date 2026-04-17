@@ -5,12 +5,19 @@ import LangToggle from './LangToggle'
 
 type NavBarProps = {
   locale?: string
+  couplesLabel: string
   vendorLabel: string
   forVendorLabel: string
-  downloadLabel: string
+  primaryCtaLabel: string
 }
 
-export default function NavBar({ locale, vendorLabel, forVendorLabel, downloadLabel }: NavBarProps) {
+export default function NavBar({
+  locale,
+  couplesLabel,
+  vendorLabel,
+  forVendorLabel,
+  primaryCtaLabel,
+}: NavBarProps) {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -27,12 +34,13 @@ export default function NavBar({ locale, vendorLabel, forVendorLabel, downloadLa
           <span className="text-gold text-xl tracking-[0.3em] font-light">VELO</span>
         </Link>
         <div className="hidden md:flex items-center gap-5">
+          <Link href="/couple" className="text-muted hover:text-cream text-sm transition-colors tracking-wide">{couplesLabel}</Link>
           <Link href="/fornitori" className="text-muted hover:text-cream text-sm transition-colors tracking-wide">{vendorLabel}</Link>
           <Link href="/vendor" className="text-muted hover:text-cream text-sm transition-colors tracking-wide">{forVendorLabel}</Link>
           <LangToggle locale={locale} />
-          <a href="#download" className="bg-gold text-bg text-xs font-semibold px-4 py-2.5 rounded-full hover:opacity-90 transition-opacity tracking-wider whitespace-nowrap">
-            {downloadLabel}
-          </a>
+          <Link href="/couple" className="bg-gold text-bg text-xs font-semibold px-4 py-2.5 rounded-full hover:opacity-90 transition-opacity tracking-wider whitespace-nowrap">
+            {primaryCtaLabel}
+          </Link>
         </div>
         <div className="flex items-center gap-3 md:hidden">
           <LangToggle locale={locale} />
@@ -51,11 +59,12 @@ export default function NavBar({ locale, vendorLabel, forVendorLabel, downloadLa
       </div>
       {open && (
         <div className="md:hidden border-t border-border bg-bg px-4 py-4 flex flex-col gap-4">
+          <Link href="/couple" onClick={() => setOpen(false)} className="text-muted hover:text-cream text-sm py-1">{couplesLabel}</Link>
           <Link href="/fornitori" onClick={() => setOpen(false)} className="text-muted hover:text-cream text-sm py-1">{vendorLabel}</Link>
           <Link href="/vendor" onClick={() => setOpen(false)} className="text-muted hover:text-cream text-sm py-1">{forVendorLabel}</Link>
-          <a href="#download" onClick={() => setOpen(false)} className="bg-gold text-bg text-xs font-semibold px-4 py-3 rounded-full text-center tracking-wider">
-            {downloadLabel}
-          </a>
+          <Link href="/couple" onClick={() => setOpen(false)} className="bg-gold text-bg text-xs font-semibold px-4 py-3 rounded-full text-center tracking-wider">
+            {primaryCtaLabel}
+          </Link>
         </div>
       )}
     </nav>
