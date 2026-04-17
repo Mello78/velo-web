@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 
 interface Task {
@@ -30,10 +30,17 @@ const LEGACY_PHASE_MAP: Record<string, PhaseKey> = {
   done: 'done', Completed: 'done', Completato: 'done',
 }
 
+const PHASE_ORDER: PhaseKey[] = ['urgent', 'soon', 'done']
+
 function normalizePhase(p: string): PhaseKey {
   if (LEGACY_PHASE_MAP[p]) return LEGACY_PHASE_MAP[p]
-  const stripped = p.replace(/^[^A-Za-zÀ-ÿ]+/, '')
+  const stripped = p.replace(/^[^A-Za-z\u00C0-\u017F]+/, '')
   return LEGACY_PHASE_MAP[stripped] || 'soon'
+}
+
+function nextPhaseForToggle(task: Task): string {
+  if (!task.completed) return 'done'
+  return task.urgent ? 'urgent' : 'soon'
 }
 
 function useLocale() {
@@ -49,16 +56,27 @@ function useLocale() {
 function getChecklistCopy(locale: string) {
   const isIT = locale === 'it'
   return {
-    pageLabel: isIT ? 'PLANNING' : 'PLANNING',
+    pageLabel: 'PLANNING',
     pageTitle: isIT ? 'La vostra roadmap' : 'Your roadmap',
     progress: isIT ? 'Completamento' : 'Overall completion',
     tasksSuffix: isIT ? 'task' : 'tasks',
-    readOnly: isIT ? 'Vista in sola lettura — usa l’app VELO per aggiungere o completare task' : 'Read-only view — use the VELO app to add or complete tasks',
+    interactionHint: isIT
+      ? 'Puoi segnare i task come completati anche da web - usa l\'app VELO per creare o modificare i task.'
+      : 'You can mark tasks complete from web too - use the VELO app to create or edit tasks.',
     synced: isIT ? 'sincronizzato' : 'synced',
+    updating: isIT ? 'aggiornamento...' : 'updating...',
     emptyTitle: isIT ? 'Nessun task ancora' : 'No tasks yet',
-    emptyDesc: isIT ? 'Apri l’app VELO per aggiungere il primo task — la checklist apparirà qui.' : 'Open the VELO app to add your first task — your checklist will appear here.',
+    emptyDesc: isIT
+      ? 'Apri l\'app VELO per aggiungere il primo task - la checklist apparira qui.'
+      : 'Open the VELO app to add your first task - your checklist will appear here.',
     errorTitle: isIT ? 'Impossibile caricare la checklist' : 'Unable to load checklist',
-    errorDesc: isIT ? 'Potrebbe essere un problema temporaneo. Prova ad aggiornare la pagina.' : 'This may be a temporary connection issue. Try refreshing the page.',
+    errorDesc: isIT
+      ? 'Potrebbe essere un problema temporaneo. Prova ad aggiornare la pagina.'
+      : 'This may be a temporary connection issue. Try refreshing the page.',
+    writeErrorTitle: isIT ? 'Impossibile aggiornare il task' : 'Unable to update task',
+    writeErrorDesc: isIT
+      ? 'Lo stato non e stato salvato. Riprova.'
+      : 'The task status was not saved. Please try again.',
     phaseLabel: (phase: PhaseKey) => {
       const map: Record<PhaseKey, [string, string]> = {
         urgent: ['Urgente', 'Urgent'],
@@ -82,6 +100,8 @@ function getChecklistCopy(locale: string) {
   }
 }
 
+type ChecklistCopy = ReturnType<typeof getChecklistCopy>
+
 function taskTitle(task: Task, locale: string): string {
   if (locale === 'en' && task.title_en) return task.title_en
   if (task.title_it) return task.title_it
@@ -96,7 +116,8 @@ function taskBody(task: Task, locale: string): string | null {
 
 function formatDate(dateStr: string, locale: string): string {
   return new Date(dateStr).toLocaleDateString(locale === 'en' ? 'en-GB' : 'it-IT', {
-    day: 'numeric', month: 'long',
+    day: 'numeric',
+    month: 'long',
   })
 }
 
@@ -129,19 +150,21 @@ function sourceBadge(source: string, locale: string) {
 
 function ErrorBanner({ title, desc }: { title: string; desc: string }) {
   return (
-    <div style={{
-      background: 'rgba(196,117,106,0.06)',
-      border: '1px solid rgba(196,117,106,0.2)',
-      borderRadius: 12,
-      padding: '20px 24px',
-    }}>
+    <div
+      style={{
+        background: 'rgba(196,117,106,0.06)',
+        border: '1px solid rgba(196,117,106,0.2)',
+        borderRadius: 12,
+        padding: '20px 24px',
+      }}
+    >
       <div style={{ fontSize: 13, color: '#C4756A', fontWeight: 600, marginBottom: 6 }}>{title}</div>
       <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7 }}>{desc}</div>
     </div>
   )
 }
 
-function ProgressBar({ done, total, copy }: { done: number; total: number; copy: ReturnType<typeof getChecklistCopy> }) {
+function ProgressBar({ done, total, copy }: { done: number; total: number; copy: ChecklistCopy }) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0
   return (
     <div style={{ marginBottom: 32 }}>
@@ -155,86 +178,139 @@ function ProgressBar({ done, total, copy }: { done: number; total: number; copy:
         </div>
       </div>
       <div style={{ height: 3, background: '#1E1D1A', borderRadius: 2, overflow: 'hidden' }}>
-        <div style={{
-          height: '100%', width: `${pct}%`,
-          background: pct === 100 ? '#7A9E7E' : '#C9A84C',
-          borderRadius: 2,
-          transition: 'width 0.4s ease',
-        }} />
+        <div
+          style={{
+            height: '100%',
+            width: `${pct}%`,
+            background: pct === 100 ? '#7A9E7E' : '#C9A84C',
+            borderRadius: 2,
+            transition: 'width 0.4s ease',
+          }}
+        />
       </div>
       <div style={{ fontSize: 11, color: '#5A5040', marginTop: 6, textAlign: 'right' }}>{pct}%</div>
     </div>
   )
 }
 
-function TaskRow({ task, locale }: { task: Task; locale: string }) {
+function TaskRow({
+  task,
+  locale,
+  pending,
+  onToggle,
+}: {
+  task: Task
+  locale: string
+  pending: boolean
+  onToggle: (task: Task) => void
+}) {
   const title = taskTitle(task, locale)
   const body = taskBody(task, locale)
   const badge = task.source && task.source !== 'user' ? sourceBadge(task.source, locale) : null
   const isVendor = task.source === 'vendor' || task.source === 'vendor_custom'
   const isDone = task.completed
+  const copy = getChecklistCopy(locale)
 
   return (
-    <div style={{
-      display: 'flex',
-      gap: 14,
-      padding: '14px 18px',
-      borderBottom: '1px solid #1A1915',
-      opacity: isDone ? 0.55 : 1,
-      background: isVendor ? 'rgba(74,122,184,0.04)' : 'transparent',
-      transition: 'opacity 0.15s',
-    }}>
-      <div style={{
-        flexShrink: 0, marginTop: 2,
-        width: 18, height: 18, borderRadius: 4,
-        border: `1.5px solid ${isDone ? '#7A9E7E' : '#3A3830'}`,
-        background: isDone ? 'rgba(122,158,126,0.2)' : 'transparent',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
+    <div
+      style={{
+        display: 'flex',
+        gap: 14,
+        padding: '14px 18px',
+        borderBottom: '1px solid #1A1915',
+        opacity: isDone ? 0.55 : 1,
+        background: isVendor ? 'rgba(74,122,184,0.04)' : 'transparent',
+        transition: 'opacity 0.15s',
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => onToggle(task)}
+        disabled={pending}
+        aria-pressed={isDone}
+        style={{
+          flexShrink: 0,
+          marginTop: 2,
+          width: 18,
+          height: 18,
+          borderRadius: 4,
+          border: `1.5px solid ${isDone ? '#7A9E7E' : '#3A3830'}`,
+          background: isDone ? 'rgba(122,158,126,0.2)' : 'transparent',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: pending ? 'default' : 'pointer',
+          padding: 0,
+          opacity: pending ? 0.6 : 1,
+        }}
+      >
         {isDone && (
           <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
             <path d="M1 4L3.5 6.5L9 1" stroke="#7A9E7E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
-      </div>
+      </button>
 
       <div style={{ flex: 1, minWidth: 0 }}>
         {badge && (
           <div style={{ marginBottom: 5 }}>
-            <span style={{
-              fontSize: 10, letterSpacing: 1, textTransform: 'uppercase',
-              color: badge.color, background: `${badge.color}18`,
-              borderRadius: 4, padding: '2px 7px',
-            }}>
+            <span
+              style={{
+                fontSize: 10,
+                letterSpacing: 1,
+                textTransform: 'uppercase',
+                color: badge.color,
+                background: `${badge.color}18`,
+                borderRadius: 4,
+                padding: '2px 7px',
+              }}
+            >
               {badge.label}
               {task.vendor_name ? ` · ${task.vendor_name}` : ''}
             </span>
           </div>
         )}
-        <div style={{
-          fontSize: 14, color: isDone ? '#5A5040' : '#F5EDD6',
-          textDecoration: isDone ? 'line-through' : 'none',
-          lineHeight: 1.5,
-        }}>
+        <div
+          style={{
+            fontSize: 14,
+            color: isDone ? '#5A5040' : '#F5EDD6',
+            textDecoration: isDone ? 'line-through' : 'none',
+            lineHeight: 1.5,
+          }}
+        >
           {title}
         </div>
-        {body && !isDone && (
-          <div style={{ fontSize: 12, color: '#8A7E6A', marginTop: 4, lineHeight: 1.6 }}>{body}</div>
-        )}
+        {body && !isDone && <div style={{ fontSize: 12, color: '#8A7E6A', marginTop: 4, lineHeight: 1.6 }}>{body}</div>}
         {task.due_date && (
-          <div style={{
-            fontSize: 11, marginTop: 5,
-            color: task.urgent && !isDone ? '#C4756A' : '#5A5040',
-          }}>
+          <div
+            style={{
+              fontSize: 11,
+              marginTop: 5,
+              color: task.urgent && !isDone ? '#C4756A' : '#5A5040',
+            }}
+          >
             {formatDate(task.due_date, locale)}
           </div>
         )}
+        {pending && <div style={{ fontSize: 11, marginTop: 5, color: '#5A5040' }}>{copy.updating}</div>}
       </div>
     </div>
   )
 }
 
-function PhaseGroup({ phase, tasks, locale }: { phase: PhaseKey; tasks: Task[]; locale: string }) {
+function PhaseGroup({
+  phase,
+  tasks,
+  locale,
+  pendingIds,
+  onToggle,
+}: {
+  phase: PhaseKey
+  tasks: Task[]
+  locale: string
+  pendingIds: Set<string>
+  onToggle: (task: Task) => void
+}) {
   const cfg = phaseConfig(phase, locale)
   const [collapsed, setCollapsed] = useState(phase === 'done')
 
@@ -243,8 +319,12 @@ function PhaseGroup({ phase, tasks, locale }: { phase: PhaseKey; tasks: Task[]; 
       <button
         onClick={() => setCollapsed(c => !c)}
         style={{
-          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '10px 18px', background: cfg.accent,
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px 18px',
+          background: cfg.accent,
           border: `1px solid ${cfg.color}20`,
           borderBottom: collapsed ? undefined : 'none',
           borderRadius: collapsed ? 10 : '10px 10px 0 0',
@@ -259,7 +339,10 @@ function PhaseGroup({ phase, tasks, locale }: { phase: PhaseKey; tasks: Task[]; 
           <span style={{ fontSize: 12, color: '#5A5040' }}>{tasks.length}</span>
         </div>
         <svg
-          width="12" height="12" viewBox="0 0 12 12" fill="none"
+          width="12"
+          height="12"
+          viewBox="0 0 12 12"
+          fill="none"
           style={{ transform: collapsed ? 'rotate(-90deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}
         >
           <path d="M2 4L6 8L10 4" stroke={cfg.color} strokeWidth="1.5" strokeLinecap="round" />
@@ -267,16 +350,18 @@ function PhaseGroup({ phase, tasks, locale }: { phase: PhaseKey; tasks: Task[]; 
       </button>
 
       {!collapsed && (
-        <div style={{
-          background: '#1A1915',
-          border: `1px solid ${cfg.color}20`,
-          borderTop: 'none',
-          borderRadius: '0 0 10px 10px',
-          overflow: 'hidden',
-        }}>
+        <div
+          style={{
+            background: '#1A1915',
+            border: `1px solid ${cfg.color}20`,
+            borderTop: 'none',
+            borderRadius: '0 0 10px 10px',
+            overflow: 'hidden',
+          }}
+        >
           {tasks.map((task, i) => (
             <div key={task.id} style={{ borderTop: i === 0 ? 'none' : undefined }}>
-              <TaskRow task={task} locale={locale} />
+              <TaskRow task={task} locale={locale} pending={pendingIds.has(task.id)} onToggle={onToggle} />
             </div>
           ))}
         </div>
@@ -285,8 +370,6 @@ function PhaseGroup({ phase, tasks, locale }: { phase: PhaseKey; tasks: Task[]; 
   )
 }
 
-const PHASE_ORDER: PhaseKey[] = ['urgent', 'soon', 'done']
-
 export default function ChecklistPage() {
   const locale = useLocale()
   const copy = getChecklistCopy(locale)
@@ -294,11 +377,26 @@ export default function ChecklistPage() {
   const [loading, setLoading] = useState(true)
   const [lastSync, setLastSync] = useState<string | null>(null)
   const [fetchError, setFetchError] = useState(false)
+  const [writeError, setWriteError] = useState(false)
+  const [pendingIds, setPendingIds] = useState<string[]>([])
+
+  const markSyncedNow = () => {
+    setLastSync(
+      new Date().toLocaleTimeString(locale === 'en' ? 'en-GB' : 'it-IT', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    )
+  }
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { setFetchError(true); setLoading(false); return }
+      if (!session) {
+        setFetchError(true)
+        setLoading(false)
+        return
+      }
 
       const { data, error } = await supabase
         .from('tasks')
@@ -315,11 +413,40 @@ export default function ChecklistPage() {
       }
 
       setTasks(data ?? [])
-      setLastSync(new Date().toLocaleTimeString(locale === 'en' ? 'en-GB' : 'it-IT', { hour: '2-digit', minute: '2-digit' }))
+      markSyncedNow()
       setLoading(false)
     }
+
     load()
   }, [locale])
+
+  const handleToggle = async (task: Task) => {
+    if (pendingIds.includes(task.id)) return
+
+    setWriteError(false)
+    const nextTask: Task = {
+      ...task,
+      completed: !task.completed,
+      phase: nextPhaseForToggle(task),
+    }
+
+    setPendingIds(prev => [...prev, task.id])
+    setTasks(prev => prev.map(t => (t.id === task.id ? nextTask : t)))
+    markSyncedNow()
+
+    const { error } = await supabase
+      .from('tasks')
+      .update({ completed: nextTask.completed, phase: nextTask.phase })
+      .eq('id', task.id)
+
+    if (error) {
+      setTasks(prev => prev.map(t => (t.id === task.id ? task : t)))
+      setWriteError(true)
+      markSyncedNow()
+    }
+
+    setPendingIds(prev => prev.filter(id => id !== task.id))
+  }
 
   if (loading) {
     return (
@@ -363,6 +490,7 @@ export default function ChecklistPage() {
 
   const total = tasks.length
   const done = tasks.filter(t => t.completed).length
+  const pendingSet = new Set(pendingIds)
 
   return (
     <div>
@@ -377,35 +505,51 @@ export default function ChecklistPage() {
 
       {total > 0 && <ProgressBar done={done} total={total} copy={copy} />}
 
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        marginBottom: 24, padding: '10px 14px',
-        background: 'rgba(138,126,106,0.06)', border: '1px solid #2A2820',
-        borderRadius: 8,
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          marginBottom: 24,
+          padding: '10px 14px',
+          background: 'rgba(138,126,106,0.06)',
+          border: '1px solid #2A2820',
+          borderRadius: 8,
+        }}
+      >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A7E6A" strokeWidth="1.5">
-          <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          <rect x="3" y="11" width="18" height="11" rx="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
         </svg>
         <span style={{ fontSize: 12, color: '#8A7E6A' }}>
-          {copy.readOnly}
+          {copy.interactionHint}
           {lastSync && <span style={{ color: '#3A3830' }}> · {copy.synced} {lastSync}</span>}
         </span>
       </div>
 
+      {writeError && (
+        <div style={{ marginBottom: 16 }}>
+          <ErrorBanner title={copy.writeErrorTitle} desc={copy.writeErrorDesc} />
+        </div>
+      )}
+
       {grouped.length === 0 && (
-        <div style={{
-          background: '#1A1915', border: '1px solid #2A2820',
-          borderRadius: 14, padding: '48px 32px', textAlign: 'center',
-        }}>
+        <div
+          style={{
+            background: '#1A1915',
+            border: '1px solid #2A2820',
+            borderRadius: 14,
+            padding: '48px 32px',
+            textAlign: 'center',
+          }}
+        >
           <div style={{ fontSize: 14, color: '#5A5040', marginBottom: 10 }}>{copy.emptyTitle}</div>
-          <div style={{ fontSize: 12, color: '#3A3830', lineHeight: 1.7 }}>
-            {copy.emptyDesc}
-          </div>
+          <div style={{ fontSize: 12, color: '#3A3830', lineHeight: 1.7 }}>{copy.emptyDesc}</div>
         </div>
       )}
 
       {grouped.map(({ phase, tasks: phaseTasks }) => (
-        <PhaseGroup key={phase} phase={phase} tasks={phaseTasks} locale={locale} />
+        <PhaseGroup key={phase} phase={phase} tasks={phaseTasks} locale={locale} pendingIds={pendingSet} onToggle={handleToggle} />
       ))}
 
       {grouped.length > 0 && (
@@ -414,11 +558,17 @@ export default function ChecklistPage() {
             const cfg = phaseConfig(phase, locale)
             const count = grouped.find(g => g.phase === phase)?.tasks.length ?? 0
             return (
-              <div key={phase} style={{
-                flex: 1, minWidth: 100,
-                background: '#1A1915', border: `1px solid ${cfg.color}20`,
-                borderRadius: 10, padding: '14px 16px',
-              }}>
+              <div
+                key={phase}
+                style={{
+                  flex: 1,
+                  minWidth: 100,
+                  background: '#1A1915',
+                  border: `1px solid ${cfg.color}20`,
+                  borderRadius: 10,
+                  padding: '14px 16px',
+                }}
+              >
                 <div style={{ fontSize: 10, letterSpacing: 2, color: cfg.color, textTransform: 'uppercase', marginBottom: 6 }}>{cfg.label}</div>
                 <div style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 28, fontWeight: 300, color: '#F5EDD6' }}>{count}</div>
               </div>
