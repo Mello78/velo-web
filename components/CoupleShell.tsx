@@ -150,7 +150,7 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
     { href: '/couple/vendors', label: c.nav.vendors },
     { href: '/couple/guests', label: c.nav.guests },
     { href: '/couple/budget', label: c.nav.budget },
-  ]
+  ].filter(item => item.href !== '/couple/documents' || couple?.nationality !== 'italian')
 
   if (authState === 'loading') {
     return (

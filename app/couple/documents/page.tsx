@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { COUNTRIES, CountryDoc } from '../../../lib/countries'
+import Link from 'next/link'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -13,6 +14,16 @@ interface CoupleDoc {
 }
 
 type Difficulty = 'easy' | 'medium' | 'complex'
+
+function useLocale() {
+  const [locale, setLocale] = useState('en')
+  useEffect(() => {
+    const m = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
+    if (m) setLocale(m[1])
+    else if (!navigator.language.startsWith('en')) setLocale('it')
+  }, [])
+  return locale
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -255,6 +266,43 @@ function CoupleProfileUnavailable() {
           We could not find an active VELO couple profile for this signed-in account on web yet.
           Complete or verify your setup in the VELO app, then come back here for your personalised documents guide.
         </div>
+      </div>
+      <Footer />
+    </div>
+  )
+}
+
+function ItalianDocumentsUnavailable({ locale }: { locale: string }) {
+  const title = locale === 'en' ? 'Documents guidance reserved for international couples' : 'Guida documenti riservata alle coppie internazionali'
+  const body = locale === 'en'
+    ? 'VELO Documents is designed for couples who need international wedding document guidance for marrying in Italy. As an Italian couple, this area is not part of your main planning flow.'
+    : 'VELO Documents e pensato per le coppie che hanno bisogno di una guida internazionale ai documenti per sposarsi in Italia. Per una coppia italiana, questa area non fa parte del flusso principale di pianificazione.'
+  const cta = locale === 'en' ? 'Back to your couple area' : 'Torna alla tua area coppia'
+
+  return (
+    <div>
+      <PageHeader title={locale === 'en' ? 'Getting married in Italy' : 'Sposarsi in Italia'} />
+      <div style={{
+        background: '#1A1915', border: '1px solid rgba(201,168,76,0.25)',
+        borderRadius: 12, padding: '20px 24px', marginBottom: 12,
+      }}>
+        <div style={{ fontSize: 13, color: '#C9A84C', fontWeight: 600, marginBottom: 6 }}>
+          {title}
+        </div>
+        <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7, marginBottom: 18 }}>
+          {body}
+        </div>
+        <Link
+          href="/couple/dashboard"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            fontSize: 13, color: '#0F0E0C', textDecoration: 'none',
+            padding: '11px 16px', background: '#C9A84C', borderRadius: 10,
+            fontWeight: 600, letterSpacing: 0.4,
+          }}
+        >
+          {cta}
+        </Link>
       </div>
       <Footer />
     </div>
@@ -662,6 +710,7 @@ function ForeignWithCivil({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function DocumentsPage() {
+  const locale = useLocale()
   const [couple, setCouple] = useState<CoupleDoc | null>(null)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
@@ -717,7 +766,7 @@ export default function DocumentsPage() {
   // Genuine incomplete profile: couple row exists but nationality was never saved
   if (!nationality) return <ProfileIncomplete />
 
-  if (nationality === 'italian') return <ItalianCouple ceremony={ceremony} />
+  if (nationality === 'italian') return <ItalianDocumentsUnavailable locale={locale} />
 
   // Foreign couple
   const isSymbolic = ceremony === 'symbolic'
