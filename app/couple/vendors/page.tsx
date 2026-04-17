@@ -96,6 +96,9 @@ function getVendorsCopy(locale: string) {
     engErrorTitle:  isIT ? 'Stato fornitori non disponibile' : 'Vendor status unavailable',
     engErrorDesc:   isIT ? 'Non è stato possibile caricare lo stato degli engagement. Riprova più tardi.' : 'Engagement status could not be loaded. Please try again later.',
     pubPartialDesc: isIT ? 'Alcuni dettagli fornitore non sono disponibili.' : 'Some vendor details could not be loaded.',
+    partnerBadge:   isIT ? 'Partner VELO' : 'VELO Partner',
+    instagramTitle: isIT ? 'Instagram' : 'Instagram',
+    websiteTitle:   isIT ? 'Sito web' : 'Website',
     statusLabel: (status: EngagementStatus): string => {
       const map: Record<EngagementStatus, [string, string]> = {
         lead:       ['Aggiunto',             'Added'],
@@ -189,7 +192,6 @@ function PipelineSummary({ vendors, copy }: { vendors: VendorCard[]; copy: Vendo
 }
 
 function VendorCardRow({ vendor, copy }: { vendor: VendorCard; copy: VendorsCopy }) {
-  const cfg = STATUS_CONFIG[vendor.status]
   const isAgreed = vendor.status === 'agreed'
   const isBooked = vendor.status === 'booked'
   const isCancelled = vendor.status === 'cancelled'
@@ -240,7 +242,7 @@ function VendorCardRow({ vendor, copy }: { vendor: VendorCard; copy: VendorsCopy
               color: '#C9A84C', border: '1px solid rgba(201,168,76,0.3)',
               borderRadius: 4, padding: '2px 6px',
             }}>
-              Partner VELO
+              {copy.partnerBadge}
             </span>
           )}
         </div>
@@ -274,7 +276,7 @@ function VendorCardRow({ vendor, copy }: { vendor: VendorCard; copy: VendorsCopy
             href={`https://www.instagram.com/${vendor.instagram.replace('@', '')}`}
             target="_blank" rel="noopener noreferrer"
             style={{ fontSize: 11, color: '#8A7E6A', textDecoration: 'none' }}
-            title="Instagram"
+            title={copy.instagramTitle}
           >
             IG
           </a>
@@ -284,7 +286,7 @@ function VendorCardRow({ vendor, copy }: { vendor: VendorCard; copy: VendorsCopy
             href={vendor.website.startsWith('http') ? vendor.website : `https://${vendor.website}`}
             target="_blank" rel="noopener noreferrer"
             style={{ fontSize: 11, color: '#8A7E6A', textDecoration: 'none' }}
-            title="Website"
+            title={copy.websiteTitle}
           >
             ↗
           </a>
