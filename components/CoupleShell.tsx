@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { getT } from '../lib/translations'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import CoupleOnboarding from './CoupleOnboarding'
 
 type AuthState = 'loading' | 'login' | 'dashboard' | 'not_couple' | 'error'
 
@@ -223,18 +224,20 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
     )
   }
 
-  if (authState === 'not_couple' || authState === 'error') {
-    const title = authState === 'not_couple'
-      ? (locale === 'en' ? 'Couple profile not available' : 'Profilo coppia non disponibile')
-      : (locale === 'en' ? 'Unable to load your couple area' : 'Impossibile caricare l’area coppia')
+  if (authState === 'not_couple') {
+    return (
+      <CoupleOnboarding
+        initialLocale={locale}
+        onComplete={retryAuthenticatedLoad}
+      />
+    )
+  }
 
-    const body = authState === 'not_couple'
-      ? (locale === 'en'
-          ? 'You are signed in, but this account does not currently have an active VELO couple profile on web. Complete or verify your setup in the VELO app, then try again here.'
-          : 'Hai effettuato l’accesso, ma questo account al momento non ha un profilo coppia VELO attivo sul web. Completa o verifica la configurazione nell’app VELO, poi riprova qui.')
-      : (locale === 'en'
-          ? 'You are signed in, but we could not load your couple data. This may be a temporary connection issue. Please try again.'
-          : 'Hai effettuato l’accesso, ma non siamo riusciti a caricare i dati della coppia. Potrebbe essere un problema temporaneo di connessione. Riprova.')
+  if (authState === 'error') {
+    const title = locale === 'en' ? 'Unable to load your couple area' : 'Impossibile caricare l\u2019area coppia'
+    const body = locale === 'en'
+      ? 'You are signed in, but we could not load your couple data. This may be a temporary connection issue. Please try again.'
+      : 'Hai effettuato l\u2019accesso, ma non siamo riusciti a caricare i dati della coppia. Potrebbe essere un problema temporaneo di connessione. Riprova.'
 
     return (
       <div style={{ minHeight: '100vh', background: '#0F0E0C', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>

@@ -257,3 +257,18 @@ export const COUNTRIES: CountryDoc[] = [
     notes: 'Spain, as an EU country with similar civil law traditions, has one of the simpler processes.',
   },
 ];
+
+// VELO wedding areas — mirrored from mobile app: lib/data/countries.ts
+export const ITALY_REGIONS = [
+  { name: 'Toscana',           emoji: '🌿', desc: 'Colline, vigneti, ville storiche' },
+  { name: 'Langhe & Piemonte', emoji: '🍇', desc: 'Vigneti, tartufi, castelli medievali' },
+  { name: 'Amalfi Coast',      emoji: '🏖️', desc: 'Scogliere, Positano, Ravello' },
+  { name: 'Lago di Como',      emoji: '⛵', desc: 'Laghi, ville nobiliari, montagne' },
+  { name: 'Roma & Lazio',      emoji: '🏛️', desc: 'Storia, arte, ville romane' },
+  { name: 'Venezia & Veneto',  emoji: '🛶', desc: 'Canali, palazzi gotici, laguna' },
+  { name: 'Puglia',            emoji: '🫒', desc: 'Trulli, ulivi, masserie' },
+  { name: 'Sicilia',           emoji: '🌋', desc: 'Barocco, mare, Etna' },
+  { name: 'Umbria',            emoji: '🌄', desc: "Verde cuore d'Italia, borghi medievali" },
+  { name: 'Liguria',           emoji: '🌊', desc: 'Cinque Terre, Portofino, riviera' },
+  { name: 'Lago di Garda',     emoji: '🏔️', desc: 'Il lago più grande, castelli, limoneti' },
+];
