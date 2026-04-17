@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { cookies } from 'next/headers'
 import { supabase } from '../../../lib/supabase'
 import { getT } from '../../../lib/translations'
@@ -86,10 +87,24 @@ export default async function VendorDetailPage({
         backLabel={tr.vendorDetail.back}
       />
 
-      {/* Hero */}
+      {/* Hero
+          Source images from Supabase storage are often uploaded at ~1200px wide (OG format).
+          On desktop viewports >1200px the image upscales and looks soft — this is a source
+          asset constraint, not a rendering bug. Vendors should upload hero photos at
+          >=1600px wide for crisp display on large screens.
+          Using next/image here gives WebP delivery, responsive srcset, and an LCP priority
+          hint — the best the renderer can do with whatever source is uploaded. */}
       <div className="relative h-[420px] mt-16 overflow-hidden">
         {vendor.photo1_url ? (
-          <img src={vendor.photo1_url} alt={vendor.name} className="w-full h-full object-cover" />
+          <Image
+            src={vendor.photo1_url}
+            alt={vendor.name}
+            fill
+            className="object-cover object-center"
+            sizes="100vw"
+            priority
+            quality={85}
+          />
         ) : (
           <div className="w-full h-full bg-dark flex items-center justify-center">
             <span className="text-8xl opacity-20">{vendor.cover_emoji || '📸'}</span>
