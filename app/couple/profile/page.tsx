@@ -60,16 +60,33 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
+  const [missingProfile, setMissingProfile] = useState(false)
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-      const { data } = await supabase
+      if (!session) {
+        setFetchError(true)
+        setLoading(false)
+        return
+      }
+      const { data, error } = await supabase
         .from('couples')
         .select('partner1, partner2, wedding_date, budget, wedding_city, wedding_region, wedding_regione, wedding_province, wedding_style, ceremony_type, wedding_size, nationality')
         .eq('user_id', session.user.id)
         .single()
+      if (error) {
+        if (error.code === 'PGRST116') setMissingProfile(true)
+        else setFetchError(true)
+        setLoading(false)
+        return
+      }
+      if (!data) {
+        setMissingProfile(true)
+        setLoading(false)
+        return
+      }
       setProfile(data)
       setLoading(false)
     }
@@ -85,7 +102,47 @@ export default function ProfilePage() {
     )
   }
 
-  if (!profile) return null
+  if (fetchError) {
+    return (
+      <div>
+        <div style={{ marginBottom: 36 }}>
+          <div style={{ fontSize: 11, letterSpacing: 3, color: '#8A7E6A', textTransform: 'uppercase', marginBottom: 8 }}>{c.profile.label}</div>
+          <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 32, fontWeight: 300, color: '#F5EDD6', margin: 0 }}>{c.profile.title}</h1>
+        </div>
+        <div style={{ background: 'rgba(196,117,106,0.06)', border: '1px solid rgba(196,117,106,0.2)', borderRadius: 12, padding: '20px 24px' }}>
+          <div style={{ fontSize: 13, color: '#C4756A', fontWeight: 600, marginBottom: 6 }}>
+            {locale === 'en' ? 'Unable to load your profile' : 'Impossibile caricare il profilo'}
+          </div>
+          <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7 }}>
+            {locale === 'en'
+              ? 'We could not retrieve your couple details. This may be a temporary connection issue. Try refreshing the page.'
+              : 'Non siamo riusciti a recuperare i dati della coppia. Potrebbe essere un problema temporaneo di connessione. Prova ad aggiornare la pagina.'}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (missingProfile || !profile) {
+    return (
+      <div>
+        <div style={{ marginBottom: 36 }}>
+          <div style={{ fontSize: 11, letterSpacing: 3, color: '#8A7E6A', textTransform: 'uppercase', marginBottom: 8 }}>{c.profile.label}</div>
+          <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 32, fontWeight: 300, color: '#F5EDD6', margin: 0 }}>{c.profile.title}</h1>
+        </div>
+        <div style={{ background: '#1A1915', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 16, padding: '24px 24px 22px' }}>
+          <div style={{ fontSize: 11, letterSpacing: 2, color: '#C9A84C', textTransform: 'uppercase', marginBottom: 10 }}>
+            {locale === 'en' ? 'Complete your profile first' : 'Completa prima il profilo'}
+          </div>
+          <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.8 }}>
+            {locale === 'en'
+              ? 'Your couple profile is not available on web yet. Complete or verify your setup in the VELO app and it will appear here.'
+              : 'Il profilo coppia non è ancora disponibile sul web. Completa o verifica la configurazione nell’app VELO e apparirà qui.'}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const location = [profile.wedding_city, profile.wedding_province, profile.wedding_regione].filter(Boolean).join(' · ')
 

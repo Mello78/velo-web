@@ -240,6 +240,27 @@ function LoadError() {
   )
 }
 
+function CoupleProfileUnavailable() {
+  return (
+    <div>
+      <PageHeader title="Getting married in Italy" />
+      <div style={{
+        background: '#1A1915', border: '1px solid rgba(201,168,76,0.25)',
+        borderRadius: 12, padding: '20px 24px', marginBottom: 12,
+      }}>
+        <div style={{ fontSize: 13, color: '#C9A84C', fontWeight: 600, marginBottom: 6 }}>
+          Couple profile not available yet
+        </div>
+        <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7 }}>
+          We could not find an active VELO couple profile for this signed-in account on web yet.
+          Complete or verify your setup in the VELO app, then come back here for your personalised documents guide.
+        </div>
+      </div>
+      <Footer />
+    </div>
+  )
+}
+
 // Italian religious guide — data mirrored from components/ReligiousCeremonyGuide.tsx (isForeign=false)
 const IT_RELIGIOUS_CHECKLIST = [
   { phase: '12+ mesi prima', items: [
@@ -644,11 +665,12 @@ export default function DocumentsPage() {
   const [couple, setCouple] = useState<CoupleDoc | null>(null)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
+  const [missingCoupleRow, setMissingCoupleRow] = useState(false)
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { setLoading(false); return }
+      if (!session) { setFetchError(true); setLoading(false); return }
       const { data, error } = await supabase
         .from('couples')
         .select('nationality, country_of_origin, ceremony_type, wedding_date')
@@ -658,6 +680,11 @@ export default function DocumentsPage() {
       // supabase-js returns error.code 'PGRST116' when .single() finds no rows.
       if (error && error.code !== 'PGRST116') {
         setFetchError(true)
+        setLoading(false)
+        return
+      }
+      if (error?.code === 'PGRST116' || !data) {
+        setMissingCoupleRow(true)
         setLoading(false)
         return
       }
@@ -678,6 +705,7 @@ export default function DocumentsPage() {
 
   // Network error or unexpected Supabase failure
   if (fetchError) return <LoadError />
+  if (missingCoupleRow) return <CoupleProfileUnavailable />
 
   // ── Derive state (same logic as mobile documents.tsx) ──────────────────────
 
