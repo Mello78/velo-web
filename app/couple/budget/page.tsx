@@ -41,6 +41,9 @@ function getBudgetCopy(locale: string) {
     available: isIT ? 'Disponibile' : 'Available',
     overPlanned: isIT ? 'Oltre il budget' : 'Over planned',
     noBudgetSet: isIT ? 'Budget non impostato' : 'No budget set',
+    noBudgetSetDesc: isIT ? 'Il budget totale della coppia non è ancora stato impostato. Le voci di spesa sono comunque aggiornate.' : 'The couple planned budget has not been set yet. Expense items are still up to date.',
+    budgetLoadErrorTitle: isIT ? 'Budget totale non disponibile' : 'Planned budget unavailable',
+    budgetLoadErrorDesc: isIT ? 'Non siamo riusciti a caricare il budget totale della coppia. Le voci di spesa sono comunque aggiornate.' : 'We could not load the couple planned budget total. Expense items are still up to date.',
     all: isIT ? 'Tutti' : 'All',
     toConfirm: isIT ? 'Da confermare' : 'To confirm',
     category: isIT ? 'Categoria' : 'Category',
@@ -49,7 +52,6 @@ function getBudgetCopy(locale: string) {
     emptyDesc: isIT ? 'Aggiungete le vostre stime dall’app VELO — il budget apparirà qui.' : 'Add your estimates in the VELO app — your budget will appear here.',
     errorTitle: isIT ? 'Impossibile caricare il budget' : 'Unable to load budget',
     errorDesc: isIT ? 'Potrebbe essere un problema temporaneo. Prova ad aggiornare la pagina.' : 'This may be a temporary connection issue. Try refreshing the page.',
-    partialBudgetDesc: isIT ? 'Il budget totale non è disponibile al momento. Le voci di spesa sono comunque aggiornate.' : 'The planned budget total is unavailable right now. Expense items are still up to date.',
     estimatedPct: isIT ? '% del budget stimato' : '% of budget estimated',
     disclaimer: isIT ? 'Gli importi sono stime organizzative. VELO non elabora pagamenti.' : 'Amounts are planning estimates. VELO does not process payments.',
     uncategorized: isIT ? 'Altro' : 'Other',
@@ -300,13 +302,15 @@ export default function BudgetPage() {
   const [budgetTotal, setBudgetTotal] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
-  const [budgetPartial, setBudgetPartial] = useState(false)
+  const [budgetMissing, setBudgetMissing] = useState(false)
+  const [budgetLoadError, setBudgetLoadError] = useState(false)
   const [filterStatus, setFilterStatus] = useState<ExpenseStatus | 'all'>('all')
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
+        setFetchError(true)
         setLoading(false)
         return
       }
@@ -333,9 +337,11 @@ export default function BudgetPage() {
       }
 
       if (coupleRes.error) {
-        setBudgetPartial(true)
+        if (coupleRes.error.code === 'PGRST116') setBudgetMissing(true)
+        else setBudgetLoadError(true)
       } else {
         setBudgetTotal(coupleRes.data?.budget ?? null)
+        if (coupleRes.data?.budget == null) setBudgetMissing(true)
       }
 
       setExpenses((expensesRes.data ?? []) as ExpenseRow[])
@@ -390,9 +396,15 @@ export default function BudgetPage() {
     <div>
       <PageHeader copy={copy} />
 
-      {budgetPartial && (
+      {budgetLoadError && (
         <div style={{ marginBottom: 20 }}>
-          <ErrorBanner title={copy.noBudgetSet} desc={copy.partialBudgetDesc} tone="warning" />
+          <ErrorBanner title={copy.budgetLoadErrorTitle} desc={copy.budgetLoadErrorDesc} tone="warning" />
+        </div>
+      )}
+
+      {budgetMissing && (
+        <div style={{ marginBottom: 20 }}>
+          <ErrorBanner title={copy.noBudgetSet} desc={copy.noBudgetSetDesc} tone="warning" />
         </div>
       )}
 
@@ -403,7 +415,7 @@ export default function BudgetPage() {
               label={copy.planned}
               value={typeof budgetTotal === 'number' ? formatCurrency(budgetTotal, locale) : '—'}
               color="#4A7AB8"
-              sub={typeof budgetTotal === 'number' ? undefined : copy.noBudgetSet}
+              sub={typeof budgetTotal === 'number' ? undefined : (budgetLoadError ? copy.budgetLoadErrorTitle : copy.noBudgetSet)}
             />
             <SummaryCard label={copy.estimated} value={formatCurrency(estimated, locale)} color="#C9A84C" />
             <SummaryCard label={copy.confirmed} value={formatCurrency(confirmedTotal, locale)} color="#7A9E7E" />

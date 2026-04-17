@@ -4,11 +4,11 @@ import { supabase } from '../../../lib/supabase'
 import { getT } from '../../../lib/translations'
 
 function useLocale() {
-  const [locale, setLocale] = useState('it')
+  const [locale, setLocale] = useState('en')
   useEffect(() => {
     const m = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
     if (m) setLocale(m[1])
-    else if (navigator.language.startsWith('en')) setLocale('en')
+    else if (!navigator.language.startsWith('en')) setLocale('it')
   }, [])
   return locale
 }
@@ -49,10 +49,24 @@ function formatBudget(n: number): string {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
 }
 
+function getDashboardCopy(locale: string) {
+  const isIT = locale === 'it'
+  return {
+    title: 'Dashboard',
+    confirmedBudget: isIT ? 'confermato' : 'confirmed',
+    appTitle: isIT ? 'Esperienza completa sull\'app VELO' : 'Full experience on the VELO app',
+    appDesc: isIT
+      ? 'Chatta con i fornitori, gestisci task e ospiti, tieni traccia del budget.'
+      : 'Chat with vendors, manage tasks and guests, track your budget.',
+    appCta: 'App Store →',
+  }
+}
+
 export default function DashboardPage() {
   const locale = useLocale()
   const d = getT(locale)
   const c = (d as any).couple
+  const copy = getDashboardCopy(locale)
 
   const [couple, setCouple] = useState<DashboardData | null>(null)
   const [stats, setStats] = useState<Stats | null>(null)
@@ -113,14 +127,13 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {/* Header */}
       <div style={{ marginBottom: 36 }}>
         <div style={{ fontSize: 11, letterSpacing: 3, color: '#8A7E6A', textTransform: 'uppercase', marginBottom: 8 }}>
           {c.dashboard.greeting}{couple?.partner1 ? `, ${couple.partner1}` : ''}
           {couple?.partner2 ? ` & ${couple.partner2}` : ''}
         </div>
         <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 32, fontWeight: 300, color: '#F5EDD6', margin: 0, lineHeight: 1.2 }}>
-          Dashboard
+          {copy.title}
         </h1>
         {couple?.wedding_city && (
           <div style={{ fontSize: 13, color: '#8A7E6A', marginTop: 6 }}>
@@ -129,7 +142,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Countdown */}
       <div style={{
         background: 'linear-gradient(135deg, #1A1915 0%, #0F0E0C 100%)',
         border: '1px solid #2A2820',
@@ -160,7 +172,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Stats grid */}
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 24 }} className="stats-grid">
           <StatCard
@@ -180,12 +191,11 @@ export default function DashboardPage() {
           <StatCard
             label={c.dashboard.budgetStat}
             value={couple?.budget ? formatBudget(couple.budget) : '—'}
-            sub={stats.spentBudget > 0 ? `${formatBudget(stats.spentBudget)} confermato` : undefined}
+            sub={stats.spentBudget > 0 ? `${formatBudget(stats.spentBudget)} ${copy.confirmedBudget}` : undefined}
           />
         </div>
       )}
 
-      {/* App CTA */}
       <div style={{
         border: '1px solid #2A2820',
         borderRadius: 12,
@@ -195,18 +205,10 @@ export default function DashboardPage() {
         gap: 16,
       }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 13, color: '#F5EDD6', marginBottom: 4 }}>
-            {locale === 'en' ? 'Full experience on the VELO app' : 'Esperienza completa sull\'app VELO'}
-          </div>
-          <div style={{ fontSize: 12, color: '#8A7E6A' }}>
-            {locale === 'en'
-              ? 'Chat with vendors, manage tasks and guests, track your budget.'
-              : 'Chatta con i fornitori, gestisci task e ospiti, tieni traccia del budget.'}
-          </div>
+          <div style={{ fontSize: 13, color: '#F5EDD6', marginBottom: 4 }}>{copy.appTitle}</div>
+          <div style={{ fontSize: 12, color: '#8A7E6A' }}>{copy.appDesc}</div>
         </div>
-        <div style={{ fontSize: 13, color: '#C9A84C', whiteSpace: 'nowrap' }}>
-          {locale === 'en' ? 'App Store →' : 'App Store →'}
-        </div>
+        <div style={{ fontSize: 13, color: '#C9A84C', whiteSpace: 'nowrap' }}>{copy.appCta}</div>
       </div>
 
       <style>{`
