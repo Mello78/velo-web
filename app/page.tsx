@@ -1,25 +1,8 @@
 import Link from 'next/link'
 import { cookies } from 'next/headers'
-import { getT } from '../lib/translations'
 import NavBar from '../components/NavBar'
 
 const regions = ['Toscana', 'Amalfi Coast', 'Lago di Como', 'Langhe & Piemonte', 'Roma & Lazio', 'Puglia', 'Venezia & Veneto', 'Umbria']
-
-function AppleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-    </svg>
-  )
-}
-
-function AndroidIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M6.18 15.64a2.18 2.18 0 012.18 2.18C8.36 19 7.38 20 6.18 20C4.98 20 4 19 4 17.82a2.18 2.18 0 012.18-2.18M17.82 15.64a2.18 2.18 0 012.18 2.18C20 19 19.02 20 17.82 20c-1.2 0-2.18-1-2.18-2.18a2.18 2.18 0 012.18-2.18M17.82 8.18C18.42 8.18 19 8.64 19 9.27v6.92c0 .63-.58 1.09-1.18 1.09-.6 0-1.18-.46-1.18-1.09V9.27c0-.63.58-1.09 1.18-1.09M6.18 8.18c.6 0 1.18.46 1.18 1.09v6.92c0 .63-.58 1.09-1.18 1.09C5.58 17.28 5 16.82 5 16.19V9.27c0-.63.58-1.09 1.18-1.09M12 1l2.27 4H9.73L12 1M12 3.27L11 5h2l-1-1.73M7 6v10h10V6H7m2-1h6c.55 0 1 .45 1 1v11c0 .55-.45 1-1 1H9c-.55 0-1-.45-1-1V6c0-.55.45-1 1-1z" />
-    </svg>
-  )
-}
 
 const featureIcons = [
   <svg key="dashboard" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><rect x="3" y="4" width="18" height="16" rx="2" stroke="#C9A84C" strokeWidth="1.5" /><path d="M7 9h10M7 13h6M7 17h4" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" /></svg>,
@@ -28,12 +11,6 @@ const featureIcons = [
   <svg key="vendors" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" stroke="#C9A84C" strokeWidth="1.5" /><path d="M9 12l2 2 4-4" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>,
   <svg key="guests" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><circle cx="9" cy="8" r="3" stroke="#C9A84C" strokeWidth="1.5" /><path d="M4 19c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" /><circle cx="17" cy="9" r="2" stroke="#C9A84C" strokeWidth="1.5" /><path d="M20 19c0-2-1.5-3.6-3.4-3.9" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" /></svg>,
   <svg key="budget" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><rect x="2" y="6" width="20" height="12" rx="2" stroke="#C9A84C" strokeWidth="1.5" /><path d="M2 10h20" stroke="#C9A84C" strokeWidth="1.5" /><circle cx="8" cy="14" r="1.5" fill="#C9A84C" /><path d="M14 14h4" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" /></svg>,
-]
-
-const stepIcons = [
-  <svg key="step-1" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><rect x="4" y="3" width="16" height="18" rx="2" stroke="#C9A84C" strokeWidth="1.5" /><path d="M8 8h8M8 12h5" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" /></svg>,
-  <svg key="step-2" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><circle cx="12" cy="12" r="9" stroke="#C9A84C" strokeWidth="1.5" /><path d="M12 7v5l3 2" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" /></svg>,
-  <svg key="step-3" viewBox="0 0 24 24" fill="none" className="w-8 h-8"><path d="M5 12h14" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" /><path d="M13 6l6 6-6 6" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>,
 ]
 
 type HomeCopy = {
@@ -51,17 +28,13 @@ type HomeCopy = {
     desc: string
     coupleBtn: string
     browseBtn: string
-    vendorBtn: string
-    webNote: string
+    appNote: string
     couplePreviewLabel: string
-    previewTitle: string
-    previewDesc: string
     previewTools: string[]
   }
   paths: {
     label: string
     title: string
-    desc: string
     couplesBadge: string
     couplesTitle: string
     couplesDesc: string
@@ -117,48 +90,44 @@ function getHomeCopy(locale: string): HomeCopy {
         primaryCta: 'ENTER COUPLE AREA',
       },
       hero: {
-        label: 'The platform for couples getting married in Italy',
-        title1: 'Plan your wedding',
+        label: 'from yes to forever',
+        title1: 'Your wedding',
         tag: 'in Italy',
-        title2: 'with one platform',
-        desc: 'VELO brings together dashboard, documents, checklist, vendors, guests, and budget in one dedicated space for couples.',
+        title2: 'planned together.',
+        desc: 'Dashboard, documents, checklist, vendors, guests, and budget — one dedicated planning space for couples marrying in Italy.',
         coupleBtn: 'Enter the couple area',
         browseBtn: 'Browse vendors',
-        vendorBtn: 'Vendor area',
-        webNote: 'Couple area available on web. VELO app remains part of the experience.',
-        couplePreviewLabel: 'Couple platform preview',
-        previewTitle: 'The VELO couple area is now a real planning workspace',
-        previewDesc: 'Dashboard, documents, checklist, vendors, guests, and budget now connect inside one authenticated planning flow.',
+        appNote: 'App also available on iOS & Android',
+        couplePreviewLabel: 'Couple platform',
         previewTools: ['Dashboard', 'Documents', 'Checklist', 'Vendors', 'Guests', 'Budget'],
       },
       paths: {
-        label: 'Two clear paths',
-        title: 'VELO now serves couples first, while still supporting vendors well',
-        desc: 'The homepage now opens with wedding planning for couples, without losing the strength of VELO’s vendor marketplace.',
+        label: 'Two paths',
+        title: 'Built for couples. Open for vendors.',
         couplesBadge: 'For couples',
         couplesTitle: 'Step into your planning platform',
-        couplesDesc: 'Sign in to the VELO couple area and manage your wedding in Italy from one authenticated space.',
+        couplesDesc: 'Sign in to the VELO couple area and manage your entire wedding in Italy from one authenticated space.',
         couplesPoints: ['Planning dashboard', 'Checklist and documents', 'Vendors, guests, and budget'],
         couplesBtn: 'Open couple area',
         vendorsBadge: 'For vendors',
-        vendorsTitle: 'Stay visible inside the VELO marketplace',
-        vendorsDesc: 'The vendor side remains important for discovery and conversion, but now as a secondary path next to the couple platform.',
-        vendorsPoints: ['Public listing', 'Vendor workspace', 'Couple pipeline and profile management'],
+        vendorsTitle: 'Get listed in the VELO marketplace',
+        vendorsDesc: 'Get listed on velowedding.it, manage your couple pipeline, and connect directly with couples planning their Italian wedding.',
+        vendorsPoints: ['Public listing on velowedding.it', 'Vendor workspace and calendar', 'Direct messages from couples'],
         vendorsBtn: 'Go to vendor area',
       },
       how: {
         label: 'How it works',
-        title: 'From first sign-in to wedding day',
+        title: 'From yes to wedding day',
         items: [
-          { title: '1. Sign in as a couple', desc: 'Enter your VELO area and immediately see the full picture of your wedding.' },
-          { title: '2. Follow the real planning flow', desc: 'Checklist, documents, budget, guests, and vendors stay aligned inside one product flow.' },
-          { title: '3. Move forward without losing context', desc: 'Each area of the platform connects back to the overall plan and makes next steps clearer.' },
+          { title: 'Sign in as a couple', desc: 'Enter your VELO area and immediately see the full picture of your wedding in one place.' },
+          { title: 'Work through the real planning flow', desc: 'Checklist, documents, budget, guests, and vendors stay aligned inside one connected product flow.' },
+          { title: 'Arrive ready for your wedding day', desc: 'Every decision made, every vendor confirmed, every guest counted. VELO keeps the whole plan in focus.' },
         ],
       },
       platform: {
         label: 'Inside the couple platform',
-        title: 'Real tools already live inside VELO',
-        desc: 'Not just inspiration or vendor browsing: couples can now enter a real planning platform that is materially built out on web.',
+        title: 'Six tools. One planning space.',
+        desc: 'Dashboard, documents, checklist, vendors, guests, and budget already live inside the VELO couple area on web.',
         cta: 'Enter the couple platform',
         cards: [
           { title: 'Planning dashboard', desc: 'A couple overview with countdown, completed tasks, planned budget, and the next areas to open.' },
@@ -171,23 +140,23 @@ function getHomeCopy(locale: string): HomeCopy {
       },
       marketplace: {
         label: 'Vendor marketplace',
-        title: 'When you need vendors, the marketplace is still right there',
-        desc: 'Photographers, floral designers, caterers, and venues remain part of VELO, but now inside a broader planning story for couples.',
-        cta: 'Explore all vendors →',
+        title: 'Discover exceptional vendors across Italy',
+        desc: 'Photographers, floral designers, caterers, and venues — selected for couples planning an Italian wedding.',
+        cta: 'Explore all vendors \u2192',
       },
       vendor: {
         badge: 'For wedding professionals',
         title: 'Are you a wedding vendor?',
         desc: 'The vendor side remains active and visible: public listing, vendor workspace, and direct connection with couples planning a wedding in Italy.',
-        pricing: 'First year free — then €20/month, cancel anytime',
-        btn: 'Register as a vendor →',
+        pricing: 'First year free \u2014 then \u20ac20/month, cancel anytime',
+        btn: 'Register as a vendor \u2192',
       },
       footer: {
         couples: 'Couple Area',
         vendors: 'Vendors',
         vendorArea: 'Vendor Area',
         admin: 'Admin',
-        copy: '© 2026 VELO · velowedding.it',
+        copy: '\u00a9 2026 VELO \u00b7 velowedding.it',
       },
     }
   }
@@ -197,55 +166,51 @@ function getHomeCopy(locale: string): HomeCopy {
       couples: 'Area Coppie',
       vendors: 'Fornitori',
       forVendors: 'Sei un fornitore?',
-      primaryCta: 'ENTRA NELL\'AREA COPPIA',
+      primaryCta: "ENTRA NELL'AREA COPPIA",
     },
     hero: {
-      label: 'La piattaforma per chi si sposa in Italia',
-      title1: 'Pianifica il tuo matrimonio',
+      label: 'dal s\u00ec per sempre',
+      title1: 'Il tuo matrimonio',
       tag: 'in Italia',
-      title2: 'con una sola piattaforma',
-      desc: 'VELO riunisce dashboard, documenti, checklist, fornitori, ospiti e budget in un unico spazio dedicato alle coppie.',
-      coupleBtn: 'Entra nell\'area coppia',
+      title2: 'pianificato insieme.',
+      desc: 'Dashboard, documenti, checklist, fornitori, ospiti e budget in un unico spazio dedicato a chi si sposa in Italia.',
+      coupleBtn: "Entra nell'area coppia",
       browseBtn: 'Esplora i fornitori',
-      vendorBtn: 'Area fornitori',
-      webNote: 'Area coppia disponibile sul web. L\'app VELO resta parte dell\'esperienza.',
-      couplePreviewLabel: 'Anteprima area coppia',
-      previewTitle: 'L’area coppia VELO ora e uno spazio di planning reale',
-      previewDesc: 'Dashboard, documenti, checklist, fornitori, ospiti e budget si collegano dentro un unico flusso autenticato.',
+      appNote: 'App disponibile anche su iOS e Android',
+      couplePreviewLabel: 'Piattaforma coppia',
       previewTools: ['Dashboard', 'Documenti', 'Checklist', 'Fornitori', 'Ospiti', 'Budget'],
     },
     paths: {
-      label: 'Due percorsi chiari',
-      title: 'VELO accompagna coppie e professionisti',
-      desc: 'La homepage ora apre subito al planning delle coppie, senza perdere la forza del marketplace fornitori.',
+      label: 'Due percorsi',
+      title: 'Prima le coppie. Aperto ai professionisti.',
       couplesBadge: 'Per le coppie',
       couplesTitle: 'Entrate nella vostra area planning',
-      couplesDesc: 'Accedete alla piattaforma VELO per seguire tutto il matrimonio in Italia da un unico spazio autenticato.',
+      couplesDesc: "Accedete alla piattaforma VELO e gestite tutto il vostro matrimonio in Italia da un unico spazio autenticato.",
       couplesPoints: ['Dashboard wedding', 'Checklist e documenti', 'Fornitori, ospiti e budget'],
       couplesBtn: 'Apri area coppia',
       vendorsBadge: 'Per i fornitori',
-      vendorsTitle: 'Restate visibili nel marketplace VELO',
-      vendorsDesc: 'La parte vendor rimane centrale per discovery e conversione, ma come percorso secondario rispetto al planning delle coppie.',
-      vendorsPoints: ['Vetrina pubblica', 'Area professionisti', 'Pipeline coppie e gestione profilo'],
-      vendorsBtn: 'Vai all\'area fornitori',
+      vendorsTitle: 'Entrate nel marketplace VELO',
+      vendorsDesc: 'Fatevi trovare su velowedding.it, gestite la pipeline delle coppie e connettevi direttamente con chi pianifica il matrimonio in Italia.',
+      vendorsPoints: ['Vetrina su velowedding.it', 'Area professionisti e calendario', 'Messaggi diretti dalle coppie'],
+      vendorsBtn: "Vai all'area fornitori",
     },
     how: {
       label: 'Come funziona',
-      title: 'Dal primo accesso al giorno del matrimonio',
+      title: 'Dal s\u00ec al giorno del matrimonio',
       items: [
-        { title: '1. Accedete come coppia', desc: 'Entrate nella vostra area VELO e ritrovate il quadro completo del matrimonio.' },
-        { title: '2. Seguite il planning reale', desc: 'Checklist, documenti, budget, ospiti e fornitori restano allineati nello stesso flusso.' },
-        { title: '3. Avanzate senza perdere contesto', desc: 'Ogni area della piattaforma vi riporta al piano generale e rende piu chiari i prossimi passi.' },
+        { title: 'Accedete come coppia', desc: "Entrate nella vostra area VELO e ritrovate subito il quadro completo del matrimonio in un unico posto." },
+        { title: 'Seguite il planning in ogni fase', desc: 'Checklist, documenti, budget, ospiti e fornitori restano allineati dentro un unico flusso connesso.' },
+        { title: 'Arrivate pronti al giorno del matrimonio', desc: 'Ogni decisione presa, ogni fornitore confermato, ogni ospite contato. VELO tiene tutto il piano in focus.' },
       ],
     },
     platform: {
       label: 'Dentro la piattaforma coppia',
-      title: 'Gli strumenti reali gia disponibili nell’area VELO',
-      desc: 'Non solo ispirazione o ricerca fornitori: la coppia entra in una piattaforma concreta, gia operativa sul web.',
+      title: 'Sei strumenti. Una piattaforma.',
+      desc: 'Dashboard, documenti, checklist, fornitori, ospiti e budget gi\u00e0 disponibili nell\u2019area coppia VELO sul web.',
       cta: 'Accedi alla piattaforma coppia',
       cards: [
-        { title: 'Dashboard planning', desc: 'Una vista d’insieme sul matrimonio con conto alla rovescia, task completati, budget e prossime aree da aprire.' },
-        { title: 'Guida documenti', desc: 'Percorso documentale dedicato alle coppie straniere che si sposano in Italia, con logica reale per cerimonia e nazionalita.' },
+        { title: 'Dashboard planning', desc: "Una vista d'insieme sul matrimonio con conto alla rovescia, task completati, budget e prossime aree da aprire." },
+        { title: 'Guida documenti', desc: 'Percorso documentale dedicato alle coppie straniere che si sposano in Italia, con logica reale per cerimonia e nazionalit\u00e0.' },
         { title: 'Checklist attiva', desc: 'Task raggruppati per urgenza, ordinati e ora completabili anche dal web senza uscire dal planning.' },
         { title: 'Pipeline fornitori', desc: 'I fornitori seguiti e confermati restano visibili in una vista dedicata, collegata al resto del piano.' },
         { title: 'Gestione ospiti', desc: 'Lista ospiti, RSVP, gruppi e coperti restano leggibili anche da desktop nel flusso coppia.' },
@@ -254,23 +219,23 @@ function getHomeCopy(locale: string): HomeCopy {
     },
     marketplace: {
       label: 'Marketplace fornitori',
-      title: 'Quando vi serve, il marketplace resta a portata di mano',
-      desc: 'Fotografi, floral designer, catering e location restano parte del prodotto VELO, ma dentro una storia piu ampia di planning per le coppie.',
-      cta: 'Esplora tutti i fornitori →',
+      title: 'Scopri i professionisti in tutta Italia',
+      desc: 'Fotografi, floral designer, catering e location selezionati per chi si sposa in Italia.',
+      cta: 'Esplora tutti i fornitori \u2192',
     },
     vendor: {
       badge: 'Per i professionisti del wedding',
       title: 'Sei un fornitore di matrimoni?',
       desc: 'La parte vendor resta viva e visibile: vetrina pubblica, area professionisti e connessione diretta con coppie che stanno pianificando il matrimonio in Italia.',
-      pricing: 'Primo anno gratuito — poi €20/mese, cancellazione libera',
-      btn: 'Registrati come fornitore →',
+      pricing: 'Primo anno gratuito \u2014 poi \u20ac20/mese, cancellazione libera',
+      btn: 'Registrati come fornitore \u2192',
     },
     footer: {
       couples: 'Area Coppie',
       vendors: 'Fornitori',
       vendorArea: 'Area Fornitori',
       admin: 'Admin',
-      copy: '© 2026 VELO · velowedding.it',
+      copy: '\u00a9 2026 VELO \u00b7 velowedding.it',
     },
   }
 }
@@ -278,7 +243,6 @@ function getHomeCopy(locale: string): HomeCopy {
 export default function Home() {
   const cookieStore = cookies()
   const locale = cookieStore.get('NEXT_LOCALE')?.value || 'it'
-  const tr = getT(locale)
   const copy = getHomeCopy(locale)
 
   return (
@@ -291,6 +255,7 @@ export default function Home() {
         primaryCtaLabel={copy.nav.primaryCta}
       />
 
+      {/* ── Hero ─────────────────────────────────────────────────── */}
       <section className="relative min-h-[700px] flex items-center overflow-hidden pt-16 border-b border-border">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -298,104 +263,86 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-bg via-bg/88 to-bg/55" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_28%,rgba(201,168,76,0.16),transparent_30%)]" />
+
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-24 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-12 items-center">
+
+            {/* Left: headline + CTAs */}
             <div className="max-w-[580px]">
+              <div className="w-8 h-px bg-gold/50 mb-5" />
               <p className="text-gold text-xs tracking-[0.34em] uppercase mb-5">{copy.hero.label}</p>
-              <h1 className="text-5xl sm:text-6xl md:text-7xl font-light leading-[1.02] mb-6">
-                {copy.hero.title1} <span className="text-gold">{copy.hero.tag}</span><br />{copy.hero.title2}
+              <h1 className="text-5xl sm:text-6xl md:text-7xl font-light leading-[1.05] mb-6">
+                {copy.hero.title1}<br />
+                <span className="text-gold">{copy.hero.tag}</span><br />
+                <span className="italic opacity-90">{copy.hero.title2}</span>
               </h1>
               <p className="text-muted text-base sm:text-lg leading-relaxed mb-8 max-w-xl">{copy.hero.desc}</p>
 
-              <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                <Link href="/couple" className="inline-flex items-center justify-center gap-2 bg-gold text-bg font-semibold px-6 py-3.5 rounded-full hover:opacity-90 transition-opacity text-sm tracking-wide">
+              <div className="flex flex-col sm:flex-row gap-3 mb-5">
+                <Link
+                  href="/couple"
+                  className="inline-flex items-center justify-center gap-2 bg-gold text-bg font-semibold px-6 py-3.5 rounded-full hover:opacity-90 transition-opacity text-sm tracking-wide"
+                >
                   {copy.hero.coupleBtn}
                 </Link>
-                <Link href="/fornitori" className="inline-flex items-center justify-center gap-2 border border-border text-cream px-6 py-3.5 rounded-full hover:border-gold transition-colors text-sm tracking-wide">
+                <Link
+                  href="/fornitori"
+                  className="inline-flex items-center justify-center gap-2 border border-border text-cream px-6 py-3.5 rounded-full hover:border-gold transition-colors text-sm tracking-wide"
+                >
                   {copy.hero.browseBtn}
                 </Link>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm">
-                <Link href="/vendor" className="text-gold hover:opacity-80 transition-opacity tracking-wide">
-                  {copy.hero.vendorBtn}
-                </Link>
-                <span className="text-muted/70">{copy.hero.webNote}</span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 mt-8" id="download">
-                <a href="#" className="flex items-center justify-center gap-3 bg-cream/92 text-bg font-semibold px-6 py-3.5 rounded-full hover:opacity-90 transition-opacity">
-                  <AppleIcon /><span className="text-sm tracking-wide">{tr.hero.appStore}</span>
-                </a>
-                <a href="#" className="flex items-center justify-center gap-3 border border-border text-cream px-6 py-3.5 rounded-full hover:border-gold transition-colors">
-                  <AndroidIcon /><span className="text-sm tracking-wide">{tr.hero.googlePlay}</span>
-                </a>
-              </div>
+              <p className="text-[11px] text-muted/50 tracking-wide">{copy.hero.appNote}</p>
             </div>
 
+            {/* Right: clean platform preview */}
             <div className="relative">
-              <div className="rounded-[28px] border border-gold/20 bg-[#14120F]/92 backdrop-blur-sm p-5 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+              <div className="rounded-[28px] border border-gold/20 bg-[#14120F]/92 backdrop-blur-sm p-6 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <p className="text-gold text-[11px] tracking-[0.28em] uppercase mb-2">{copy.hero.couplePreviewLabel}</p>
-                    <h2 className="text-2xl font-light text-cream">{copy.hero.previewTitle}</h2>
+                    <p className="text-gold text-[11px] tracking-[0.28em] uppercase mb-1.5">{copy.hero.couplePreviewLabel}</p>
+                    <p className="text-cream text-xl font-light">VELO / Couple Area</p>
                   </div>
-                  <Link href="/couple" className="hidden sm:inline-flex bg-gold/12 border border-gold/25 text-gold px-4 py-2 rounded-full text-xs tracking-[0.16em] uppercase">
-                    {copy.hero.coupleBtn}
-                  </Link>
+                  <span className="bg-gold/10 border border-gold/20 text-gold px-3 py-1 rounded-full text-[11px] uppercase tracking-[0.18em]">
+                    Live
+                  </span>
                 </div>
 
-                <p className="text-muted text-sm leading-relaxed mb-6 max-w-xl">{copy.hero.previewDesc}</p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-[1.2fr_0.8fr] gap-4">
-                  <div className="rounded-2xl border border-border bg-dark/70 p-5 min-h-[220px]">
-                    <div className="flex items-center justify-between mb-5">
-                      <div>
-                        <div className="text-[11px] tracking-[0.24em] uppercase text-gold mb-2">{copy.hero.previewTools[0]}</div>
-                        <div className="text-2xl font-light text-cream">VELO / Couple</div>
-                      </div>
-                      <div className="rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-gold">
-                        Live
-                      </div>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {copy.hero.previewTools.map((tool, i) => (
+                    <div
+                      key={tool}
+                      className="flex items-center gap-3 rounded-xl border border-border bg-dark/60 px-4 py-3"
+                    >
+                      <div className="[&>svg]:w-5 [&>svg]:h-5 shrink-0 opacity-80">{featureIcons[i]}</div>
+                      <span className="text-sm text-cream">{tool}</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      {copy.hero.previewTools.slice(1, 5).map((tool, index) => (
-                        <div key={tool} className="rounded-xl border border-border bg-bg/60 px-4 py-3">
-                          <div className="text-[10px] uppercase tracking-[0.22em] text-gold/80 mb-2">Tool {index + 1}</div>
-                          <div className="text-sm text-cream">{tool}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="rounded-xl border border-border bg-bg/60 px-4 py-3">
-                      <div className="text-[10px] uppercase tracking-[0.22em] text-gold/80 mb-2">{copy.hero.previewTools[5]}</div>
-                      <div className="text-sm text-cream">{copy.platform.cards[5].desc}</div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-4">
-                    {copy.platform.cards.slice(0, 4).map((card, index) => (
-                      <div key={card.title} className="rounded-2xl border border-border bg-dark/70 p-4">
-                        <div className="mb-3 opacity-90">{featureIcons[index]}</div>
-                        <div className="text-sm text-cream mb-2">{card.title}</div>
-                        <div className="text-xs text-muted leading-relaxed">{card.desc}</div>
-                      </div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
+
+                <Link
+                  href="/couple"
+                  className="flex items-center justify-center gap-2 border border-gold/30 bg-gold/8 text-gold px-4 py-3 rounded-xl text-xs uppercase tracking-[0.2em] hover:bg-gold/15 transition-colors w-full"
+                >
+                  {copy.hero.coupleBtn} &rarr;
+                </Link>
               </div>
             </div>
+
           </div>
         </div>
       </section>
 
+      {/* ── Two paths ────────────────────────────────────────────── */}
       <section className="py-16 sm:py-20 px-4 sm:px-6 border-b border-border">
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mb-10">
             <p className="text-gold text-xs tracking-[0.3em] uppercase mb-4">{copy.paths.label}</p>
-            <h2 className="text-3xl sm:text-4xl font-light mb-4">{copy.paths.title}</h2>
-            <p className="text-muted leading-relaxed">{copy.paths.desc}</p>
+            <h2 className="text-3xl sm:text-4xl font-light">{copy.paths.title}</h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {/* Couples — primary */}
             <div className="rounded-[24px] border border-gold/20 bg-dark p-6 sm:p-8">
               <div className="inline-flex rounded-full border border-gold/25 bg-gold/10 px-4 py-1.5 text-[11px] uppercase tracking-[0.22em] text-gold mb-5">
                 {copy.paths.couplesBadge}
@@ -415,6 +362,7 @@ export default function Home() {
               </Link>
             </div>
 
+            {/* Vendors — secondary */}
             <div className="rounded-[24px] border border-border bg-dark p-6 sm:p-8">
               <div className="inline-flex rounded-full border border-border bg-bg/60 px-4 py-1.5 text-[11px] uppercase tracking-[0.22em] text-muted mb-5">
                 {copy.paths.vendorsBadge}
@@ -437,6 +385,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── How it works ─────────────────────────────────────────── */}
       <section className="py-16 sm:py-20 px-4 sm:px-6 border-b border-border">
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl text-center mx-auto mb-12">
@@ -445,16 +394,23 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {copy.how.items.map((item, index) => (
-              <div key={item.title} className="rounded-2xl border border-border bg-dark p-6">
-                <div className="mb-4 opacity-90">{stepIcons[index]}</div>
-                <h3 className="text-lg text-cream mb-3">{item.title}</h3>
-                <p className="text-sm text-muted leading-relaxed">{item.desc}</p>
+              <div key={item.title} className="rounded-2xl border border-border bg-dark p-6 relative overflow-hidden">
+                {/* Watermark step number */}
+                <div className="text-[80px] font-light text-gold/[0.07] absolute -top-3 right-4 select-none leading-none pointer-events-none">
+                  {index + 1}
+                </div>
+                <div className="relative">
+                  <div className="w-6 h-px bg-gold/40 mb-5" />
+                  <h3 className="text-lg text-cream mb-3">{item.title}</h3>
+                  <p className="text-sm text-muted leading-relaxed">{item.desc}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ── Platform tools ───────────────────────────────────────── */}
       <section className="py-16 sm:py-24 px-4 sm:px-6 border-b border-border">
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mb-12">
@@ -464,7 +420,12 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {copy.platform.cards.map((card, index) => (
-              <div key={card.title} className="bg-dark border border-border rounded-2xl p-5 sm:p-6 hover:border-gold/30 transition-colors group">
+              <div
+                key={card.title}
+                className={`bg-dark rounded-2xl p-5 sm:p-6 hover:border-gold/40 transition-colors group border ${
+                  index === 0 ? 'border-gold/25' : 'border-border'
+                }`}
+              >
                 <div className="mb-4 opacity-80 group-hover:opacity-100 transition-opacity">{featureIcons[index]}</div>
                 <h3 className="text-cream font-medium mb-2 tracking-wide">{card.title}</h3>
                 <p className="text-muted text-sm leading-relaxed">{card.desc}</p>
@@ -479,11 +440,12 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Marketplace ──────────────────────────────────────────── */}
       <section className="py-16 sm:py-24 px-4 sm:px-6 border-b border-border">
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-gold text-xs tracking-[0.3em] uppercase mb-4">{copy.marketplace.label}</p>
           <h2 className="text-3xl sm:text-4xl font-light mb-4">{copy.marketplace.title}</h2>
-          <p className="text-muted mb-10 max-w-3xl mx-auto">{copy.marketplace.desc}</p>
+          <p className="text-muted mb-10 max-w-2xl mx-auto">{copy.marketplace.desc}</p>
           <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
             {regions.map(region => (
               <Link
@@ -501,6 +463,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Vendor CTA ───────────────────────────────────────────── */}
       <section className="py-16 sm:py-24 px-4 sm:px-6 bg-dark border-b border-border">
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-block bg-gold/10 border border-gold/25 rounded-full px-5 py-2 text-xs text-gold tracking-widest uppercase mb-8">
@@ -515,6 +478,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Footer ───────────────────────────────────────────────── */}
       <footer className="border-t border-border py-10 sm:py-12 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
           <div className="flex items-center gap-3">
