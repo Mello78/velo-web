@@ -53,14 +53,15 @@ interface VendorCard {
 }
 
 // ─── Status config — mirrored from mobile vendors.tsx STATUS_CONFIG ───────────
+// Colors/bg/border only — labels are locale-aware via copy.statusLabel()
 
-const STATUS_CONFIG: Record<EngagementStatus, { label: string; color: string; bg: string; border: string }> = {
-  lead:       { label: 'Added',             color: '#8A7E6A', bg: 'rgba(138,126,106,0.10)', border: 'rgba(138,126,106,0.2)' },
-  quote_sent: { label: 'Quote requested',   color: '#4A7AB8', bg: 'rgba(74,122,184,0.10)',  border: 'rgba(74,122,184,0.25)' },
-  agreed:     { label: 'Agreement reached', color: '#C9A84C', bg: 'rgba(201,168,76,0.10)',  border: 'rgba(201,168,76,0.35)' },
-  booked:     { label: 'Confirmed',         color: '#7A9E7E', bg: 'rgba(122,158,126,0.10)', border: 'rgba(122,158,126,0.25)' },
-  completed:  { label: 'Completed',         color: '#7A9E7E', bg: 'rgba(122,158,126,0.10)', border: 'rgba(122,158,126,0.2)'  },
-  cancelled:  { label: 'Cancelled',         color: '#C4756A', bg: 'rgba(196,117,106,0.08)', border: 'rgba(196,117,106,0.2)'  },
+const STATUS_CONFIG: Record<EngagementStatus, { color: string; bg: string; border: string }> = {
+  lead:       { color: '#8A7E6A', bg: 'rgba(138,126,106,0.10)', border: 'rgba(138,126,106,0.2)' },
+  quote_sent: { color: '#4A7AB8', bg: 'rgba(74,122,184,0.10)',  border: 'rgba(74,122,184,0.25)' },
+  agreed:     { color: '#C9A84C', bg: 'rgba(201,168,76,0.10)',  border: 'rgba(201,168,76,0.35)' },
+  booked:     { color: '#7A9E7E', bg: 'rgba(122,158,126,0.10)', border: 'rgba(122,158,126,0.25)' },
+  completed:  { color: '#7A9E7E', bg: 'rgba(122,158,126,0.10)', border: 'rgba(122,158,126,0.2)'  },
+  cancelled:  { color: '#C4756A', bg: 'rgba(196,117,106,0.08)', border: 'rgba(196,117,106,0.2)'  },
 }
 
 // Pipeline order for display — active statuses first, then terminal
@@ -78,23 +79,54 @@ function useLocale() {
   return locale
 }
 
+// ─── Locale-aware copy ────────────────────────────────────────────────────────
+
+function getVendorsCopy(locale: string) {
+  const isIT = locale === 'it'
+  return {
+    pageLabel:      isIT ? 'FORNITORI'   : 'VENDORS',
+    pageTitle:      isIT ? 'I vostri fornitori' : 'Your vendors',
+    filterAll:      isIT ? 'Tutti'       : 'All',
+    readOnly:       isIT ? 'Vista in sola lettura — usa l\'app VELO per gestire i fornitori' : 'Read-only view — use the VELO app to manage vendors and advance status',
+    agreedNudge:    isIT ? 'Accordo raggiunto — apri l\'app VELO per confermare e bloccare la data.' : 'Agreement reached — open the VELO app to confirm and lock in this vendor.',
+    emptyTitle:     isIT ? 'Nessun fornitore' : 'No vendors yet',
+    emptyDesc:      isIT ? 'Sfoglia e aggiungi fornitori dall\'app VELO — la lista apparirà qui.' : 'Browse and add vendors in the VELO app — your list will appear here.',
+    errorTitle:     isIT ? 'Impossibile caricare i fornitori' : 'Unable to load vendors',
+    errorDesc:      isIT ? 'Potrebbe essere un problema temporaneo. Prova ad aggiornare la pagina.' : 'This may be a temporary connection issue. Try refreshing the page.',
+    engErrorTitle:  isIT ? 'Stato fornitori non disponibile' : 'Vendor status unavailable',
+    engErrorDesc:   isIT ? 'Non è stato possibile caricare lo stato degli engagement. Riprova più tardi.' : 'Engagement status could not be loaded. Please try again later.',
+    pubPartialDesc: isIT ? 'Alcuni dettagli fornitore non sono disponibili.' : 'Some vendor details could not be loaded.',
+    statusLabel: (status: EngagementStatus): string => {
+      const map: Record<EngagementStatus, [string, string]> = {
+        lead:       ['Aggiunto',             'Added'],
+        quote_sent: ['Preventivo richiesto', 'Quote requested'],
+        agreed:     ['Accordo raggiunto',    'Agreement reached'],
+        booked:     ['Confermato',           'Confirmed'],
+        completed:  ['Completato',           'Completed'],
+        cancelled:  ['Annullato',            'Cancelled'],
+      }
+      return isIT ? map[status][0] : map[status][1]
+    },
+  }
+}
+
+type VendorsCopy = ReturnType<typeof getVendorsCopy>
+
 // ─── Category icon — strip emoji prefix from mobile category strings ──────────
 // Mobile uses e.g. "📷 Fotografia", "🎵 Musica" — extract the leading emoji
 
 function categoryEmoji(category: string): string {
-  // Mobile categories like "📷 Fotografia" — grab any leading non-ASCII char(s)
   const match = category.match(/^[^\u0000-\u007F]+/)
   return match ? match[0].trim() : '◈'
 }
 
 function categoryLabel(category: string): string {
-  // Strip leading non-ASCII chars (emoji) and whitespace
   return category.replace(/^[^\u0000-\u007F\w]*/, '').trim() || category
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function StatusPill({ status }: { status: EngagementStatus }) {
+function StatusPill({ status, label }: { status: EngagementStatus; label: string }) {
   const cfg = STATUS_CONFIG[status]
   return (
     <span style={{
@@ -103,12 +135,24 @@ function StatusPill({ status }: { status: EngagementStatus }) {
       border: `1px solid ${cfg.border}`,
       borderRadius: 20, padding: '3px 10px', whiteSpace: 'nowrap',
     }}>
-      {cfg.label}
+      {label}
     </span>
   )
 }
 
-function PipelineSummary({ vendors }: { vendors: VendorCard[] }) {
+function ErrorBanner({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div style={{
+      background: 'rgba(196,117,106,0.06)', border: '1px solid rgba(196,117,106,0.2)',
+      borderRadius: 12, padding: '20px 24px',
+    }}>
+      <div style={{ fontSize: 13, color: '#C4756A', fontWeight: 600, marginBottom: 6 }}>{title}</div>
+      <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7 }}>{desc}</div>
+    </div>
+  )
+}
+
+function PipelineSummary({ vendors, copy }: { vendors: VendorCard[]; copy: VendorsCopy }) {
   const counts = PIPELINE_ORDER.reduce((acc, s) => {
     acc[s] = vendors.filter(v => v.status === s).length
     return acc
@@ -135,7 +179,7 @@ function PipelineSummary({ vendors }: { vendors: VendorCard[] }) {
               {counts[s]}
             </span>
             <span style={{ fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: cfg.color }}>
-              {cfg.label}
+              {copy.statusLabel(s)}
             </span>
           </div>
         )
@@ -144,7 +188,7 @@ function PipelineSummary({ vendors }: { vendors: VendorCard[] }) {
   )
 }
 
-function VendorCardRow({ vendor }: { vendor: VendorCard }) {
+function VendorCardRow({ vendor, copy }: { vendor: VendorCard; copy: VendorsCopy }) {
   const cfg = STATUS_CONFIG[vendor.status]
   const isAgreed = vendor.status === 'agreed'
   const isBooked = vendor.status === 'booked'
@@ -204,7 +248,7 @@ function VendorCardRow({ vendor }: { vendor: VendorCard }) {
           {categoryLabel(vendor.category)} · {vendor.location}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <StatusPill status={vendor.status} />
+          <StatusPill status={vendor.status} label={copy.statusLabel(vendor.status)} />
           {showRating && (
             <span style={{ fontSize: 12, color: '#8A7E6A' }}>
               ★ {vendor.rating?.toFixed(1)}
@@ -217,10 +261,8 @@ function VendorCardRow({ vendor }: { vendor: VendorCard }) {
 
         {/* Agreed nudge */}
         {isAgreed && (
-          <div style={{
-            marginTop: 10, fontSize: 12, color: '#C9A84C', lineHeight: 1.5,
-          }}>
-            Agreement reached — open the VELO app to confirm and lock in this vendor.
+          <div style={{ marginTop: 10, fontSize: 12, color: '#C9A84C', lineHeight: 1.5 }}>
+            {copy.agreedNudge}
           </div>
         )}
       </div>
@@ -252,7 +294,7 @@ function VendorCardRow({ vendor }: { vendor: VendorCard }) {
   )
 }
 
-function StatusGroup({ status, vendors }: { status: EngagementStatus; vendors: VendorCard[] }) {
+function StatusGroup({ status, vendors, copy }: { status: EngagementStatus; vendors: VendorCard[]; copy: VendorsCopy }) {
   const cfg = STATUS_CONFIG[status]
   const [collapsed, setCollapsed] = useState(status === 'cancelled' || status === 'completed')
 
@@ -269,7 +311,7 @@ function StatusGroup({ status, vendors }: { status: EngagementStatus; vendors: V
       >
         <div style={{ width: 7, height: 7, borderRadius: '50%', background: cfg.color, flexShrink: 0 }} />
         <span style={{ fontSize: 11, letterSpacing: 2, color: cfg.color, textTransform: 'uppercase', fontWeight: 600 }}>
-          {cfg.label}
+          {copy.statusLabel(status)}
         </span>
         <span style={{ fontSize: 12, color: '#3A3830', marginLeft: 4 }}>{vendors.length}</span>
         <svg
@@ -279,7 +321,7 @@ function StatusGroup({ status, vendors }: { status: EngagementStatus; vendors: V
           <path d="M2 4L6 8L10 4" stroke={cfg.color} strokeWidth="1.5" strokeLinecap="round"/>
         </svg>
       </button>
-      {!collapsed && vendors.map(v => <VendorCardRow key={v.id} vendor={v} />)}
+      {!collapsed && vendors.map(v => <VendorCardRow key={v.id} vendor={v} copy={copy} />)}
     </div>
   )
 }
@@ -290,7 +332,9 @@ export default function VendorsPage() {
   const locale = useLocale()
   const [vendors, setVendors] = useState<VendorCard[]>([])
   const [loading, setLoading] = useState(true)
-  const [fetchError, setFetchError] = useState(false)
+  const [fetchError, setFetchError] = useState(false)   // vendors table failed
+  const [engFailed, setEngFailed] = useState(false)     // engagements failed — statuses unreliable
+  const [pubPartial, setPubPartial] = useState(false)   // public_vendors failed — soft-degrade
   const [filterStatus, setFilterStatus] = useState<EngagementStatus | 'all'>('all')
 
   useEffect(() => {
@@ -310,29 +354,41 @@ export default function VendorsPage() {
       if (vErr) { setFetchError(true); setLoading(false); return }
       if (!vendorRows || vendorRows.length === 0) { setLoading(false); return }
 
-      // 2 — fetch engagements for all these vendors
-      const { data: engRows } = await supabase
+      // 2 — fetch engagements — CRITICAL: without this, all statuses default to 'lead' (misleading)
+      const { data: engRows, error: engErr } = await supabase
         .from('engagements')
         .select('id, vendor_id, status')
         .eq('user_id', uid)
+
+      if (engErr) {
+        // Showing the list with all statuses silently forced to 'lead' would be misleading.
+        // Hard-fail with a clear message instead.
+        setEngFailed(true)
+        setLoading(false)
+        return
+      }
 
       const engMap: Record<string, EngagementRow> = {}
       if (engRows) {
         engRows.forEach((e: EngagementRow) => { engMap[e.vendor_id] = e })
       }
 
-      // 3 — fetch public vendor details for vendors that have a public_vendor_id
+      // 3 — fetch public vendor details (supplementary enrichment — soft-degrade if unavailable)
       const pubIds = vendorRows
         .map((v: VendorRow) => v.public_vendor_id)
         .filter(Boolean) as string[]
 
       let pubMap: Record<string, PublicVendorRow> = {}
       if (pubIds.length > 0) {
-        const { data: pubRows } = await supabase
+        const { data: pubRows, error: pubErr } = await supabase
           .from('public_vendors')
           .select('id, photo1_url, logo_url, verified, review_count, description, description_en, region, instagram, website')
           .in('id', pubIds)
-        if (pubRows) {
+
+        if (pubErr) {
+          // Core pipeline (name/status) still works — signal partial degradation via banner
+          setPubPartial(true)
+        } else if (pubRows) {
           pubRows.forEach((p: PublicVendorRow) => { pubMap[p.id] = p })
         }
       }
@@ -372,6 +428,8 @@ export default function VendorsPage() {
     load()
   }, [locale])
 
+  const copy = getVendorsCopy(locale)
+
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
@@ -384,16 +442,17 @@ export default function VendorsPage() {
   if (fetchError) {
     return (
       <div>
-        <PageHeader />
-        <div style={{
-          background: 'rgba(196,117,106,0.06)', border: '1px solid rgba(196,117,106,0.2)',
-          borderRadius: 12, padding: '20px 24px',
-        }}>
-          <div style={{ fontSize: 13, color: '#C4756A', fontWeight: 600, marginBottom: 6 }}>Unable to load vendors</div>
-          <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7 }}>
-            This may be a temporary connection issue. Try refreshing the page.
-          </div>
-        </div>
+        <PageHeader copy={copy} />
+        <ErrorBanner title={copy.errorTitle} desc={copy.errorDesc} />
+      </div>
+    )
+  }
+
+  if (engFailed) {
+    return (
+      <div>
+        <PageHeader copy={copy} />
+        <ErrorBanner title={copy.engErrorTitle} desc={copy.engErrorDesc} />
       </div>
     )
   }
@@ -405,28 +464,41 @@ export default function VendorsPage() {
 
   return (
     <div>
-      <PageHeader />
+      <PageHeader copy={copy} />
+
+      {/* Public vendor data partial failure — soft-degrade banner */}
+      {pubPartial && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          marginBottom: 20, padding: '10px 14px',
+          background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)',
+          borderRadius: 8,
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.5">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span style={{ fontSize: 12, color: '#8A7E6A' }}>{copy.pubPartialDesc}</span>
+        </div>
+      )}
 
       {vendors.length === 0 ? (
         <div style={{
           background: '#1A1915', border: '1px solid #2A2820',
           borderRadius: 14, padding: '48px 32px', textAlign: 'center',
         }}>
-          <div style={{ fontSize: 14, color: '#5A5040', marginBottom: 10 }}>No vendors yet</div>
-          <div style={{ fontSize: 12, color: '#3A3830', lineHeight: 1.7 }}>
-            Browse and add vendors in the VELO app — your list will appear here.
-          </div>
+          <div style={{ fontSize: 14, color: '#5A5040', marginBottom: 10 }}>{copy.emptyTitle}</div>
+          <div style={{ fontSize: 12, color: '#3A3830', lineHeight: 1.7 }}>{copy.emptyDesc}</div>
         </div>
       ) : (
         <>
           {/* Pipeline summary pills */}
-          <PipelineSummary vendors={vendors} />
+          <PipelineSummary vendors={vendors} copy={copy} />
 
           {/* Status filter tabs */}
           {statusesPresent.length > 1 && (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 24 }}>
               <FilterTab
-                label="All"
+                label={copy.filterAll}
                 count={vendors.length}
                 active={filterStatus === 'all'}
                 onClick={() => setFilterStatus('all')}
@@ -434,7 +506,7 @@ export default function VendorsPage() {
               {statusesPresent.map(s => (
                 <FilterTab
                   key={s}
-                  label={STATUS_CONFIG[s].label}
+                  label={copy.statusLabel(s)}
                   count={vendors.filter(v => v.status === s).length}
                   color={STATUS_CONFIG[s].color}
                   active={filterStatus === s}
@@ -454,9 +526,7 @@ export default function VendorsPage() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A7E6A" strokeWidth="1.5">
               <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
             </svg>
-            <span style={{ fontSize: 12, color: '#8A7E6A' }}>
-              Read-only view — use the VELO app to manage vendors and advance status
-            </span>
+            <span style={{ fontSize: 12, color: '#8A7E6A' }}>{copy.readOnly}</span>
           </div>
 
           {/* Vendor list grouped by status */}
@@ -466,9 +536,10 @@ export default function VendorsPage() {
                   key={status}
                   status={status}
                   vendors={filtered.filter(v => v.status === status)}
+                  copy={copy}
                 />
               ))
-            : filtered.map(v => <VendorCardRow key={v.id} vendor={v} />)
+            : filtered.map(v => <VendorCardRow key={v.id} vendor={v} copy={copy} />)
           }
         </>
       )}
@@ -478,14 +549,14 @@ export default function VendorsPage() {
 
 // ─── Header ───────────────────────────────────────────────────────────────────
 
-function PageHeader() {
+function PageHeader({ copy }: { copy: VendorsCopy }) {
   return (
     <div style={{ marginBottom: 28 }}>
       <div style={{ fontSize: 11, letterSpacing: 3, color: '#C9A84C', textTransform: 'uppercase', marginBottom: 8 }}>
-        VENDORS
+        {copy.pageLabel}
       </div>
       <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 32, fontWeight: 300, color: '#F5EDD6', margin: 0 }}>
-        Your vendors
+        {copy.pageTitle}
       </h1>
     </div>
   )
