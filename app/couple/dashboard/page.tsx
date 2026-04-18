@@ -81,57 +81,54 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const load = async () => {
-      const fallbackLocale = getPreferredSiteLocale()
-      setLocale(fallbackLocale)
+   useEffect(() => {
+     const load = async () => {
+       const { data: { session } } = await supabase.auth.getSession()
+       if (!session) return
 
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
+       const userId = session.user.id
 
-      const userId = session.user.id
+       // Fetch couple first
+       const coupleRes = await supabase.from('couples')
+         .select('partner1, partner2, wedding_date, budget, wedding_city, wedding_region, nationality, country_of_origin')
+         .eq('user_id', userId).single()
 
-      const [coupleRes, engagementsRes, tasksRes, guestsRes, expensesRes] = await Promise.all([
-        supabase.from('couples')
-          .select('partner1, partner2, wedding_date, budget, wedding_city, wedding_region, nationality, country_of_origin')
-          .eq('user_id', userId).single(),
-        supabase.from('engagements')
-          .select('status').eq('user_id', userId),
-        supabase.from('tasks')
-          .select('completed').eq('user_id', userId),
-        supabase.from('guests')
-          .select('id', { count: 'exact', head: true }).eq('user_id', userId),
-        supabase.from('expenses')
-          .select('amount, confirmed').eq('user_id', userId),
-      ])
+       const coupleData = coupleRes.data
 
-      const coupleData = coupleRes.data
-      if (coupleData) {
-        const nextLocale = getCoupleLocale(coupleData, fallbackLocale)
-        persistCoupleLocale(nextLocale)
-        setLocale(nextLocale)
-      }
+       // Determine fallback locale from cookie/browser
+       const fallbackLocale = getPreferredSiteLocale()
+       // Determine final locale
+       const finalLocale = getCoupleLocale(coupleData, fallbackLocale)
+       persistCoupleLocale(finalLocale)
+       setLocale(finalLocale)
 
-      setCouple(coupleData)
+       // Now fetch other data
+       const [engagementsRes, tasksRes, guestsRes, expensesRes] = await Promise.all([
+         supabase.from('engagements').select('status').eq('user_id', userId),
+         supabase.from('tasks').select('completed').eq('user_id', userId),
+         supabase.from('guests').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+         supabase.from('expenses').select('amount, confirmed').eq('user_id', userId),
+       ])
 
-      const engagements = engagementsRes.data ?? []
-      const tasks = tasksRes.data ?? []
-      const guests = guestsRes.count ?? 0
-      const expenses = expensesRes.data ?? []
+       const engagements = engagementsRes.data ?? []
+       const tasks = tasksRes.data ?? []
+       const guests = guestsRes.count ?? 0
+       const expenses = expensesRes.data ?? []
 
-      setStats({
-        confirmedVendors: engagements.filter(e => e.status === 'booked').length,
-        totalVendors: engagements.length,
-        completedTasks: tasks.filter(t => t.completed).length,
-        totalTasks: tasks.length,
-        guestCount: guests,
-        spentBudget: expenses.filter(e => e.confirmed).reduce((sum, e) => sum + (e.amount ?? 0), 0),
-      })
+       setStats({
+         confirmedVendors: engagements.filter(e => e.status === 'booked').length,
+         totalVendors: engagements.length,
+         completedTasks: tasks.filter(t => t.completed).length,
+         totalTasks: tasks.length,
+         guestCount: guests,
+         spentBudget: expenses.filter(e => e.confirmed).reduce((sum, e) => sum + (e.amount ?? 0), 0),
+       })
 
-      setLoading(false)
-    }
-    load()
-  }, [])
+       setCouple(coupleData)
+       setLoading(false)
+     }
+     load()
+   }, [])
 
   if (loading) return <CoupleLoadingBlock />
 
