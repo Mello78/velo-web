@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { cookies } from 'next/headers'
 import NavBar from '../components/NavBar'
@@ -6,6 +7,39 @@ const REGIONS = ['Toscana', 'Amalfi Coast', 'Lago di Como', 'Langhe & Piemonte',
 const DISPLAY_FONT = 'DM Serif Display, Georgia, serif'
 const ITALIC_FONT = 'Fraunces, Georgia, serif'
 const MONO_FONT = "'JetBrains Mono', monospace"
+
+type HeroImage = {
+  src: string
+  alt: string
+  objectPosition: string
+  overlay: string
+  plateLabel: { it: string; en: string }
+  footLeft: { it: string; en: string }
+  footRight: { it: string; en: string }
+}
+
+const HERO_IMAGES: HeroImage[] = [
+  {
+    src: '/images/home/hero-coastal-01.png',
+    alt: 'An Italian coastal terrace ceremony setup overlooking the sea at golden hour.',
+    objectPosition: '68% 52%',
+    overlay:
+      'linear-gradient(180deg, rgba(23,15,9,0.02) 0%, rgba(23,15,9,0.14) 55%, rgba(23,15,9,0.44) 100%), linear-gradient(90deg, rgba(248,240,228,0.14) 0%, rgba(248,240,228,0.02) 34%, rgba(23,15,9,0.16) 100%)',
+    plateLabel: { it: 'Costiera Amalfitana', en: 'Amalfi Coast' },
+    footLeft: { it: 'Terrazza sul mare', en: 'Sea terrace' },
+    footRight: { it: 'Plate 01', en: 'Plate 01' },
+  },
+  {
+    src: '/images/home/hero-masseria-01.png',
+    alt: 'A warm masseria courtyard dinner with candlelight and a bride seen from the back.',
+    objectPosition: '72% 52%',
+    overlay:
+      'linear-gradient(180deg, rgba(25,16,9,0.02) 0%, rgba(25,16,9,0.16) 58%, rgba(25,16,9,0.36) 100%), linear-gradient(90deg, rgba(249,242,233,0.2) 0%, rgba(249,242,233,0.06) 40%, rgba(25,16,9,0.2) 100%)',
+    plateLabel: { it: 'Masseria italiana', en: 'Italian masseria' },
+    footLeft: { it: 'Cena in corte', en: 'Courtyard dinner' },
+    footRight: { it: 'Plate 02', en: 'Plate 02' },
+  },
+]
 
 type Copy = {
   nav: { couples: string; vendors: string; forVendors: string; primaryCta: string }
@@ -200,8 +234,9 @@ function DashboardSurface({
   )
 }
 
-function ItalyPlate({ copy, locale }: { copy: Copy['hero']; locale: string }) {
+function ItalyPlate({ copy, locale, heroImage }: { copy: Copy['hero']; locale: string; heroImage: HeroImage }) {
   const isIT = locale === 'it'
+  const plateCta = isIT ? 'Toscana · Amalfi · Como · Langhe' : 'Tuscany · Amalfi · Como · Langhe'
   const plate = {
     kicker: isIT ? 'La promessa italiana' : 'The Italian promise',
     note: isIT ? 'Il matrimonio in Italia, con luogo, luce e misura.' : 'Destination weddings, with place, light, and restraint.',
@@ -216,19 +251,24 @@ function ItalyPlate({ copy, locale }: { copy: Copy['hero']; locale: string }) {
       {/* Dark accent strip */}
       <div className="absolute right-0 top-[11%] hidden h-[66%] w-[13%] rounded-[2rem] bg-[#2a1f17] lg:block" />
       {/* Main image */}
-      <div
-        className="absolute right-[7%] top-0 h-[78%] w-[76%] rounded-[2.8rem] border border-[#e4cdb4]/70 bg-cover shadow-[0_36px_100px_rgba(18,10,5,0.32),inset_0_1px_0_rgba(255,255,255,0.05)]"
-        style={{
-          backgroundPosition: '50% 25%',
-          backgroundImage:
-            "linear-gradient(180deg, rgba(22,14,8,0.04) 0%, rgba(22,14,8,0.15) 55%, rgba(22,14,8,0.52) 100%), url('https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=1600&q=85')",
-        }}
-      />
+      <div className="absolute right-[7%] top-0 h-[78%] w-[76%] overflow-hidden rounded-[2.8rem] border border-[#e4cdb4]/70 shadow-[0_36px_100px_rgba(18,10,5,0.32),inset_0_1px_0_rgba(255,255,255,0.05)]">
+        <Image
+          src={heroImage.src}
+          alt={heroImage.alt}
+          fill
+          priority
+          sizes="(max-width: 1024px) 76vw, 820px"
+          className="object-cover"
+          style={{ objectPosition: heroImage.objectPosition }}
+        />
+        <div className="absolute inset-0" style={{ background: heroImage.overlay }} />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0)_22%,rgba(32,24,18,0.08)_100%)]" />
+      </div>
       {/* Cinematic label bar */}
       <div className="absolute right-[7%] top-0 z-10 flex h-9 w-[76%] items-center justify-between rounded-t-[2.8rem] px-5">
         <span className="text-[8.5px] uppercase tracking-[0.32em] text-[#f0e4d2]/65" style={{ fontFamily: MONO_FONT }}>{isIT ? 'Italia' : 'Italy'}</span>
         <span className="text-[8.5px] uppercase tracking-[0.32em] text-[#f0e4d2]/65" style={{ fontFamily: MONO_FONT }}>VELO</span>
-        <span className="text-[8.5px] uppercase tracking-[0.32em] text-[#f0e4d2]/65" style={{ fontFamily: MONO_FONT }}>Destination</span>
+        <span className="text-[8.5px] uppercase tracking-[0.32em] text-[#f0e4d2]/65" style={{ fontFamily: MONO_FONT }}>{heroImage.plateLabel[isIT ? 'it' : 'en']}</span>
       </div>
       {/* Inner framing ring */}
       <div className="absolute right-[11%] top-[6%] h-[66%] w-[68%] rounded-[2.35rem] border border-[#e8d4bc]/18" />
@@ -244,7 +284,14 @@ function ItalyPlate({ copy, locale }: { copy: Copy['hero']; locale: string }) {
           <span className="rounded-full border border-[#ddc9b1] bg-white/55 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[#6c5b4b]">{copy.destinationBadge}</span>
         </div>
         <p className="mt-4 max-w-[33rem] text-[1.05rem] leading-relaxed text-[#5d4e40] sm:text-[1.1rem]" style={{ fontFamily: DISPLAY_FONT }}>{plate.caption}</p>
-        <p className="mt-4 text-[10px] uppercase tracking-[0.2em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>{plate.cta}</p>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>{plateCta}</p>
+          <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>
+            <span>{heroImage.footLeft[isIT ? 'it' : 'en']}</span>
+            <span className="h-px w-6 bg-[#c97a52]/55" />
+            <span>{heroImage.footRight[isIT ? 'it' : 'en']}</span>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -254,6 +301,7 @@ export default function Home() {
   const cookieStore = cookies()
   const locale = cookieStore.get('NEXT_LOCALE')?.value || 'it'
   const c = getCopy(locale)
+  const heroImage = HERO_IMAGES[Math.floor(Math.random() * HERO_IMAGES.length)] ?? HERO_IMAGES[0]
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f3eadb] text-[#1f1812]">
@@ -322,7 +370,7 @@ export default function Home() {
 
             {/* Right — Italy plate */}
             <div className="relative lg:-ml-10 lg:mt-4">
-              <ItalyPlate copy={c.hero} locale={locale} />
+              <ItalyPlate copy={c.hero} locale={locale} heroImage={heroImage} />
             </div>
           </div>
         </div>
