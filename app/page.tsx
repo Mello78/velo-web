@@ -3,7 +3,9 @@ import { cookies } from 'next/headers'
 import NavBar from '../components/NavBar'
 
 const REGIONS = ['Toscana', 'Amalfi Coast', 'Lago di Como', 'Langhe & Piemonte', 'Roma & Lazio', 'Puglia', 'Venezia & Veneto', 'Umbria']
-const DISPLAY_FONT = 'Cormorant Garamond, Georgia, serif'
+const DISPLAY_FONT = 'DM Serif Display, Georgia, serif'
+const ITALIC_FONT = 'Fraunces, Georgia, serif'
+const MONO_FONT = "'JetBrains Mono', monospace"
 
 type Copy = {
   nav: { couples: string; vendors: string; forVendors: string; primaryCta: string }
@@ -165,105 +167,51 @@ function DashboardSurface({
 }) {
   const isIT = locale === 'it'
   const ui = {
-    documents: isIT ? 'Documenti' : 'Documents',
-    path: isIT ? 'Percorso documenti' : 'Document path',
-    planning: isIT ? 'Planning Italia' : 'Italy planning',
-    calm: isIT ? 'Spazio calmo' : 'Calm space',
-    today: isIT ? 'Da fare adesso' : 'To do now',
-    guided: isIT ? 'Guidato da nazionalita, rito e comune' : 'Guided by nationality, ceremony, and comune',
-    ceremony: isIT ? 'Cerimonia civile' : 'Civil ceremony',
-    guestsReady: isIT ? 'Guest list in ordine' : 'Guest list in shape',
-    budgetReady: isIT ? 'Budget sotto controllo' : 'Budget in view',
-    shortlistReady: isIT ? 'Shortlist coerente' : 'Shortlist in context',
-    overview: isIT ? 'Panoramica' : 'Overview',
-    guests: isIT ? 'Ospiti' : 'Guests',
-    budget: 'Budget',
-    shortlist: isIT ? 'Shortlist fornitori' : 'Vendor shortlist',
-    onePlace: isIT ? 'Tutto resta nello stesso spazio' : 'Everything stays in the same space',
+    stamp: isIT ? 'Area coppia' : 'Couple area',
+    destination: isIT ? 'Destination' : 'Destination',
   }
 
   return (
-    <div className="relative h-[430px] sm:h-[520px] lg:h-[590px]">
-      <div className="absolute inset-x-[3%] bottom-0 top-[4%] rounded-[3rem] bg-[linear-gradient(160deg,#2a1f18_0%,#1d1611_100%)] shadow-[0_36px_90px_rgba(31,24,18,0.24)]" />
-      <div className="absolute inset-0 rounded-[2.8rem] border border-[#3c2b20] bg-[linear-gradient(165deg,#261c15_0%,#1c1510_100%)] p-4 text-[#fbf4e5] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/10 pb-5">
-          <div className="max-w-[30rem]">
-            <p className="text-[10px] uppercase tracking-[0.34em] text-[#cf8b60]">{heroCopy.proofLabel}</p>
-            <p className="mt-2 text-[1.35rem] leading-tight text-[#fbf4e5] sm:text-[1.6rem]" style={{ fontFamily: DISPLAY_FONT }}>{heroCopy.proofTitle}</p>
-          </div>
-          <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[#d3c4b3]">{ui.overview}</span>
+    <div className="rounded-[2.4rem] bg-[#e6dac4] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_0_rgba(43,31,22,0.06)] sm:p-6">
+      {/* Floating planning page */}
+      <div className="rounded-[1.9rem] bg-[#fbf4e5] p-5 shadow-[0_18px_54px_rgba(31,24,18,0.13)] sm:p-7">
+        <div className="flex items-center justify-between border-b border-[#e4d4be] pb-4">
+          <p className="text-[10px] uppercase tracking-[0.36em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>{heroCopy.proofLabel}</p>
+          <span className="rounded-full border border-[#d8c7b0] bg-white/60 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[#7a6554]" style={{ fontFamily: MONO_FONT }}>{ui.stamp}</span>
         </div>
+        <h3 className="mt-4 text-[1.35rem] leading-snug text-[#1f1812] sm:text-[1.6rem]" style={{ fontFamily: DISPLAY_FONT }}>{heroCopy.proofTitle}</h3>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-[1.18fr_0.82fr]">
-          <div className="rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,#17110d_0%,#1e1712_100%)] p-4 sm:p-5">
-            <div className="flex flex-wrap items-center gap-2">
-              {heroCopy.proofItems.slice(0, 4).map((item, index) => (
-                <span key={item} className={`rounded-full px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] ${index === 0 ? 'border border-[#b85a2e]/35 bg-[#b85a2e]/12 text-[#d88b61]' : 'border border-white/10 bg-white/[0.04] text-[#baa897]'}`}>
-                  {item}
-                </span>
-              ))}
-            </div>
-
-            <div className="mt-5 rounded-[1.6rem] border border-white/8 bg-white/[0.04] p-4">
-              <div className="flex items-start justify-between gap-4">
+        {/* Planning items as flowing literary list */}
+        <div className="mt-6 space-y-5">
+          {platformCopy.panels.map((panel, i) => {
+            const roman = ['i.', 'ii.', 'iii.'][i]
+            return (
+              <div key={panel.eyebrow} className="flex gap-4 border-b border-[#ead9c8] pb-5 last:border-0 last:pb-0">
+                <span className="mt-0.5 w-5 shrink-0 text-sm italic text-[#b85a2e]" style={{ fontFamily: ITALIC_FONT }}>{roman}</span>
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-[#b9a898]">{ui.planning}</p>
-                  <h3 className="mt-2 text-[1.5rem] leading-tight text-[#fbf4e5]" style={{ fontFamily: DISPLAY_FONT }}>{platformCopy.workspaceTitle}</h3>
-                </div>
-                <span className="rounded-full border border-[#b85a2e]/35 bg-[#b85a2e]/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-[#d88b61]">{ui.calm}</span>
-              </div>
-              <p className="mt-4 max-w-[34rem] text-sm leading-relaxed text-[#b9a898]">{platformCopy.workspaceCopy}</p>
-            </div>
-
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-[1.45rem] border border-white/8 bg-white/[0.04] p-4">
-                <p className="text-[10px] uppercase tracking-[0.24em] text-[#cf8b60]">{ui.path}</p>
-                <p className="mt-3 text-base text-[#fbf4e5]">{ui.guided}</p>
-                <div className="mt-4 h-1.5 rounded-full bg-white/10">
-                  <div className="h-1.5 rounded-full bg-[#b85a2e]" style={{ width: '72%' }} />
-                </div>
-                <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[#baa897]">{ui.ceremony}</p>
-              </div>
-              <div className="rounded-[1.45rem] border border-white/8 bg-white/[0.04] p-4">
-                <p className="text-[10px] uppercase tracking-[0.24em] text-[#cf8b60]">{ui.today}</p>
-                <div className="mt-3 space-y-3">
-                  {[
-                    [ui.guests, ui.guestsReady],
-                    [ui.budget, ui.budgetReady],
-                    [ui.shortlist, ui.shortlistReady],
-                  ].map(([title, desc]) => (
-                    <div key={title} className="flex items-start justify-between gap-3 border-b border-white/8 pb-3 last:border-b-0 last:pb-0">
-                      <div>
-                        <p className="text-sm text-[#fbf4e5]">{title}</p>
-                        <p className="mt-1 text-xs text-[#b9a898]">{desc}</p>
-                      </div>
-                      <span className="mt-1 h-2 w-2 rounded-full bg-[#b85a2e]" />
-                    </div>
-                  ))}
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-[#8a3e1e]">{panel.eyebrow}</p>
+                  <p className="mt-1.5 text-[1.05rem] leading-snug text-[#1f1812]" style={{ fontFamily: DISPLAY_FONT }}>{panel.title}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-[#665547]">{panel.copy}</p>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            {platformCopy.panels.map((panel, index) => (
-              <div
-                key={panel.eyebrow}
-                className={`rounded-[1.65rem] border p-4 ${index === 2 ? 'border-[#8a3e1e]/14 bg-[linear-gradient(180deg,#ecd7c1_0%,#f4e6d7_100%)] text-[#2b2119]' : 'border-[#e3d3bf] bg-[#f7efe4] text-[#2b2119]'}`}
-              >
-                <p className="text-[10px] uppercase tracking-[0.28em] text-[#8a3e1e]">{panel.eyebrow}</p>
-                <p className="mt-3 text-[1.2rem] leading-snug" style={{ fontFamily: DISPLAY_FONT }}>{panel.title}</p>
-                <p className="mt-3 text-sm leading-relaxed text-[#675847]">{panel.copy}</p>
-              </div>
-            ))}
-
-            <div className="rounded-[1.65rem] border border-white/10 bg-white/[0.04] p-4">
-              <p className="text-[10px] uppercase tracking-[0.28em] text-[#cf8b60]">{heroCopy.destinationBadge}</p>
-              <p className="mt-3 text-base leading-relaxed text-[#f1e6d7]">{heroCopy.destinationNote}</p>
-              <p className="mt-4 text-xs uppercase tracking-[0.18em] text-[#baa897]">{ui.onePlace}</p>
-            </div>
-          </div>
+            )
+          })}
         </div>
+      </div>
+
+      {/* Proof items strip */}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {heroCopy.proofItems.map((item) => (
+          <span key={item} className="rounded-full border border-[#cdb9a2] bg-[rgba(255,250,244,0.72)] px-3 py-1.5 text-[10px] uppercase tracking-[0.22em] text-[#7a6554]" style={{ fontFamily: MONO_FONT }}>
+            {item}
+          </span>
+        ))}
+      </div>
+
+      {/* Destination note */}
+      <div className="mt-3 rounded-[1.4rem] border border-[#c9b49c]/40 bg-[rgba(255,250,244,0.55)] p-4">
+        <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>{heroCopy.destinationBadge}</p>
+        <p className="mt-2 text-sm leading-relaxed text-[#5d4e40]">{heroCopy.destinationNote}</p>
       </div>
     </div>
   )
@@ -290,6 +238,12 @@ function ItalyPlate({ copy, locale }: { copy: Copy['hero']; locale: string }) {
             "linear-gradient(180deg, rgba(22,14,8,0.04) 0%, rgba(22,14,8,0.15) 55%, rgba(22,14,8,0.52) 100%), url('https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=1600&q=85')",
         }}
       />
+      {/* Cinematic label bar */}
+      <div className="absolute right-[7%] top-0 z-10 flex h-10 w-[76%] items-center justify-between rounded-t-[2.8rem] px-5">
+        <span className="text-[9px] uppercase tracking-[0.32em] text-[#f0e4d2]/70" style={{ fontFamily: MONO_FONT }}>{isIT ? 'Italia' : 'Italy'}</span>
+        <span className="text-[9px] uppercase tracking-[0.32em] text-[#f0e4d2]/70" style={{ fontFamily: MONO_FONT }}>VELO</span>
+        <span className="text-[9px] uppercase tracking-[0.32em] text-[#f0e4d2]/70" style={{ fontFamily: MONO_FONT }}>{isIT ? 'Destination · Civil' : 'Destination · Civil'}</span>
+      </div>
       <div className="absolute right-[11%] top-[6%] h-[66%] w-[68%] rounded-[2.35rem] border border-[#e8d4bc]/18" />
       <div className="absolute left-0 top-[8%] z-10 w-[48%] max-w-[270px] rounded-[2rem] border border-[#c8b09a]/28 bg-[rgba(252,246,238,0.94)] p-5 shadow-[0_24px_64px_rgba(30,18,10,0.18),0_2px_8px_rgba(30,18,10,0.07)] backdrop-blur-xl">
         <p className="text-[10px] uppercase tracking-[0.32em] text-[#8a3e1e]">{plate.kicker}</p>
@@ -341,16 +295,17 @@ export default function Home() {
           <div className="my-auto grid items-end gap-14 lg:grid-cols-[minmax(0,0.92fr)_minmax(500px,1.08fr)] lg:gap-8">
             <div className="relative z-10 max-w-[680px]">
               <div className="mb-10 flex flex-wrap items-center gap-4">
-                <div className="h-px w-14 bg-[#c97a52]" />
+                <span className="text-[9px] text-[#b89a5b]" style={{ fontFamily: MONO_FONT }}>No. 01</span>
+                <div className="h-px w-10 bg-[#c97a52]" />
                 <p className="text-[10px] uppercase tracking-[0.44em] text-[#8a3e1e] sm:text-[11px]">{c.hero.label}</p>
                 <span className="rounded-full border border-[#d8c3ab] bg-[rgba(255,250,244,0.74)] px-4 py-2 text-[10px] uppercase tracking-[0.28em] text-[#6f5b49]">
                   {c.hero.destinationBadge}
                 </span>
               </div>
 
-              <h1 className="max-w-[760px] font-light leading-[0.88]" style={{ fontFamily: DISPLAY_FONT, fontSize: 'clamp(3.9rem, 9vw, 8.35rem)' }}>
-                <span className="block text-[#1f1812]">{c.hero.titleA}</span>
-                <span className="block italic text-[#d38c67]">{c.hero.titleC}</span>
+              <h1 className="max-w-[760px] font-light leading-[0.88]" style={{ fontSize: 'clamp(3.9rem, 9vw, 8.35rem)' }}>
+                <span className="block text-[#1f1812]" style={{ fontFamily: DISPLAY_FONT }}>{c.hero.titleA}</span>
+                <span className="block italic text-[#d38c67]" style={{ fontFamily: ITALIC_FONT }}>{c.hero.titleC}</span>
               </h1>
 
               <p className="mt-8 max-w-[470px] text-base leading-relaxed text-[#5f5144] sm:text-[1.05rem]">{c.hero.sub}</p>
@@ -382,6 +337,10 @@ export default function Home() {
         <div className="relative mx-auto max-w-[1360px]">
           <div className="grid gap-14 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
             <div className="max-w-[520px]">
+              <div className="mb-5 flex items-center gap-3">
+                <span className="text-[9px] text-[#b89a5b]" style={{ fontFamily: MONO_FONT }}>No. 02</span>
+                <div className="h-px w-8 bg-[#c97a52]/50" />
+              </div>
               <p className="text-[11px] uppercase tracking-[0.38em] text-[#8a3e1e]">{c.platform.label}</p>
               <h2 className="mt-6 font-light leading-[0.98]" style={{ fontFamily: DISPLAY_FONT, fontSize: 'clamp(2.7rem, 5vw, 4.95rem)' }}>
                 {c.platform.title}
@@ -392,7 +351,7 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="relative rounded-[3rem] border border-[#deccb5] bg-[linear-gradient(160deg,#f4e7d5_0%,#efe1cd_52%,#eadac4_100%)] p-5 text-[#1f1812] shadow-[0_34px_90px_rgba(45,31,22,0.12)] sm:p-8">
+            <div className="relative rounded-[3rem] border border-[#d5c4ae] bg-[#e8dece] p-5 text-[#1f1812] shadow-[0_34px_90px_rgba(45,31,22,0.10)] sm:p-8">
               <div className="mb-8 flex flex-wrap items-start justify-between gap-4 border-b border-[#d9c5ae] pb-5">
                 <div className="max-w-[560px]">
                   <p className="text-[10px] uppercase tracking-[0.34em] text-[#8a3e1e]">{c.platform.workspaceLabel}</p>
@@ -416,6 +375,10 @@ export default function Home() {
         <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(184,90,46,0.48),transparent)]" />
         <div className="mx-auto grid max-w-[1360px] gap-14 lg:grid-cols-[0.82fr_1.18fr] lg:gap-20">
           <div className="max-w-[560px] lg:sticky lg:top-28 lg:self-start">
+            <div className="mb-5 flex items-center gap-3">
+              <span className="text-[9px] text-[#b89a5b]" style={{ fontFamily: MONO_FONT }}>No. 03</span>
+              <div className="h-px w-8 bg-[#d38c67]/40" />
+            </div>
             <p className="text-[11px] uppercase tracking-[0.38em] text-[#d38c67]">{c.italy.label}</p>
             <h2 className="mt-6 font-light leading-[0.96]" style={{ fontFamily: DISPLAY_FONT, fontSize: 'clamp(2.8rem, 5vw, 5.1rem)' }}>
               {c.italy.title}
@@ -424,15 +387,18 @@ export default function Home() {
             <div className="mt-8 rounded-[1.9rem] border border-[#b85a2e]/25 bg-[linear-gradient(180deg,rgba(184,90,46,0.14),rgba(255,255,255,0.03))] p-5 text-sm leading-relaxed text-[#f1e6d7]">{c.italy.callout}</div>
           </div>
           <div className="divide-y divide-white/10 border-t border-white/10">
-            {c.italy.pillars.map((pillar) => (
-              <div key={pillar.number} className="grid gap-5 py-8 sm:grid-cols-[120px_1fr] sm:gap-8 sm:py-10">
-                <div className="text-[#cf8b60]" style={{ fontFamily: DISPLAY_FONT, fontSize: 'clamp(2.2rem, 4vw, 3.6rem)' }}>{pillar.number}</div>
-                <div className="max-w-[620px]">
-                  <h3 className="text-2xl font-light leading-tight text-[#fbf4e5] sm:text-[2rem]" style={{ fontFamily: DISPLAY_FONT }}>{pillar.title}</h3>
-                  <p className="mt-4 text-sm leading-relaxed text-[#d2c3b0] sm:text-base">{pillar.copy}</p>
+            {c.italy.pillars.map((pillar, i) => {
+              const roman = ['i.', 'ii.', 'iii.'][i]
+              return (
+                <div key={pillar.number} className="flex gap-7 py-9 sm:py-11">
+                  <span className="mt-1 w-6 shrink-0 text-sm italic text-[#cf8b60]" style={{ fontFamily: ITALIC_FONT }}>{roman}</span>
+                  <div className="max-w-[640px]">
+                    <h3 className="text-xl leading-tight text-[#fbf4e5] sm:text-2xl" style={{ fontFamily: DISPLAY_FONT }}>{pillar.title}</h3>
+                    <p className="mt-4 text-sm leading-relaxed text-[#d2c3b0] sm:text-[0.95rem]">{pillar.copy}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>
@@ -440,6 +406,10 @@ export default function Home() {
       <section className="bg-[#efe1cd] px-6 py-28 text-[#1f1812] sm:px-10 sm:py-36 lg:px-16">
         <div className="mx-auto grid max-w-[1360px] gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
           <div className="max-w-[560px]">
+            <div className="mb-5 flex items-center gap-3">
+              <span className="text-[9px] text-[#b89a5b]" style={{ fontFamily: MONO_FONT }}>No. 04</span>
+              <div className="h-px w-8 bg-[#c97a52]/50" />
+            </div>
             <p className="text-[11px] uppercase tracking-[0.38em] text-[#8a3e1e]">{c.vendors.label}</p>
             <h2 className="mt-6 font-light leading-[0.98]" style={{ fontFamily: DISPLAY_FONT, fontSize: 'clamp(2.6rem, 5vw, 4.7rem)' }}>
               {c.vendors.title}
@@ -488,22 +458,33 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="mt-9 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-[1.7rem] border border-[#dbc7b0] bg-[#f9f2e7] p-5">
-                <p className="text-[10px] uppercase tracking-[0.28em] text-[#8a3e1e]">{locale === 'it' ? 'Discipline' : 'Disciplines'}</p>
-                <p className="mt-3 text-[1.2rem] leading-snug text-[#1f1812]" style={{ fontFamily: DISPLAY_FONT }}>Photography / Floral / Venues</p>
-                <p className="mt-3 text-sm leading-relaxed text-[#675847]">{locale === 'it' ? 'Le categorie piu cercate all inizio del percorso.' : 'The categories couples often need first.'}</p>
-              </div>
-              <div className="rounded-[1.7rem] border border-[#dbc7b0] bg-[#f9f2e7] p-5">
-                <p className="text-[10px] uppercase tracking-[0.28em] text-[#8a3e1e]">{locale === 'it' ? 'Selezione' : 'Selection'}</p>
-                <p className="mt-3 text-[1.2rem] leading-snug text-[#1f1812]" style={{ fontFamily: DISPLAY_FONT }}>Planning / Catering / Music</p>
-                <p className="mt-3 text-sm leading-relaxed text-[#675847]">{locale === 'it' ? 'Scelte introdotte con piu coerenza di un semplice marketplace.' : 'Choices introduced with more coherence than a generic marketplace.'}</p>
-              </div>
-              <div className="rounded-[1.7rem] border border-[#3d2d21] bg-[#241b15] p-5 text-[#fbf4e5]">
-                <p className="text-[10px] uppercase tracking-[0.28em] text-[#cf8b60]">{locale === 'it' ? 'Contesto' : 'Context'}</p>
-                <p className="mt-3 text-[1.2rem] leading-snug text-[#fbf4e5]" style={{ fontFamily: DISPLAY_FONT }}>{locale === 'it' ? 'Confrontate, allineate, decidete.' : 'Compare, align, decide.'}</p>
-                <p className="mt-3 text-sm leading-relaxed text-[#d2c3b0]">{locale === 'it' ? 'La shortlist resta nello stesso spazio del budget, degli ospiti e dei documenti.' : 'Your shortlist stays in the same space as budget, guests, and documents.'}</p>
-              </div>
+            {/* Editorial plates */}
+            <div className="mt-8 divide-y divide-[#cdb9a2]">
+              {[
+                {
+                  label: locale === 'it' ? 'Fotografia · Floral' : 'Photography · Floral',
+                  title: locale === 'it' ? 'La memoria visiva e il paesaggio botanico del giorno.' : 'The visual memory and botanical landscape of the day.',
+                  region: 'Toscana · Amalfi · Como',
+                },
+                {
+                  label: locale === 'it' ? 'Location · Catering' : 'Venues · Catering',
+                  title: locale === 'it' ? 'Luoghi e tavole selezionati per ogni stile.' : 'Places and tables selected for every style.',
+                  region: 'Langhe · Venezia · Puglia',
+                },
+                {
+                  label: locale === 'it' ? 'Planning · Musica' : 'Planning · Music',
+                  title: locale === 'it' ? 'La regia del giorno e la sua colonna sonora.' : 'The direction of the day and its score.',
+                  region: 'Roma · Umbria · Sicilia',
+                },
+              ].map((plate) => (
+                <div key={plate.label} className="flex flex-col gap-3 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+                  <div>
+                    <p className="text-[9px] uppercase tracking-[0.34em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>{plate.label}</p>
+                    <p className="mt-2 text-lg leading-snug text-[#1f1812] sm:text-xl" style={{ fontFamily: DISPLAY_FONT }}>{plate.title}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full border border-[#c9b49c] bg-[rgba(255,250,244,0.65)] px-4 py-1.5 text-[10px] tracking-[0.18em] text-[#7a6554]" style={{ fontFamily: MONO_FONT }}>{plate.region}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -511,10 +492,15 @@ export default function Home() {
 
       <section className="bg-[#f3eadb] px-6 py-28 sm:px-10 sm:py-36 lg:px-16">
         <div className="mx-auto max-w-[1180px]">
-          <div className="rounded-[3.3rem] border border-[#dcc8b0] bg-[linear-gradient(145deg,#fbf4e5_0%,#f1e5d3_48%,#ead8c2_100%)] p-8 text-[#1f1812] shadow-[0_34px_90px_rgba(45,31,22,0.14)] sm:p-16 lg:p-[5rem]">
+          <div className="rounded-[3.3rem] border border-[#dcc8b0] bg-[linear-gradient(145deg,#fbf4e5_0%,#f1e5d3_52%,#ead8c2_100%)] p-8 text-[#1f1812] shadow-[0_34px_90px_rgba(45,31,22,0.14)] sm:p-16 lg:p-[5rem]">
+            {/* Tagline accent */}
+            <p className="mb-10 text-sm italic text-[#b89a5b]" style={{ fontFamily: ITALIC_FONT }}>
+              {locale === 'it' ? 'Dal sì, per sempre.' : 'From yes, to forever.'}
+            </p>
+
             <div className="grid gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
               <div className="max-w-[720px]">
-                <p className="text-[11px] uppercase tracking-[0.38em] text-[#8a3e1e]">{c.close.label}</p>
+                <p className="text-[11px] uppercase tracking-[0.38em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>{c.close.label}</p>
                 <h2 className="mt-7 max-w-[820px] font-light leading-[0.94]" style={{ fontFamily: DISPLAY_FONT, fontSize: 'clamp(2.8rem, 5vw, 5.35rem)' }}>
                   {c.close.title}
                 </h2>
@@ -523,7 +509,7 @@ export default function Home() {
 
               <div className="lg:justify-self-end lg:text-left">
                 <div className="flex flex-col gap-4 sm:flex-row lg:flex-col lg:items-start">
-                  <Link href="/couple" className="inline-flex items-center justify-center rounded-full bg-[#b85a2e] px-8 py-4 text-sm font-semibold tracking-[0.14em] text-[#fbf4e5] transition-all hover:bg-[#a54d25]">
+                  <Link href="/couple" className="inline-flex items-center justify-center rounded-full bg-[#1f1812] px-8 py-4 text-sm font-semibold tracking-[0.14em] text-[#f3eadb] transition-all hover:bg-[#2c2219]">
                     {c.close.coupleCta}
                   </Link>
                   <Link href="/vendor" className="inline-flex items-center justify-center px-1 py-3 text-sm tracking-[0.14em] text-[#6b5947] transition-colors hover:text-[#8a3e1e]">
@@ -538,24 +524,24 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-[#d5c4ad] bg-[#f3eadb] px-6 py-14 text-[#1f1812] sm:px-10 sm:py-16 lg:px-16 lg:py-20">
+      <footer className="bg-[#2c2219] px-6 py-14 text-[#f3eadb] sm:px-10 sm:py-16 lg:px-16 lg:py-20">
         <div className="mx-auto flex max-w-[1360px] flex-col items-center justify-between gap-8 text-center md:flex-row md:text-left">
           <div className="flex items-center gap-4">
-            <img src="/favicon.png" alt="" className="h-8 w-auto" />
+            <img src="/favicon.png" alt="" className="h-8 w-auto opacity-80" />
             <div>
-              <span className="text-2xl font-light tracking-[0.35em] text-[#8a3e1e]" style={{ fontFamily: DISPLAY_FONT }}>VELO</span>
-              <p className="text-[11px] uppercase tracking-widest text-[#7a6754]">from yes to forever</p>
+              <span className="text-2xl font-light tracking-[0.35em] text-[#f3eadb]" style={{ fontFamily: DISPLAY_FONT }}>VELO</span>
+              <p className="text-[9px] uppercase tracking-[0.3em] text-[#b89a5b]" style={{ fontFamily: MONO_FONT }}>from yes to forever</p>
             </div>
           </div>
 
           <div className="flex flex-wrap justify-center gap-8 sm:gap-10">
-            <Link href="/couple" className="text-[13px] tracking-[0.06em] text-[#6e5d4c] transition-colors hover:text-[#8a3e1e]">{c.footer.couples}</Link>
-            <Link href="/fornitori" className="text-[13px] tracking-[0.06em] text-[#6e5d4c] transition-colors hover:text-[#8a3e1e]">{c.footer.vendors}</Link>
-            <Link href="/vendor" className="text-[13px] tracking-[0.06em] text-[#6e5d4c] transition-colors hover:text-[#8a3e1e]">{c.footer.vendorArea}</Link>
-            <Link href="/admin" className="text-[13px] tracking-[0.06em] text-[#6e5d4c] transition-colors hover:text-[#8a3e1e]">{c.footer.admin}</Link>
+            <Link href="/couple" className="text-[11px] tracking-[0.12em] text-[#b0a090] transition-colors hover:text-[#f3eadb]" style={{ fontFamily: MONO_FONT }}>{c.footer.couples}</Link>
+            <Link href="/fornitori" className="text-[11px] tracking-[0.12em] text-[#b0a090] transition-colors hover:text-[#f3eadb]" style={{ fontFamily: MONO_FONT }}>{c.footer.vendors}</Link>
+            <Link href="/vendor" className="text-[11px] tracking-[0.12em] text-[#b0a090] transition-colors hover:text-[#f3eadb]" style={{ fontFamily: MONO_FONT }}>{c.footer.vendorArea}</Link>
+            <Link href="/admin" className="text-[11px] tracking-[0.12em] text-[#b0a090] transition-colors hover:text-[#f3eadb]" style={{ fontFamily: MONO_FONT }}>{c.footer.admin}</Link>
           </div>
 
-          <p className="text-[11px] tracking-[0.04em] text-[#7a6754]">{c.footer.copy}</p>
+          <p className="text-[10px] tracking-[0.06em] text-[#7a6e64]" style={{ fontFamily: MONO_FONT }}>{c.footer.copy} — A wedding, in Italian.</p>
         </div>
       </footer>
     </main>
