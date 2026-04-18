@@ -1,802 +1,829 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { supabase } from '../../../lib/supabase'
-import { COUNTRIES, CountryDoc } from '../../../lib/countries'
-import Link from 'next/link'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
+import { COUNTRIES, CountryDoc } from '../../../lib/countries'
+import { supabase } from '../../../lib/supabase'
+import {
+  CoupleChip,
+  CoupleLoadingBlock,
+  CoupleNotice,
+  CouplePageIntro,
+  CouplePanel,
+  VELO_DISPLAY_FONT,
+  VELO_MONO_FONT,
+} from '../../../components/couple-ui'
+
+type CeremonyType = 'civil' | 'religious' | 'symbolic' | null
+type DocumentsMode = 'personalized' | 'partial' | 'fallback' | 'italian' | 'profile_missing'
 
 interface CoupleDoc {
+  partner1: string | null
+  partner2: string | null
   nationality: string | null
   country_of_origin: string | null
-  ceremony_type: string | null
+  ceremony_type: CeremonyType
   wedding_date: string | null
 }
 
-type Difficulty = 'easy' | 'medium' | 'complex'
+interface OverviewItem {
+  label: string
+  title: string
+  body: string
+}
+
+interface GuideSection {
+  eyebrow: string
+  title: string
+  items: string[]
+}
+
+interface DocumentsCopy {
+  eyebrow: string
+  title: string
+  subtitle: string
+  nextStepLabel: string
+  appliesLabel: string
+  unfoldsLabel: string
+  verifyTitle: string
+  verifyBody: string
+  profileCta: string
+  completeProfileCta: string
+  dashboardCta: string
+  officialCta: string
+  fallbackTitle: string
+  fallbackBody: string
+  partialTitle: string
+  partialBody: string
+  profileMissingTitle: string
+  profileMissingBody: string
+  italianTitle: string
+  italianBody: string
+  urgentTitle: string
+  urgentBody: string
+  readGeneralBody: string
+  noCountryTitle: string
+  mainDocument: string
+  whereToGetIt: string
+  timing: string
+  nextRecommendedStep: string
+  whatUnlocks: string
+  genericGuide: string
+  commonRules: string
+  dateUnknown: string
+  timingOpen: string
+  daysToGo: (days: number) => string
+  datePassed: string
+  ceremonyLabel: (ceremony: CeremonyType) => string
+  internalStatusLabel: (mode: DocumentsMode) => string
+}
 
 function useLocale() {
   const [locale, setLocale] = useState('en')
   useEffect(() => {
-    const m = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
-    if (m) setLocale(m[1])
+    const match = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
+    if (match) setLocale(match[1])
     else if (!navigator.language.startsWith('en')) setLocale('it')
   }, [])
   return locale
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+function getDocumentsCopy(locale: string): DocumentsCopy {
+  const isIT = locale === 'it'
+  return {
+    eyebrow: isIT ? 'DOCUMENTI' : 'DOCUMENTS',
+    title: isIT ? 'La guida documenti per sposarsi in Italia' : 'The documents guide for marrying in Italy',
+    subtitle: isIT
+      ? 'Una lettura piu calma e utile di cosa serve, dove si ottiene e quando conviene muoversi.'
+      : 'A calmer, more useful read of what is needed, where to get it, and when to move.',
+    nextStepLabel: isIT ? 'Prossimo passo consigliato' : 'Next recommended step',
+    appliesLabel: isIT ? 'Quello che di solito conta' : 'What usually applies',
+    unfoldsLabel: isIT ? 'Come si svolge di solito il percorso' : 'How the process usually unfolds',
+    verifyTitle: isIT ? 'Verifica sempre con le fonti ufficiali' : 'Always verify with official sources',
+    verifyBody: isIT
+      ? "Le richieste possono cambiare per Comune, nazionalita e rito. VELO aiuta a fare ordine, ma l'ultima parola resta al Comune e alla tua ambasciata o consolato."
+      : 'Requirements can shift by Comune, nationality, and ceremony type. VELO helps create order, but the final word remains with the Comune and your embassy or consulate.',
+    profileCta: isIT ? 'Rivedi il profilo coppia' : 'Review couple profile',
+    completeProfileCta: isIT ? 'Completa il profilo coppia' : 'Complete couple profile',
+    dashboardCta: isIT ? 'Torna alla dashboard' : 'Back to dashboard',
+    officialCta: isIT ? 'Apri la fonte ufficiale' : 'Open official source',
+    fallbackTitle: isIT ? 'Guida generale disponibile' : 'General guidance available',
+    fallbackBody: isIT
+      ? "Non abbiamo ancora una scheda paese dedicata per questa nazionalita, ma VELO puo comunque guidarti sul flusso generale per sposarsi in Italia."
+      : "We do not yet have a dedicated country sheet for this nationality, but VELO can still guide the general flow for marrying in Italy.",
+    partialTitle: isIT ? 'Piu dati rendono la guida piu precisa' : 'More profile detail makes this guide more precise',
+    partialBody: isIT
+      ? 'Con tipo di cerimonia e paese di origine possiamo mostrarti un percorso piu preciso, con documenti principali, tempistiche e punti di attenzione.'
+      : 'With ceremony type and country of origin, we can show a more precise path with the main documents, timing, and key watchpoints.',
+    profileMissingTitle: isIT ? 'Profilo web non ancora completo' : 'Web profile not fully available yet',
+    profileMissingBody: isIT
+      ? "Non abbiamo trovato un profilo coppia completo su web. Intanto trovi una guida generale, ma il percorso si personalizza meglio appena il profilo e allineato."
+      : 'We could not find a complete couple profile on web yet. You still have a general guide here, but the path becomes more precise as soon as the profile is aligned.',
+    italianTitle: isIT ? 'Per coppie italiane il flusso e piu leggero' : 'For Italian couples the flow is lighter',
+    italianBody: isIT
+      ? "Questa area nasce soprattutto per le coppie destination. Per una coppia italiana, il riferimento resta prima di tutto il Comune della cerimonia e, se serve, la parrocchia."
+      : 'This area is built mainly for destination couples. For an Italian couple, the primary reference remains the wedding Comune and, when relevant, the parish.',
+    urgentTitle: isIT ? 'Muoviti questa settimana' : 'Move this week',
+    urgentBody: isIT
+      ? 'Mancano meno di 90 giorni. Apostille, traduzioni e appuntamenti consolari possono richiedere tempo reale: non lasciare questa parte alla fine.'
+      : 'There are fewer than 90 days left. Apostilles, translations, and consular appointments take real time, so this should not be left to the end.',
+    readGeneralBody: isIT
+      ? 'Anche senza una personalizzazione completa, VELO puo aiutarti a leggere il percorso con piu ordine.'
+      : 'Even without full personalization, VELO can still help you read the process with more order.',
+    noCountryTitle: isIT ? 'Paese non ancora impostato' : 'Country not set yet',
+    mainDocument: isIT ? 'Documento principale' : 'Main document',
+    whereToGetIt: isIT ? 'Dove ottenerlo' : 'Where to get it',
+    timing: isIT ? 'Quando muoversi' : 'Timing',
+    nextRecommendedStep: isIT ? 'La prossima mossa piu utile per non accumulare stress.' : 'The next most useful move so this never turns into stress.',
+    whatUnlocks: isIT ? 'Cosa sblocca una guida migliore' : 'What unlocks a better guide',
+    genericGuide: isIT ? 'Guida generale Italia' : 'General Italy guide',
+    commonRules: isIT ? 'Regole che tornano quasi sempre' : 'Rules that usually apply',
+    dateUnknown: isIT ? 'Data non ancora impostata' : 'Date not set yet',
+    timingOpen: isIT ? 'Meglio iniziare 4-6 mesi prima' : 'Best started 4-6 months ahead',
+    daysToGo: (days: number) => isIT ? `${days} giorni alla data` : `${days} days to go`,
+    datePassed: isIT ? 'La data registrata e gia passata' : 'The saved date has already passed',
+    ceremonyLabel: (ceremony) => {
+      if (ceremony === 'civil') return isIT ? 'Rito civile' : 'Civil ceremony'
+      if (ceremony === 'religious') return isIT ? 'Rito religioso' : 'Religious ceremony'
+      if (ceremony === 'symbolic') return isIT ? 'Rito simbolico' : 'Symbolic ceremony'
+      return isIT ? 'Cerimonia da definire' : 'Ceremony to be confirmed'
+    },
+    internalStatusLabel: (mode) => {
+      if (mode === 'personalized') return isIT ? 'Guida personalizzata' : 'Personalized guide'
+      if (mode === 'fallback') return isIT ? 'Fallback elegante' : 'Graceful fallback'
+      if (mode === 'italian') return isIT ? 'Coppia italiana' : 'Italian couple'
+      return isIT ? 'Da completare' : 'To complete'
+    },
+  }
+}
 
 function daysUntil(dateStr: string): number {
-  const now = new Date(); now.setHours(0, 0, 0, 0)
-  const t = new Date(dateStr); t.setHours(0, 0, 0, 0)
-  return Math.ceil((t.getTime() - now.getTime()) / 86400000)
+  const now = new Date()
+  const target = new Date(dateStr)
+  now.setHours(0, 0, 0, 0)
+  target.setHours(0, 0, 0, 0)
+  return Math.ceil((target.getTime() - now.getTime()) / 86400000)
 }
 
-const DIFF_COLOR: Record<Difficulty, string> = {
-  easy: '#7A9E7E',
-  medium: '#C9A84C',
-  complex: '#C4756A',
-}
-const DIFF_LABEL: Record<Difficulty, string> = {
-  easy: 'Straightforward',
-  medium: 'Some steps required',
-  complex: 'Plan well in advance',
+function formatDate(dateStr: string, locale: string): string {
+  return new Date(dateStr).toLocaleDateString(locale === 'it' ? 'it-IT' : 'en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
-// ─── Shared sub-components ───────────────────────────────────────────────────
+function primaryButtonClass() {
+  return 'inline-flex items-center justify-center rounded-full bg-[var(--velo-terracotta)] px-5 py-3 text-[11px] uppercase tracking-[0.2em] text-[var(--velo-paper-2)] transition-colors hover:bg-[var(--velo-terracotta-deep)]'
+}
 
-function PageHeader({ flag, title, sub, badge, badgeColor }: {
-  flag?: string; title: string; sub?: string; badge?: string; badgeColor?: string
-}) {
+function stripEmoji(value: string) {
+  return value.replace(/^[^A-Za-z0-9À-ÿ]+/, '').trim() || value
+}
+
+function getWhereToGetIt(countryDoc: CountryDoc | null, ceremony: CeremonyType, mode: DocumentsMode, copy: DocumentsCopy) {
+  if (mode === 'italian') {
+    return ceremony === 'religious'
+      ? `${copy.ceremonyLabel(ceremony)} / Comune + parrocchia`
+      : `${copy.ceremonyLabel(ceremony)} / Comune della cerimonia`
+  }
+  if (ceremony === 'symbolic') return copy.ceremonyLabel(ceremony)
+  if (!countryDoc) return copy.genericGuide
+  if (['US', 'CA', 'AU'].includes(countryDoc.code)) return 'Italian consulate at home + Comune in Italy'
+  if (countryDoc.difficulty === 'complex') return 'Embassy or consulate + Comune in Italy'
+  return 'Home registry or embassy + Comune in Italy'
+}
+
+function getTimingSummary(countryDoc: CountryDoc | null, weddingDate: string | null, copy: DocumentsCopy) {
+  if (!weddingDate) return countryDoc ? `${copy.timingOpen} / ${countryDoc.arrivalDays}` : copy.timingOpen
+  const days = daysUntil(weddingDate)
+  if (days < 0) return copy.datePassed
+  return `${copy.daysToGo(days)} / ${countryDoc?.arrivalDays ?? copy.timingOpen}`
+}
+
+function getMissingProfilePrompt(
+  locale: string,
+  nationality: string | null,
+  countryCode: string | null,
+  ceremony: CeremonyType,
+) {
+  const missing: string[] = []
+
+  if (!nationality) missing.push(locale === 'it' ? 'nazionalita' : 'nationality')
+  if (!countryCode) missing.push(locale === 'it' ? 'paese di origine' : 'country of origin')
+  if (!ceremony) missing.push(locale === 'it' ? 'tipo di rito' : 'ceremony type')
+
+  if (missing.length === 0) return ''
+  if (missing.length === 1) return missing[0]
+
+  const joiner = locale === 'it' ? ' e ' : ' and '
+  return `${missing.slice(0, -1).join(', ')}${joiner}${missing[missing.length - 1]}`
+}
+
+function getGeneralRules(locale: string, ceremony: CeremonyType) {
+  const isIT = locale === 'it'
+  const rules = [
+    isIT
+      ? 'Il Comune resta il riferimento finale: verifica sempre con l Ufficio di Stato Civile della location.'
+      : 'The wedding Comune remains the final reference point, so always verify with the local civil office.',
+    isIT
+      ? 'Documenti esteri richiedono spesso apostille o legalizzazione e traduzione in italiano.'
+      : 'Foreign records often require apostille or legalization plus an Italian translation.',
+    isIT
+      ? 'Se la cerimonia e civile e non parlate italiano, puo servire un interprete.'
+      : 'If the ceremony is civil and you do not speak Italian, an interpreter may be required.',
+  ]
+
+  if (ceremony === 'religious') {
+    rules.push(
+      isIT
+        ? 'Per i riti religiosi la parte civile puo seguire regole diverse: chiariscila presto con parrocchia e Comune.'
+        : 'For religious ceremonies, the civil side may follow different rules, so align early with both parish and Comune.',
+    )
+  }
+  if (ceremony === 'symbolic') {
+    rules.push(
+      isIT
+        ? 'Il rito simbolico non crea effetti legali: la parte civile va organizzata separatamente.'
+        : 'A symbolic ceremony has no legal effect, so the legal marriage needs to be handled separately.',
+    )
+  }
+
+  return rules
+}
+
+function getGuideSections(locale: string, mode: DocumentsMode, countryDoc: CountryDoc | null, ceremony: CeremonyType): GuideSection[] {
+  const isIT = locale === 'it'
+
+  if (mode === 'italian') {
+    return [
+      {
+        eyebrow: isIT ? 'Comune o parrocchia' : 'Comune or parish',
+        title: isIT ? 'Partite dall ufficio giusto, non da una ricerca generica.' : 'Start with the right office, not with generic searching.',
+        items: [
+          isIT
+            ? 'Contattate il Comune della cerimonia non appena data e luogo sono abbastanza chiari.'
+            : 'Contact the wedding Comune as soon as date and venue are reasonably clear.',
+          isIT
+            ? 'Se il rito e religioso, allineate presto anche la parrocchia.'
+            : 'If the ceremony is religious, align with the parish early as well.',
+        ],
+      },
+      {
+        eyebrow: isIT ? 'Cosa chiedere' : 'What to ask',
+        title: isIT ? 'Serve chiarezza pratica, non una lista infinita.' : 'You need practical clarity, not an endless list.',
+        items: [
+          isIT
+            ? 'Chiedete quali documenti servono davvero per il vostro rito e con quali tempi.'
+            : 'Ask which documents really apply to your ceremony and on what timing.',
+          isIT
+            ? 'Verificate testimoni, eventuale interprete e margine di consegna.'
+            : 'Verify witnesses, any interpreter requirement, and the delivery margin.',
+        ],
+      },
+      {
+        eyebrow: isIT ? 'Tono del planning' : 'Planning tone',
+        title: isIT ? 'Tenete i documenti ordinati dentro il resto del matrimonio.' : 'Keep the paperwork orderly inside the rest of the wedding.',
+        items: [
+          isIT
+            ? 'Annotate scadenze e nomi dei referenti nello stesso flusso del planning.'
+            : 'Keep deadlines and contact names inside the same planning flow as the rest of the wedding.',
+          isIT
+            ? 'Una volta chiarita la parte documentale, il resto del progetto diventa piu leggero.'
+            : 'Once the document side is clear, the rest of the project becomes lighter.',
+        ],
+      },
+    ]
+  }
+
+  if (ceremony === 'symbolic') {
+    return [
+      {
+        eyebrow: isIT ? 'Valore legale' : 'Legal value',
+        title: isIT ? 'Il rito simbolico non richiede documenti italiani per esistere.' : 'A symbolic ceremony does not need Italian paperwork to exist.',
+        items: [
+          isIT
+            ? 'Potete scegliere location, lingua e officiante con grande liberta.'
+            : 'You can choose the venue, language, and officiant with broad freedom.',
+          isIT
+            ? 'La parte civile, se la volete, va gestita separatamente.'
+            : 'The legal marriage, if you want it, needs to be handled separately.',
+        ],
+      },
+      {
+        eyebrow: isIT ? 'Scelta migliore' : 'Best choice',
+        title: isIT ? 'Decidete presto dove rendere il matrimonio legalmente valido.' : 'Decide early where the marriage becomes legally valid.',
+        items: [
+          isIT
+            ? 'Molte coppie fanno la parte legale nel proprio paese e tengono in Italia il momento simbolico principale.'
+            : 'Many couples handle the legal marriage at home and keep Italy as the main symbolic celebration.',
+          isIT
+            ? 'In alternativa si puo aggiungere un piccolo rito civile in Italia.'
+            : 'Alternatively, a small civil step can be added in Italy.',
+        ],
+      },
+      {
+        eyebrow: isIT ? 'Ordine' : 'Order',
+        title: isIT ? 'Anche senza burocrazia, la chiarezza resta utile.' : 'Even without bureaucracy, clarity still matters.',
+        items: [
+          isIT
+            ? 'Definite presto se servono interprete, testimoni o coordinamento con il luogo.'
+            : 'Define early whether you need an interpreter, witnesses, or venue coordination.',
+          isIT
+            ? 'Tenete la scelta legale e quella simbolica nello stesso disegno del planning.'
+            : 'Keep the legal choice and the symbolic celebration in the same planning view.',
+        ],
+      },
+    ]
+  }
+
+  if (!countryDoc) {
+    return [
+      {
+        eyebrow: isIT ? 'A casa' : 'At home',
+        title: isIT ? 'Partite dal vostro consolato o registro civile.' : 'Start with your embassy, consulate, or civil registry.',
+        items: [
+          isIT
+            ? 'Chiedete quale certificato sostituisce il nulla osta nel vostro paese.'
+            : 'Ask which document in your country plays the role of a no-impediment certificate.',
+          isIT
+            ? 'Verificate gia se sono richieste apostille o legalizzazioni.'
+            : 'Confirm early whether apostilles or legalizations are required.',
+        ],
+      },
+      {
+        eyebrow: isIT ? 'Preparazione' : 'Preparation',
+        title: isIT ? 'Traduzioni e coerenza dei dati fanno la differenza.' : 'Translations and name consistency make the difference.',
+        items: [
+          isIT
+            ? 'Usate traduzioni in italiano dove il Comune le richiede.'
+            : 'Use Italian translations wherever the Comune requires them.',
+          isIT
+            ? 'Controllate che nomi e date coincidano su ogni documento.'
+            : 'Check that names and dates match across every document.',
+        ],
+      },
+      {
+        eyebrow: isIT ? 'In Italia' : 'In Italy',
+        title: isIT ? 'Il Comune resta il punto finale di conferma.' : 'The Comune remains the final point of confirmation.',
+        items: [
+          isIT
+            ? 'Confermate sempre tempistiche, dichiarazioni e margini di arrivo con la location pubblica giusta.'
+            : 'Always confirm timing, declarations, and arrival margins with the correct public office.',
+          isIT
+            ? 'Se la guida paese manca, il Comune puo chiarire i documenti minimi ancora prima del viaggio.'
+            : 'If the country guide is missing, the Comune can still clarify the minimum document set before travel.',
+        ],
+      },
+    ]
+  }
+
+  const first = countryDoc.steps.slice(0, 2)
+  const middle = countryDoc.steps.slice(2, 4)
+  const last = countryDoc.steps.slice(4)
+
+  return [
+    {
+      eyebrow: isIT ? 'Prima di partire' : 'Before leaving home',
+      title: isIT ? 'La parte piu importante si costruisce ancora a casa.' : 'The most important part is still built at home.',
+      items: first.length > 0 ? first : countryDoc.steps.slice(0, 1),
+    },
+    {
+      eyebrow: isIT ? 'Legalizzazione' : 'Legalisation',
+      title: isIT ? 'Apostille, traduzioni e coerenza dei dati vanno curate bene.' : 'Apostilles, translations, and clean records need careful handling.',
+      items: middle.length > 0
+        ? middle
+        : [
+            isIT
+              ? 'Preparate traduzioni in italiano e controllate che i dati coincidano.'
+              : 'Prepare Italian translations and verify that all personal details match.',
+            isIT
+              ? 'Se il vostro paese richiede apostille o legalizzazione, trattatela come una tappa propria.'
+              : 'If your country needs apostille or legalisation, treat that as a step of its own.',
+          ],
+    },
+    {
+      eyebrow: isIT ? 'Arrivo in Italia' : 'Arrival in Italy',
+      title: isIT ? 'Gli ultimi passaggi si chiudono con il Comune giusto.' : 'The final steps close with the right Comune.',
+      items: last.length > 0
+        ? last
+        : [
+            isIT
+              ? `Arrivate con margine: ${countryDoc.arrivalDays}.`
+              : `Arrive with margin: ${countryDoc.arrivalDays}.`,
+            isIT
+              ? 'Chiudete dichiarazioni e verifiche con il Comune prima del rito.'
+              : 'Complete declarations and checks with the Comune before the ceremony.',
+          ],
+    },
+  ]
+}
+
+function ActionButton({ href, label, external = false }: { href: string; label: string; external?: boolean }) {
+  if (external) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={primaryButtonClass()} style={{ fontFamily: VELO_MONO_FONT }}>
+        {label}
+      </a>
+    )
+  }
+
   return (
-    <div style={{ marginBottom: 32 }}>
-      <div style={{ fontSize: 11, letterSpacing: 3, color: '#C9A84C', textTransform: 'uppercase', marginBottom: 8 }}>
-        DOCUMENTS
+    <Link href={href} className={primaryButtonClass()} style={{ fontFamily: VELO_MONO_FONT }}>
+      {label}
+    </Link>
+  )
+}
+
+function OverviewCard({ item }: { item: OverviewItem }) {
+  return (
+    <CouplePanel className="h-full">
+      <div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
+        {item.label}
       </div>
-      <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 32, fontWeight: 300, color: '#F5EDD6', margin: '0 0 6px', lineHeight: 1.2 }}>
-        {flag ? `${flag} ` : ''}{title}
-      </h1>
-      {sub && <div style={{ fontSize: 14, color: '#8A7E6A', marginBottom: 10 }}>{sub}</div>}
-      {badge && (
-        <span style={{
-          display: 'inline-block', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase',
-          color: badgeColor ?? '#C9A84C',
-          border: `1px solid ${badgeColor ?? '#C9A84C'}40`,
-          background: `${badgeColor ?? '#C9A84C'}12`,
-          borderRadius: 20, padding: '4px 12px',
-        }}>
-          {badge}
-        </span>
-      )}
-    </div>
+      <p className="text-[1.25rem] leading-snug text-[var(--velo-ink)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+        {item.title}
+      </p>
+      <p className="mt-3 text-sm leading-7 text-[var(--velo-muted)]">{item.body}</p>
+    </CouplePanel>
   )
 }
 
-function Card({ children, border }: { children: React.ReactNode; border?: string }) {
+function GuideCard({ section }: { section: GuideSection }) {
   return (
-    <div style={{
-      background: '#1A1915', border: `1px solid ${border ?? '#2A2820'}`,
-      borderRadius: 14, padding: '20px 22px', marginBottom: 12,
-    }}>
-      {children}
-    </div>
-  )
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 11, letterSpacing: 2, color: '#8A7E6A', textTransform: 'uppercase', marginBottom: 14 }}>{children}</div>
-}
-
-function BodyText({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.8 }}>{children}</div>
-}
-
-function StepList({ steps, civil_note }: { steps: string[]; civil_note?: string }) {
-  return (
-    <div>
-      {civil_note && (
-        <div style={{ fontSize: 12, color: '#8A7E6A', fontStyle: 'italic', marginBottom: 14, lineHeight: 1.7 }}>
-          {civil_note}
-        </div>
-      )}
-      {steps.map((step, i) => (
-        <div key={i} style={{ display: 'flex', gap: 14, marginBottom: 14, alignItems: 'flex-start' }}>
-          <div style={{
-            flexShrink: 0, width: 22, height: 22, borderRadius: '50%',
-            background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 11, color: '#C9A84C', fontWeight: 700, marginTop: 1,
-          }}>
-            {i + 1}
-          </div>
-          <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7, flex: 1 }}>{step}</div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function JourneySteps({ steps }: { steps: { title: string; sub: string }[] }) {
-  return (
-    <div>
-      {steps.map((s, i) => (
-        <div key={i} style={{ display: 'flex', gap: 16, marginBottom: i < steps.length - 1 ? 0 : 0 }}>
-          {/* Timeline */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 32, flexShrink: 0 }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: '50%',
-              background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 13, color: '#C9A84C',
-            }}>
-              {i + 1}
-            </div>
-            {i < steps.length - 1 && (
-              <div style={{ width: 1, flex: 1, minHeight: 20, background: 'rgba(201,168,76,0.15)', margin: '4px 0' }} />
-            )}
-          </div>
-          {/* Content */}
-          <div style={{ flex: 1, paddingBottom: i < steps.length - 1 ? 20 : 0 }}>
-            <div style={{ fontSize: 14, color: '#F5EDD6', fontWeight: 400, marginBottom: 3 }}>{s.title}</div>
-            <div style={{ fontSize: 12, color: '#8A7E6A', lineHeight: 1.6 }}>{s.sub}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function NoteBadge({ text }: { text: string }) {
-  return (
-    <div style={{
-      background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)',
-      borderRadius: 10, padding: '14px 18px', marginBottom: 12,
-    }}>
-      <div style={{ fontSize: 11, letterSpacing: 2, color: '#C9A84C', textTransform: 'uppercase', marginBottom: 6 }}>
-        Good to know
+    <CouplePanel className="h-full">
+      <div className="mb-3 text-[10px] uppercase tracking-[0.24em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
+        {section.eyebrow}
       </div>
-      <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7 }}>{text}</div>
-    </div>
-  )
-}
-
-function WarningBox({ title, text }: { title: string; text: string }) {
-  return (
-    <div style={{
-      background: 'rgba(196,117,106,0.06)', border: '1px solid rgba(196,117,106,0.2)',
-      borderRadius: 10, padding: '14px 18px', marginBottom: 12,
-    }}>
-      <div style={{ fontSize: 12, color: '#C4756A', fontWeight: 600, marginBottom: 6 }}>{title}</div>
-      <div style={{ fontSize: 12, color: '#9A9080', lineHeight: 1.7 }}>{text}</div>
-    </div>
-  )
-}
-
-function Footer() {
-  return (
-    <div style={{ marginTop: 8, fontSize: 12, color: '#5A5040', lineHeight: 1.8, fontStyle: 'italic', borderTop: '1px solid #1E1D1A', paddingTop: 20 }}>
-      Need personalised help? Consider consulting an Italian lawyer (avvocato) or a wedding planner experienced in destination weddings.
-    </div>
-  )
-}
-
-// ─── Country overview block ───────────────────────────────────────────────────
-
-function CountryOverview({ doc }: { doc: CountryDoc }) {
-  const color = DIFF_COLOR[doc.difficulty]
-  return (
-    <div style={{
-      background: '#1A1915', border: '1px solid rgba(201,168,76,0.2)',
-      borderRadius: 14, padding: '20px 22px', marginBottom: 12,
-    }}>
-      <div style={{ fontSize: 11, letterSpacing: 2, color: '#C9A84C', textTransform: 'uppercase', marginBottom: 16 }}>
-        At a glance — {doc.name}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }} className="overview-grid">
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 10, color: '#8A7E6A', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Main document</div>
-          <div style={{ fontSize: 12, color: '#F5EDD6', lineHeight: 1.5 }}>{doc.keyDoc}</div>
-        </div>
-        <div style={{ textAlign: 'center', borderLeft: '1px solid #2A2820', borderRight: '1px solid #2A2820' }}>
-          <div style={{ fontSize: 10, color: '#8A7E6A', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Arrive in Italy</div>
-          <div style={{ fontSize: 12, color: '#F5EDD6', lineHeight: 1.5 }}>{doc.arrivalDays}</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 10, color: '#8A7E6A', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Process</div>
-          <div style={{ fontSize: 12, color: color, fontWeight: 600 }}>{DIFF_LABEL[doc.difficulty]}</div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Page paths ───────────────────────────────────────────────────────────────
-
-function ProfileIncomplete() {
-  return (
-    <div>
-      <PageHeader title="Getting married in Italy" sub="Complete your profile to see your personalised guide" />
-      <Card border="rgba(201,168,76,0.25)">
-        <SectionTitle>Complete your profile first</SectionTitle>
-        <BodyText>
-          To show you the right document guide, we need to know your nationality and ceremony type.
-          Complete your profile in the VELO app and your personalised checklist will appear here.
-        </BodyText>
-        <div style={{ marginTop: 16, fontSize: 13, color: '#C9A84C' }}>Open the VELO app to update your profile →</div>
-      </Card>
-      <Footer />
-    </div>
-  )
-}
-
-function LoadError() {
-  return (
-    <div>
-      <PageHeader title="Getting married in Italy" />
-      <div style={{
-        background: 'rgba(196,117,106,0.06)', border: '1px solid rgba(196,117,106,0.2)',
-        borderRadius: 12, padding: '20px 24px', marginBottom: 12,
-      }}>
-        <div style={{ fontSize: 13, color: '#C4756A', fontWeight: 600, marginBottom: 6 }}>
-          Unable to load your profile
-        </div>
-        <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7 }}>
-          We could not retrieve your wedding details. This may be a temporary connection issue.
-          Try refreshing the page — if the problem persists, open the VELO app and make sure your profile is complete.
-        </div>
-      </div>
-      <Footer />
-    </div>
-  )
-}
-
-function CoupleProfileUnavailable() {
-  return (
-    <div>
-      <PageHeader title="Getting married in Italy" />
-      <div style={{
-        background: '#1A1915', border: '1px solid rgba(201,168,76,0.25)',
-        borderRadius: 12, padding: '20px 24px', marginBottom: 12,
-      }}>
-        <div style={{ fontSize: 13, color: '#C9A84C', fontWeight: 600, marginBottom: 6 }}>
-          Couple profile not available yet
-        </div>
-        <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7 }}>
-          We could not find an active VELO couple profile for this signed-in account on web yet.
-          Complete or verify your setup in the VELO app, then come back here for your personalised documents guide.
-        </div>
-      </div>
-      <Footer />
-    </div>
-  )
-}
-
-function ItalianDocumentsUnavailable({ locale }: { locale: string }) {
-  const title = locale === 'en' ? 'Documents guidance reserved for international couples' : 'Guida documenti riservata alle coppie internazionali'
-  const body = locale === 'en'
-    ? 'VELO Documents is designed for couples who need international wedding document guidance for marrying in Italy. As an Italian couple, this area is not part of your main planning flow.'
-    : 'VELO Documents e pensato per le coppie che hanno bisogno di una guida internazionale ai documenti per sposarsi in Italia. Per una coppia italiana, questa area non fa parte del flusso principale di pianificazione.'
-  const cta = locale === 'en' ? 'Back to your couple area' : 'Torna alla tua area coppia'
-
-  return (
-    <div>
-      <PageHeader title={locale === 'en' ? 'Getting married in Italy' : 'Sposarsi in Italia'} />
-      <div style={{
-        background: '#1A1915', border: '1px solid rgba(201,168,76,0.25)',
-        borderRadius: 12, padding: '20px 24px', marginBottom: 12,
-      }}>
-        <div style={{ fontSize: 13, color: '#C9A84C', fontWeight: 600, marginBottom: 6 }}>
-          {title}
-        </div>
-        <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7, marginBottom: 18 }}>
-          {body}
-        </div>
-        <Link
-          href="/couple/dashboard"
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            fontSize: 13, color: '#0F0E0C', textDecoration: 'none',
-            padding: '11px 16px', background: '#C9A84C', borderRadius: 10,
-            fontWeight: 600, letterSpacing: 0.4,
-          }}
-        >
-          {cta}
-        </Link>
-      </div>
-      <Footer />
-    </div>
-  )
-}
-
-// Italian religious guide — data mirrored from components/ReligiousCeremonyGuide.tsx (isForeign=false)
-const IT_RELIGIOUS_CHECKLIST = [
-  { phase: '12+ mesi prima', items: [
-    'Contattare il parroco per verificare la disponibilità della data',
-    'Verificare che entrambi i partner siano battezzati (e cresimati)',
-    'Richiedere i documenti di stato libero alla propria parrocchia',
-  ]},
-  { phase: '6–9 mesi prima', items: [
-    'Iscriversi al corso di preparazione al matrimonio (prematrimoniale)',
-    'Scegliere i testimoni (almeno 2, anche non cattolici)',
-    'Iniziare a definire la liturgia con il parroco',
-  ]},
-  { phase: '3–6 mesi prima', items: [
-    'Consegnare i documenti richiesti alla parrocchia',
-    'Scegliere le letture bibliche e i canti',
-    'Accordarsi con il parroco sulla musica (organista, coro)',
-    'Verificare le regole della chiesa per fotografi e videomaker',
-  ]},
-  { phase: '1–3 mesi prima', items: [
-    'Confermare il programma della cerimonia con il parroco',
-    'Comunicare le regole fotografiche al fotografo',
-    'Definire l\'allestimento floreale con il fiorista (regole della chiesa)',
-    'Preparare le fedi e gli altri elementi liturgici',
-  ]},
-  { phase: '1–2 settimane prima', items: [
-    'Consegnare il libretto della messa all\'officina tipografica',
-    'Verificare l\'orario preciso con il parroco',
-    'Briefing finale con fotografo e fiorista sulle regole',
-  ]},
-]
-
-function ItalianReligiousGuide() {
-  const [openPhase, setOpenPhase] = useState<string | null>('12+ mesi prima')
-
-  return (
-    <div>
-      <PageHeader
-        title="La tua guida al rito religioso"
-        badge="Cerimonia religiosa"
-      />
-
-      <Card>
-        <SectionTitle>Scadenziario</SectionTitle>
-        {IT_RELIGIOUS_CHECKLIST.map(({ phase, items }) => (
-          <div key={phase} style={{ marginBottom: 6 }}>
-            <button
-              onClick={() => setOpenPhase(openPhase === phase ? null : phase)}
-              style={{
-                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '10px 14px',
-                background: openPhase === phase ? 'rgba(201,168,76,0.08)' : 'rgba(255,255,255,0.02)',
-                border: '1px solid #2A2820',
-                borderBottom: openPhase === phase ? 'none' : undefined,
-                borderRadius: openPhase === phase ? '8px 8px 0 0' : 8,
-                cursor: 'pointer',
-              }}
-            >
-              <span style={{ fontSize: 12, color: '#C9A84C', letterSpacing: 1 }}>{phase}</span>
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none"
-                style={{ transform: openPhase === phase ? 'none' : 'rotate(-90deg)', transition: 'transform 0.15s', flexShrink: 0 }}>
-                <path d="M2 4L6 8L10 4" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </button>
-            {openPhase === phase && (
-              <div style={{
-                background: '#1A1915', border: '1px solid #2A2820', borderTop: 'none',
-                borderRadius: '0 0 8px 8px', padding: '12px 14px',
-              }}>
-                {items.map((item, i) => (
-                  <div key={i} style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7, marginBottom: i < items.length - 1 ? 6 : 0 }}>
-                    · {item}
-                  </div>
-                ))}
-              </div>
-            )}
+      <p className="text-[1.18rem] leading-snug text-[var(--velo-ink)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+        {section.title}
+      </p>
+      <div className="mt-4 space-y-3">
+        {section.items.map((item) => (
+          <div key={item} className="flex gap-3">
+            <span className="mt-[0.45rem] h-[6px] w-[6px] shrink-0 rounded-full bg-[var(--velo-terracotta)]" />
+            <p className="text-sm leading-7 text-[var(--velo-muted)]">{item}</p>
           </div>
         ))}
-      </Card>
-
-      <Card>
-        <SectionTitle>Fotografia &amp; video in chiesa</SectionTitle>
-        <BodyText>
-          <div style={{ marginBottom: 6 }}>· Molte chiese vietano il flash durante la celebrazione — verifica sempre in anticipo</div>
-          <div style={{ marginBottom: 6 }}>· Alcune chiese limitano i movimenti del fotografo (es. solo dall'ultima fila)</div>
-          <div style={{ marginBottom: 6 }}>· Il video può essere vietato o limitato al solo presbiterio</div>
-          <div>· Suggerimento: porta il fotografo alla visita della chiesa per capire le regole</div>
-        </BodyText>
-      </Card>
-
-      <Card>
-        <SectionTitle>Musica</SectionTitle>
-        <BodyText>
-          <div style={{ marginBottom: 6 }}>· La musica deve essere approvata dal parroco</div>
-          <div style={{ marginBottom: 6 }}>· La musica profana (pop, colonne sonore) è generalmente vietata durante la messa</div>
-          <div>· Ave Maria, Pachelbel Canon, Bach sono classici sempre accettati</div>
-        </BodyText>
-      </Card>
-
-      <WarningBox
-        title="Dubbi sui documenti?"
-        text="Contatta l'Ufficio di Stato Civile del Comune dove ti sposi — sono l'autorità competente e possono darti le istruzioni precise per la tua situazione."
-      />
-      <Footer />
-    </div>
-  )
-}
-
-function ItalianCouple({ ceremony }: { ceremony: string | null }) {
-  // Italian + religious → dedicated guide (mirrors mobile ReligiousCeremonyGuide isForeign=false path)
-  if (ceremony === 'religious') return <ItalianReligiousGuide />
-
-  return (
-    <div>
-      <PageHeader
-        title="Getting married in Italy"
-        sub="Coppia italiana"
-        badge={ceremony === 'civil' ? 'Civil ceremony' : ceremony === 'symbolic' ? 'Symbolic ceremony' : undefined}
-      />
-
-      <Card>
-        <SectionTitle>This guide is for foreign couples</SectionTitle>
-        <BodyText>
-          {ceremony === 'symbolic'
-            ? 'Il matrimonio simbolico non ha requisiti burocratici. Sei libero di scegliere location, officiante, lingua e rito. Per la validità legale, procedete separatamente in Comune.'
-            : 'La guida documenti di VELO è pensata per le coppie straniere che si sposano in Italia (destination wedding). Per un matrimonio civile in Italia, le coppie italiane si rivolgono direttamente all\'Ufficio di Stato Civile del proprio Comune. Contatta il Comune della tua location per le istruzioni specifiche.'}
-        </BodyText>
-      </Card>
-
-      {ceremony === 'symbolic' && (
-        <Card border="rgba(201,168,76,0.2)">
-          <SectionTitle>Matrimonio simbolico — cosa preparare</SectionTitle>
-          <BodyText>
-            <div style={{ marginBottom: 8 }}>• Nessun documento legale richiesto per il rito in sé</div>
-            <div style={{ marginBottom: 8 }}>• Libertà totale su location, lingua, script, voti</div>
-            <div style={{ marginBottom: 8 }}>• Scegli un officiante di fiducia (professionista o amico)</div>
-            <div style={{ marginTop: 16, marginBottom: 8 }}>Per la validità legale, le opzioni comuni sono:</div>
-            <div style={{ marginBottom: 4 }}>1. Matrimonio civile in Comune nella stessa data o il giorno prima</div>
-            <div>2. Matrimonio civile nel proprio comune di residenza in un'altra data</div>
-          </BodyText>
-        </Card>
-      )}
-
-      <WarningBox
-        title="Dubbi sui documenti?"
-        text="Contatta l'Ufficio di Stato Civile del Comune dove ti sposi — sono l'autorità competente e possono darti le istruzioni precise per la tua situazione."
-      />
-      <Footer />
-    </div>
-  )
-}
-
-function SymbolicForeign({ countryDoc }: { countryDoc: CountryDoc | null }) {
-  const SYMBOLIC_STEPS = [
-    { title: 'Choose your location', sub: 'No restrictions — beach, vineyard, private villa, rooftop, garden' },
-    { title: 'Find your officiant', sub: 'A professional celebrant or a trusted friend — no official requirements' },
-    { title: 'Plan your ceremony', sub: 'Any language, any script, any tradition you love' },
-    { title: 'Write your vows', sub: 'Complete freedom — this is the most personal part' },
-  ]
-
-  return (
-    <div>
-      <PageHeader
-        title={countryDoc ? `${countryDoc.flag} ${countryDoc.name}` : 'Getting married in Italy'}
-        badge="Symbolic ceremony"
-        badgeColor="#7A9E7E"
-      />
-
-      <Card border="rgba(122,158,126,0.3)">
-        <SectionTitle>Good news — no Italian paperwork needed</SectionTitle>
-        <BodyText>
-          <div style={{ marginBottom: 12 }}>A symbolic ceremony in Italy has no legal value in itself, so Italy does not require any official documents from you.</div>
-          <div style={{ marginBottom: 8 }}>You do not need:</div>
-          <div style={{ marginBottom: 4 }}>• Nulla Osta or Certificate of No Impediment</div>
-          <div style={{ marginBottom: 4 }}>• Apostilles or certified translations</div>
-          <div style={{ marginBottom: 4 }}>• Declaring intention to marry at the Comune</div>
-          <div style={{ marginTop: 12 }}>The ceremony can be held anywhere, in any language, with any script you choose.</div>
-        </BodyText>
-      </Card>
-
-      <Card>
-        <SectionTitle>Your symbolic ceremony journey</SectionTitle>
-        <JourneySteps steps={SYMBOLIC_STEPS} />
-      </Card>
-
-      <Card>
-        <SectionTitle>What about legal recognition?</SectionTitle>
-        <BodyText>
-          <div style={{ marginBottom: 12 }}>If you want to be legally married, you have two common options:</div>
-          <div style={{ marginBottom: 8 }}>1. Marry legally in your home country before or after your Italian celebration</div>
-          <div style={{ marginBottom: 16 }}>2. Add a small civil ceremony at the local Comune the day before — this requires standard documents from your country</div>
-          <div>Many couples choose option 1: the symbolic ceremony in Italy becomes the main celebration, while the legal paperwork stays simple and local.</div>
-        </BodyText>
-      </Card>
-
-      <WarningBox
-        title="Always verify"
-        text="If you decide to add a legal civil ceremony in Italy, you will need the standard documents for your country. Always confirm requirements with the Italian Comune and your country's embassy in Italy."
-      />
-      <Footer />
-    </div>
-  )
-}
-
-function ForeignWithCivil({
-  countryDoc, ceremony, isOther, urgentDocs, ceremonyUnset,
-}: {
-  countryDoc: CountryDoc | null; ceremony: string | null; isOther: boolean; urgentDocs: boolean; ceremonyUnset: boolean
-}) {
-  const CIVIL_STEPS = [
-    { title: 'Check your documents', sub: 'See exactly what your country requires — no surprises' },
-    { title: 'Prepare with time', sub: 'Most documents need to be requested 3–6 months before' },
-    { title: 'Translations & legalisation', sub: 'Every document needs apostille + Italian translation' },
-    { title: 'Arrive in Italy', sub: 'Sign at the Comune — then celebrate' },
-  ]
-
-  const GENERIC_STEPS = [
-    'Valid passport for both partners',
-    'Birth certificate — apostilled + translated into Italian by a certified translator',
-    "Certificate of No Impediment / Nulla Osta — from your country's embassy or consulate in Italy",
-    'If previously married: divorce decree or death certificate — apostilled + translated',
-    'Declaration of Intention to Marry — signed at the local Comune (Ufficio di Stato Civile)',
-    'Two witnesses at the ceremony (any nationality, over 18, with valid ID)',
-  ]
-
-  const APPLIES_ALL = [
-    'All foreign documents must be apostilled (Hague Convention) or legalised',
-    'All documents must be translated into Italian by a certified translator',
-    'If neither partner speaks Italian, an interpreter must be present at civil ceremonies',
-    'Civil banns are typically waived for non-residents',
-  ]
-
-  const badgeLabel = ceremony === 'civil' ? 'Civil ceremony' : ceremony === 'religious' ? 'Religious ceremony' : undefined
-
-  return (
-    <div>
-      <PageHeader
-        title={countryDoc ? `${countryDoc.flag} ${countryDoc.name}` : 'Getting married in Italy'}
-        sub={countryDoc ? undefined : 'Destination wedding guide'}
-        badge={badgeLabel}
-      />
-
-      {/* Difficulty + arrival time for known country */}
-      {countryDoc && (
-        <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-          <span style={{
-            fontSize: 11, letterSpacing: 1,
-            color: DIFF_COLOR[countryDoc.difficulty],
-            border: `1px solid ${DIFF_COLOR[countryDoc.difficulty]}40`,
-            background: `${DIFF_COLOR[countryDoc.difficulty]}10`,
-            borderRadius: 20, padding: '4px 12px',
-          }}>
-            {DIFF_LABEL[countryDoc.difficulty]}
-          </span>
-          <span style={{ fontSize: 11, color: '#8A7E6A', display: 'flex', alignItems: 'center' }}>
-            Arrive {countryDoc.arrivalDays}
-          </span>
-        </div>
-      )}
-
-      {/* Ceremony unset nudge — mirrors mobile ceremonyUnsetBanner */}
-      {ceremonyUnset && (
-        <div style={{
-          background: 'rgba(201,168,76,0.07)', border: '1px solid rgba(201,168,76,0.25)',
-          borderRadius: 10, padding: '12px 16px', marginBottom: 14,
-          display: 'flex', gap: 10, alignItems: 'flex-start',
-        }}>
-          <div style={{ color: '#C9A84C', fontSize: 15, flexShrink: 0, marginTop: 1 }}>◎</div>
-          <div style={{ fontSize: 12, color: '#9A9080', lineHeight: 1.7 }}>
-            Ceremony type not set — showing the civil marriage guide.{' '}
-            <span style={{ color: '#C9A84C' }}>Update your profile in the VELO app</span>{' '}
-            to get a guide tailored to your ceremony.
-          </div>
-        </div>
-      )}
-
-      {/* Urgency banner */}
-      {urgentDocs && (
-        <div style={{
-          background: 'rgba(196,117,106,0.08)', border: '1px solid rgba(196,117,106,0.25)',
-          borderRadius: 10, padding: '12px 16px', marginBottom: 16,
-          display: 'flex', gap: 10, alignItems: 'flex-start',
-        }}>
-          <div style={{ color: '#C4756A', fontSize: 16, flexShrink: 0, marginTop: 1 }}>!</div>
-          <div style={{ fontSize: 12, color: '#9A9080', lineHeight: 1.7 }}>
-            Your wedding is in under 90 days. Some of these documents — apostilles, certified translations, consulate filings — can take 3 to 6 months to arrange. If you haven't started yet, contact your nearest Italian consulate this week.
-          </div>
-        </div>
-      )}
-
-      {/* Reassurance */}
-      <div style={{ fontSize: 13, color: '#8A7E6A', fontStyle: 'italic', marginBottom: 20, lineHeight: 1.7 }}>
-        Don't worry — we'll help you understand what you need, one step at a time.
       </div>
-
-      {/* Journey overview */}
-      <Card>
-        <SectionTitle>Your path to getting married in Italy</SectionTitle>
-        <JourneySteps steps={CIVIL_STEPS} />
-      </Card>
-
-      {/* Country overview */}
-      {countryDoc && <CountryOverview doc={countryDoc} />}
-
-      {/* Civil ceremony note */}
-      {ceremony === 'civil' && (
-        <Card>
-          <SectionTitle>Civil ceremony — what to expect</SectionTitle>
-          <BodyText>
-            <div style={{ marginBottom: 8 }}>Performed by the Mayor or official delegate at the Comune (town hall) or an approved venue.</div>
-            <div style={{ marginBottom: 4 }}>• The ceremony is conducted in Italian — an interpreter must be present if needed</div>
-            <div style={{ marginBottom: 4 }}>• Duration: typically 20–45 minutes</div>
-            <div style={{ marginBottom: 4 }}>• Two witnesses required (any nationality, over 18, with valid ID)</div>
-            <div>• Legally binding in Italy and internationally recognised</div>
-          </BodyText>
-        </Card>
-      )}
-
-      {/* Religious ceremony note */}
-      {ceremony === 'religious' && (
-        <Card border="rgba(196,117,106,0.2)">
-          <SectionTitle>Religious ceremony — important notes</SectionTitle>
-          <BodyText>
-            <div style={{ marginBottom: 12 }}>Only Catholic ceremonies have legal civil value in Italy (Concordato 1929).</div>
-            <div style={{ marginBottom: 8 }}>For a legally valid Catholic ceremony:</div>
-            <div style={{ marginBottom: 4 }}>• Contact your local parish months in advance</div>
-            <div style={{ marginBottom: 4 }}>• Both partners must complete pre-marital preparation (corso prematrimoniale)</div>
-            <div style={{ marginBottom: 16 }}>• Additional paperwork from your home parish required</div>
-            <div style={{ marginBottom: 8 }}>For other religions (Protestant, Jewish, Muslim, Orthodox, etc.):</div>
-            <div style={{ marginBottom: 4 }}>• A separate civil ceremony at the Comune is required for legal recognition</div>
-            <div>• The religious ceremony can follow as a symbolic celebration</div>
-          </BodyText>
-        </Card>
-      )}
-
-      {/* Country step-by-step */}
-      {countryDoc && (
-        <Card>
-          <SectionTitle>Step-by-step guide</SectionTitle>
-          <StepList
-            steps={countryDoc.steps}
-            civil_note={ceremony === 'religious' ? 'These steps cover civil registration — required even for religious ceremonies with legal standing in Italy.' : undefined}
-          />
-        </Card>
-      )}
-
-      {/* Generic guide for unknown country */}
-      {isOther && (
-        <Card>
-          <SectionTitle>General requirements — all foreigners</SectionTitle>
-          <StepList steps={GENERIC_STEPS} />
-        </Card>
-      )}
-
-      {/* Good to know */}
-      {countryDoc?.notes && <NoteBadge text={countryDoc.notes} />}
-
-      {/* Official resource link */}
-      {countryDoc?.officialUrl && (
-        <div style={{ marginBottom: 12 }}>
-          <a
-            href={countryDoc.officialUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              fontSize: 13, color: '#4A7AB8', textDecoration: 'none',
-              padding: '10px 16px',
-              background: 'rgba(74,122,184,0.06)',
-              border: '1px solid rgba(74,122,184,0.2)',
-              borderRadius: 10,
-            }}
-          >
-            Open official {countryDoc.name} resource →
-          </a>
-        </div>
-      )}
-
-      {/* Applies to all */}
-      <Card>
-        <SectionTitle>Applies to every country</SectionTitle>
-        <div>
-          {APPLIES_ALL.map((item, i) => (
-            <div key={i} style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7, marginBottom: i < APPLIES_ALL.length - 1 ? 8 : 0 }}>
-              • {item}
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      <WarningBox
-        title="Always verify"
-        text="Requirements can change and vary by municipality and ceremony type. Always confirm with the Italian Comune and your country's embassy in Italy."
-      />
-      <Footer />
-    </div>
+    </CouplePanel>
   )
 }
-
-// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function DocumentsPage() {
   const locale = useLocale()
+  const copy = useMemo(() => getDocumentsCopy(locale), [locale])
+
   const [couple, setCouple] = useState<CoupleDoc | null>(null)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
-  const [missingCoupleRow, setMissingCoupleRow] = useState(false)
+  const [missingProfile, setMissingProfile] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
+
     const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { setFetchError(true); setLoading(false); return }
-      const { data, error } = await supabase
-        .from('couples')
-        .select('nationality, country_of_origin, ceremony_type, wedding_date')
-        .eq('user_id', session.user.id)
-        .single()
-      // Distinguish a genuine query error from a couple row that simply has no nationality set.
-      // supabase-js returns error.code 'PGRST116' when .single() finds no rows.
-      if (error && error.code !== 'PGRST116') {
-        setFetchError(true)
-        setLoading(false)
-        return
+      try {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession()
+
+        if (sessionError) throw sessionError
+
+        if (!session?.user) {
+          if (!cancelled) {
+            setMissingProfile(true)
+            setLoading(false)
+          }
+          return
+        }
+
+        const { data, error } = await supabase
+          .from('couples')
+          .select('partner1, partner2, nationality, country_of_origin, ceremony_type, wedding_date')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+
+        if (error) throw error
+
+        if (cancelled) return
+
+        if (!data || data.length === 0) {
+          setCouple(null)
+          setMissingProfile(true)
+        } else {
+          setCouple(data[0] as CoupleDoc)
+          setMissingProfile(false)
+        }
+      } catch (error) {
+        console.error('documents page load failed', error)
+        if (!cancelled) setFetchError(true)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-      if (error?.code === 'PGRST116' || !data) {
-        setMissingCoupleRow(true)
-        setLoading(false)
-        return
-      }
-      setCouple(data)
-      setLoading(false)
     }
+
     load()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
-  if (loading) {
+  const nationality = couple?.nationality?.toLowerCase().trim() ?? null
+  const countryCode = couple?.country_of_origin?.toUpperCase().trim() ?? null
+  const ceremony = (couple?.ceremony_type ?? null) as CeremonyType
+  const weddingDate = couple?.wedding_date ?? null
+  const countryDoc = countryCode ? COUNTRIES.find((entry) => entry.code === countryCode) ?? null : null
+
+  const mode: DocumentsMode = useMemo(() => {
+    if (missingProfile) return 'profile_missing'
+    if (nationality === 'italian') return 'italian'
+    if (!nationality || !countryCode || !ceremony) return 'partial'
+    if (countryDoc) return 'personalized'
+    return 'fallback'
+  }, [ceremony, countryCode, countryDoc, missingProfile, nationality])
+
+  const days = weddingDate ? daysUntil(weddingDate) : null
+  const isUrgent = days !== null && days >= 0 && days < 90
+
+  const mainDocumentTitle =
+    mode === 'italian'
+      ? ceremony === 'religious'
+        ? locale === 'it'
+          ? 'Conferma da Comune e parrocchia'
+          : 'Confirmation from Comune and parish'
+        : locale === 'it'
+          ? 'Conferma richiesta del Comune'
+          : 'Comune requirement check'
+      : ceremony === 'symbolic'
+        ? locale === 'it'
+          ? 'Nessun fascicolo civile italiano'
+          : 'No Italian civil file needed'
+        : countryDoc?.keyDoc ?? (locale === 'it' ? 'Certificato di stato libero o nulla osta' : 'No-impediment or freedom-to-marry document')
+
+  const mainDocumentBody =
+    mode === 'italian'
+      ? locale === 'it'
+        ? 'Per una coppia italiana conta soprattutto capire presto quali passaggi chiede davvero il Comune della cerimonia.'
+        : 'For an Italian couple, the key is clarifying early what the wedding Comune actually requires.'
+      : ceremony === 'symbolic'
+        ? locale === 'it'
+          ? 'Il rito simbolico non crea effetti civili in Italia, quindi la parte legale puo vivere altrove.'
+          : 'A symbolic ceremony has no civil effect in Italy, so the legal step can happen elsewhere.'
+        : countryDoc
+          ? locale === 'it'
+            ? `${stripEmoji(countryDoc.keyDoc)} e il punto da cui parte quasi tutto per ${stripEmoji(countryDoc.name)}.`
+            : `${stripEmoji(countryDoc.keyDoc)} is the document that anchors most of the process for ${stripEmoji(countryDoc.name)}.`
+          : copy.readGeneralBody
+
+  const overview: OverviewItem[] = [
+    {
+      label: copy.mainDocument,
+      title: mainDocumentTitle,
+      body: mainDocumentBody,
+    },
+    {
+      label: copy.whereToGetIt,
+      title: getWhereToGetIt(countryDoc, ceremony, mode, copy),
+      body:
+        mode === 'personalized'
+          ? locale === 'it'
+            ? 'Parti prima dalla fonte del tuo paese, poi usa il Comune in Italia per confermare i passaggi finali.'
+            : 'Start with the right source in your home country, then use the Comune in Italy to confirm the final steps.'
+          : mode === 'italian'
+            ? locale === 'it'
+              ? 'La conferma pratica arriva dall ufficio giusto, non da una ricerca generica.'
+              : 'Practical clarity comes from the right office, not from generic searching.'
+            : locale === 'it'
+              ? 'La guida resta utile anche senza una scheda paese dedicata, soprattutto per capire l ordine delle tappe.'
+              : 'The guide is still useful without a dedicated country sheet, especially to understand the order of the steps.',
+    },
+    {
+      label: copy.timing,
+      title: getTimingSummary(countryDoc, weddingDate, copy),
+      body:
+        days === null
+          ? locale === 'it'
+            ? 'Se la data non e ancora fissa, tratta i documenti come una preparazione anticipata e non come un adempimento finale.'
+            : 'If the date is not fixed yet, treat documents as early preparation rather than a last-minute task.'
+          : days < 0
+            ? locale === 'it'
+              ? 'Aggiorna la data del matrimonio se il planning e cambiato, cosi anche questa guida resta affidabile.'
+              : 'Update the wedding date if the plan has moved, so this guide remains reliable.'
+            : locale === 'it'
+              ? 'Apostille, traduzioni e appuntamenti consolari si muovono meglio con margine reale.'
+              : 'Apostilles, translations, and consular appointments work better with real margin.',
+    },
+  ]
+
+  const profilePrompt = getMissingProfilePrompt(locale, nationality, countryCode, ceremony)
+
+  const nextStepTitle =
+    mode === 'personalized'
+      ? locale === 'it'
+        ? 'Apri la fonte ufficiale e blocca l elenco reale.'
+        : 'Open the official source and lock the real checklist.'
+      : mode === 'italian'
+        ? locale === 'it'
+          ? 'Contatta il Comune della cerimonia.'
+          : 'Contact the wedding Comune.'
+        : mode === 'fallback'
+          ? locale === 'it'
+            ? 'Individua il documento equivalente nel tuo paese.'
+            : 'Confirm the equivalent document used in your home country.'
+          : locale === 'it'
+            ? 'Completa il profilo per sbloccare la guida personalizzata.'
+            : 'Complete the profile to unlock the personalized guide.'
+
+  const nextStepBody =
+    mode === 'personalized'
+      ? locale === 'it'
+        ? 'Usa la scheda paese per capire il documento chiave, poi confrontala con il Comune italiano che celebrera il matrimonio.'
+        : 'Use the country sheet to understand the key document, then align it with the Italian Comune that will host the marriage.'
+      : mode === 'italian'
+        ? locale === 'it'
+          ? 'Per una coppia italiana la parte documentale vive soprattutto nel dialogo con il Comune e, se serve, con la parrocchia.'
+          : 'For an Italian couple, the document path lives mainly in the dialogue with the Comune and, when needed, the parish.'
+        : mode === 'fallback'
+          ? locale === 'it'
+            ? 'VELO puo guidarti sul flusso generale, ma per essere davvero precisa questa pagina deve partire dal documento che il tuo paese usa davvero.'
+            : 'VELO can guide the general flow, but this page becomes truly precise once the right document for your country is confirmed.'
+          : locale === 'it'
+            ? 'Con pochi dati in piu questa pagina diventa molto piu utile: niente muri di testo, solo i passi che contano davvero.'
+            : 'With a little more data this page becomes much more useful: no long walls of text, only the steps that really matter.'
+
+  const appliesList =
+    mode === 'italian'
+      ? [
+          locale === 'it'
+            ? 'Il Comune della cerimonia resta il riferimento finale.'
+            : 'The wedding Comune remains the final reference point.',
+          ceremony === 'religious'
+            ? locale === 'it'
+              ? 'Per il rito religioso va chiarita presto anche la parte parrocchiale.'
+              : 'For a religious ceremony, the parish side should be clarified early as well.'
+            : locale === 'it'
+              ? 'Testimoni, interprete e margini di consegna vanno verificati sul caso reale.'
+              : 'Witnesses, interpreter needs, and delivery margins should be verified for the real case.',
+        ]
+      : getGeneralRules(locale, ceremony)
+
+  const sections = getGuideSections(locale, mode, countryDoc, ceremony)
+
+  const action =
+    mode === 'personalized' && countryDoc?.officialUrl
+      ? { href: countryDoc.officialUrl, label: copy.officialCta, external: true }
+      : mode === 'italian'
+        ? { href: '/couple/dashboard', label: copy.dashboardCta, external: false }
+        : mode === 'partial' || mode === 'profile_missing'
+          ? { href: '/couple/profile', label: copy.completeProfileCta, external: false }
+        : { href: '/couple/profile', label: copy.profileCta, external: false }
+
+  const meta = (
+    <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
+      <CoupleChip accent="var(--velo-terracotta)">{copy.internalStatusLabel(mode)}</CoupleChip>
+      {countryDoc ? <CoupleChip>{stripEmoji(countryDoc.name)}</CoupleChip> : countryCode ? <CoupleChip>{countryCode}</CoupleChip> : null}
+      <CoupleChip>{copy.ceremonyLabel(ceremony)}</CoupleChip>
+      <CoupleChip accent={isUrgent ? 'var(--velo-danger)' : 'var(--velo-info)'}>
+        {weddingDate ? formatDate(weddingDate, locale) : copy.dateUnknown}
+      </CoupleChip>
+    </div>
+  )
+
+  if (loading) return <CoupleLoadingBlock />
+
+  if (fetchError) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
-        <div style={{ width: 28, height: 28, border: '2px solid #C9A84C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div className="space-y-6">
+        <CouplePageIntro eyebrow={copy.eyebrow} title={copy.title} subtitle={copy.subtitle} />
+        <CoupleNotice title={locale === 'it' ? 'Impossibile caricare la guida' : 'Unable to load the guide'} tone="danger">
+          {locale === 'it'
+            ? 'Riprova tra poco. Se il problema resta, puoi comunque controllare il profilo coppia o tornare alla dashboard.'
+            : 'Please try again shortly. If the problem continues, you can still review the couple profile or return to the dashboard.'}
+        </CoupleNotice>
+        <div className="flex flex-wrap gap-3">
+          <ActionButton href="/couple/profile" label={copy.profileCta} />
+          <ActionButton href="/couple/dashboard" label={copy.dashboardCta} />
+        </div>
       </div>
     )
   }
 
-  // Network error or unexpected Supabase failure
-  if (fetchError) return <LoadError />
-  if (missingCoupleRow) return <CoupleProfileUnavailable />
-
-  // ── Derive state (same logic as mobile documents.tsx) ──────────────────────
-
-  const nationality = couple?.nationality ?? null
-  const countryCode = couple?.country_of_origin ?? null
-  const ceremony = couple?.ceremony_type ?? null      // null = unset
-  const weddingDate = couple?.wedding_date ?? null
-
-  // Genuine incomplete profile: couple row exists but nationality was never saved
-  if (!nationality) return <ProfileIncomplete />
-
-  if (nationality === 'italian') return <ItalianDocumentsUnavailable locale={locale} />
-
-  // Foreign couple
-  const isSymbolic = ceremony === 'symbolic'
-  if (isSymbolic) {
-    const countryDoc = countryCode && countryCode !== 'other'
-      ? (COUNTRIES.find(c => c.code === countryCode) ?? null)
-      : null
-    return <SymbolicForeign countryDoc={countryDoc} />
-  }
-
-  // Foreign + civil / religious, or ceremony unset (falls through to civil guide with nudge banner)
-  const ceremonyUnset = ceremony === null
-  const countryDoc = countryCode && countryCode !== 'other'
-    ? (COUNTRIES.find(c => c.code === countryCode) ?? null)
-    : null
-  const isOther = !countryDoc
-  const urgentDocs = !!(
-    countryDoc?.difficulty === 'complex' &&
-    weddingDate &&
-    daysUntil(weddingDate) > 0 &&
-    daysUntil(weddingDate) < 90
-  )
-
   return (
-    <ForeignWithCivil
-      countryDoc={countryDoc}
-      ceremony={ceremony}
-      isOther={isOther}
-      urgentDocs={urgentDocs}
-      ceremonyUnset={ceremonyUnset}
-    />
+    <div className="space-y-6 sm:space-y-7">
+      <CouplePageIntro
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        subtitle={copy.subtitle}
+        meta={meta}
+        action={<ActionButton href={action.href} label={action.label} external={action.external} />}
+      />
+
+      {mode === 'profile_missing' && (
+        <CoupleNotice title={copy.profileMissingTitle} tone="warning">
+          {copy.profileMissingBody}
+        </CoupleNotice>
+      )}
+
+      {mode === 'partial' && (
+        <CoupleNotice title={copy.partialTitle} tone="warning">
+          {copy.partialBody} {profilePrompt ? `${copy.whatUnlocks}: ${profilePrompt}.` : null}
+        </CoupleNotice>
+      )}
+
+      {mode === 'fallback' && (
+        <CoupleNotice title={copy.fallbackTitle} tone="neutral">
+          {copy.fallbackBody}
+        </CoupleNotice>
+      )}
+
+      {mode === 'italian' && (
+        <CoupleNotice title={copy.italianTitle} tone="neutral">
+          {copy.italianBody}
+        </CoupleNotice>
+      )}
+
+      {isUrgent && (
+        <CoupleNotice title={copy.urgentTitle} tone="danger">
+          {copy.urgentBody}
+        </CoupleNotice>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        {overview.map((item) => (
+          <OverviewCard key={item.label} item={item} />
+        ))}
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr]">
+        <CouplePanel tone="dark" className="relative overflow-hidden">
+          <div className="absolute right-[-1rem] top-[-1rem] h-28 w-28 rounded-full border border-white/10" />
+          <div className="relative">
+            <div className="mb-4 text-[10px] uppercase tracking-[0.3em] text-[#d7b89d]" style={{ fontFamily: VELO_MONO_FONT }}>
+              {copy.nextStepLabel}
+            </div>
+            <p className="max-w-[28rem] text-[2rem] leading-[1.02] text-[var(--velo-paper-2)] sm:text-[2.35rem]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+              {nextStepTitle}
+            </p>
+            <p className="mt-4 max-w-[34rem] text-sm leading-7 text-[#d2c3b0]">{nextStepBody}</p>
+            <p className="mt-5 text-[11px] uppercase tracking-[0.2em] text-[#c9b29a]" style={{ fontFamily: VELO_MONO_FONT }}>
+              {copy.nextRecommendedStep}
+            </p>
+          </div>
+        </CouplePanel>
+
+        <CouplePanel tone="soft">
+          <div className="mb-4 text-[10px] uppercase tracking-[0.3em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
+            {copy.appliesLabel}
+          </div>
+          <div className="space-y-3">
+            {appliesList.map((item) => (
+              <div key={item} className="flex gap-3">
+                <span className="mt-[0.42rem] h-[6px] w-[6px] shrink-0 rounded-full bg-[var(--velo-terracotta)]" />
+                <p className="text-sm leading-7 text-[var(--velo-muted)]">{item}</p>
+              </div>
+            ))}
+          </div>
+        </CouplePanel>
+      </div>
+
+      <CouplePanel className="space-y-5">
+        <div className="flex flex-col gap-3 border-b border-[var(--velo-border)] pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="mb-3 text-[10px] uppercase tracking-[0.28em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
+              {copy.unfoldsLabel}
+            </div>
+            <p className="max-w-[34rem] text-[1.9rem] leading-[1.05] text-[var(--velo-ink)] sm:text-[2.2rem]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+              {locale === 'it' ? 'Documenti, ma con ordine.' : 'Paperwork, but with order.'}
+            </p>
+          </div>
+          <p className="max-w-[21rem] text-sm leading-7 text-[var(--velo-muted)]">
+            {locale === 'it'
+              ? 'Il punto non e sapere tutto insieme. Il punto e capire cosa succede prima, cosa succede in Italia, e cosa richiede verifica.'
+              : 'The goal is not to know everything at once. The goal is to understand what happens first, what happens in Italy, and what needs verification.'}
+          </p>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          {sections.map((section) => (
+            <GuideCard key={section.title} section={section} />
+          ))}
+        </div>
+      </CouplePanel>
+
+      {countryDoc?.notes && (
+        <CoupleNotice title={locale === 'it' ? 'Nota utile' : 'Useful note'} tone="neutral">
+          {stripEmoji(countryDoc.notes)}
+        </CoupleNotice>
+      )}
+
+      <CoupleNotice title={copy.verifyTitle} tone="neutral">
+        {copy.verifyBody}
+      </CoupleNotice>
+    </div>
   )
 }
+
