@@ -78,15 +78,13 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const load = async () => {
-      const fallbackLocale = getPreferredSiteLocale()
-      setLocale(fallbackLocale)
-
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         setFetchError(true)
         setLoading(false)
         return
       }
+      // Fetch couple first
       const { data, error } = await supabase
         .from('couples')
         .select('partner1, partner2, wedding_date, budget, wedding_city, wedding_region, wedding_regione, wedding_province, wedding_style, ceremony_type, wedding_size, nationality, country_of_origin')
@@ -103,6 +101,8 @@ export default function ProfilePage() {
         setLoading(false)
         return
       }
+      // Determine locale from couple data
+      const fallbackLocale = getPreferredSiteLocale()
       const nextLocale = getCoupleLocale(data, fallbackLocale)
       persistCoupleLocale(nextLocale)
       setLocale(nextLocale)

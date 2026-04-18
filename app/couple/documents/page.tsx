@@ -471,14 +471,11 @@ export default function DocumentsPage() {
   const [fetchError, setFetchError] = useState(false)
   const [missingProfile, setMissingProfile] = useState(false)
 
-  useEffect(() => {
+useEffect(() => {
     let cancelled = false
 
     const load = async () => {
       try {
-        const fallbackLocale = getPreferredSiteLocale()
-        if (!cancelled) setLocale(fallbackLocale)
-
         const {
           data: { session },
           error: sessionError,
@@ -494,6 +491,7 @@ export default function DocumentsPage() {
           return
         }
 
+        // Fetch couple first
         const { data, error } = await supabase
           .from('couples')
           .select('partner1, partner2, nationality, country_of_origin, ceremony_type, wedding_date')
@@ -504,6 +502,8 @@ export default function DocumentsPage() {
         if (error) throw error
 
         if (cancelled) return
+
+        const fallbackLocale = getPreferredSiteLocale()
 
         if (!data || data.length === 0) {
           setCouple(null)

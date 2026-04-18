@@ -343,9 +343,6 @@ export default function ChecklistPage() {
 
   useEffect(() => {
     const load = async () => {
-      const fallbackLocale = getPreferredSiteLocale()
-      setLocale(fallbackLocale)
-
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         setFetchError(true)
@@ -353,6 +350,7 @@ export default function ChecklistPage() {
         return
       }
 
+      // Fetch couple first
       const coupleLocaleRes = await supabase
         .from('couples')
         .select('nationality, country_of_origin')
@@ -360,6 +358,7 @@ export default function ChecklistPage() {
         .order('created_at', { ascending: false })
         .limit(1)
 
+      const fallbackLocale = getPreferredSiteLocale()
       const coupleLocaleData = coupleLocaleRes.data?.[0]
       if (coupleLocaleData) {
         const nextLocale = getCoupleLocale(coupleLocaleData, fallbackLocale)

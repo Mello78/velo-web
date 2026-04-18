@@ -185,9 +185,6 @@ export default function BudgetPage() {
 
   useEffect(() => {
     const load = async () => {
-      const fallbackLocale = getPreferredSiteLocale()
-      setLocale(fallbackLocale)
-
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         setFetchError(true)
@@ -197,6 +194,7 @@ export default function BudgetPage() {
 
       const uid = session.user.id
 
+      // Fetch couple first
       const [expensesRes, coupleRes] = await Promise.all([
         supabase.from('expenses').select('id, title, amount, category, confirmed').eq('user_id', uid).order('created_at', { ascending: false }),
         supabase.from('couples').select('budget, nationality, country_of_origin').eq('user_id', uid).single(),
@@ -208,6 +206,7 @@ export default function BudgetPage() {
         return
       }
 
+      const fallbackLocale = getPreferredSiteLocale()
       if (coupleRes.error) {
         if (coupleRes.error.code === 'PGRST116') setBudgetMissing(true)
         else setBudgetLoadError(true)
