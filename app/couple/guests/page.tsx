@@ -1,6 +1,16 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
+import {
+  CoupleChip,
+  CoupleEmptyState,
+  CoupleLoadingBlock,
+  CoupleNotice,
+  CouplePageIntro,
+  CouplePanel,
+  VELO_DISPLAY_FONT,
+  VELO_MONO_FONT,
+} from '../../../components/couple-ui'
 
 type RsvpStatus = 'confirmed' | 'pending' | 'declined'
 
@@ -20,9 +30,9 @@ interface GuestRow {
 const RSVP_ORDER: RsvpStatus[] = ['confirmed', 'pending', 'declined']
 
 const RSVP_CONFIG: Record<RsvpStatus, { color: string; bg: string; border: string }> = {
-  confirmed: { color: '#7A9E7E', bg: 'rgba(122,158,126,0.10)', border: 'rgba(122,158,126,0.25)' },
-  pending:   { color: '#8A7E6A', bg: 'rgba(138,126,106,0.10)', border: 'rgba(138,126,106,0.20)' },
-  declined:  { color: '#C4756A', bg: 'rgba(196,117,106,0.08)', border: 'rgba(196,117,106,0.20)' },
+  confirmed: { color: 'var(--velo-success)', bg: 'rgba(122,158,126,0.10)', border: 'rgba(122,158,126,0.25)' },
+  pending: { color: 'var(--velo-muted)', bg: 'rgba(138,126,106,0.10)', border: 'rgba(138,126,106,0.20)' },
+  declined: { color: 'var(--velo-danger)', bg: 'rgba(196,117,106,0.08)', border: 'rgba(196,117,106,0.20)' },
 }
 
 function useLocale() {
@@ -40,7 +50,10 @@ function getGuestsCopy(locale: string) {
   return {
     pageLabel: isIT ? 'OSPITI' : 'GUESTS',
     pageTitle: isIT ? 'I vostri invitati' : 'Your guests',
-    readOnly: isIT ? 'Vista in sola lettura — usa l’app VELO per aggiungere ospiti o aggiornare gli RSVP' : 'Read-only view — use the VELO app to add guests or update RSVPs',
+    pageSub: isIT
+      ? 'Una vista piu ordinata di RSVP, gruppi e coperti senza perdere il contesto del planning.'
+      : 'A clearer view of RSVPs, groups, and seats without losing planning context.',
+    readOnly: isIT ? "Vista in sola lettura — usa l'app VELO per aggiungere ospiti o aggiornare gli RSVP" : 'Read-only view — use the VELO app to add guests or update RSVPs',
     total: isIT ? 'Invitati' : 'Guests',
     confirmed: isIT ? 'Confermati' : 'Confirmed',
     pending: isIT ? 'In attesa' : 'Pending',
@@ -52,12 +65,10 @@ function getGuestsCopy(locale: string) {
     dietaryLabel: isIT ? 'Esigenze alimentari' : 'Dietary requirements',
     notesLabel: isIT ? 'Note' : 'Notes',
     plusOne: isIT ? 'Con accompagnatore' : 'Plus one',
-    noDietary: isIT ? 'Nessuna segnalata' : 'None noted',
-    noSideGroup: isIT ? 'Non assegnato' : 'Unassigned',
     emailTitle: isIT ? 'Email' : 'Email',
     phoneTitle: isIT ? 'Telefono' : 'Phone',
     emptyTitle: isIT ? 'Nessun ospite ancora' : 'No guests yet',
-    emptyDesc: isIT ? 'Aggiungete i vostri ospiti dall’app VELO per seguire RSVP, gruppi e posti.' : 'Add your guests in the VELO app to track RSVPs, groups, and seats.',
+    emptyDesc: isIT ? "Aggiungete i vostri ospiti dall'app VELO per seguire RSVP, gruppi e posti." : 'Add your guests in the VELO app to track RSVPs, groups, and seats.',
     errorTitle: isIT ? 'Impossibile caricare gli ospiti' : 'Unable to load guests',
     errorDesc: isIT ? 'Potrebbe essere un problema temporaneo. Prova ad aggiornare la pagina.' : 'This may be a temporary connection issue. Try refreshing the page.',
     statusLabel: (status: RsvpStatus) => {
@@ -98,99 +109,35 @@ function normalizeRsvp(value: string | null): RsvpStatus {
   return 'pending'
 }
 
-function StatusPill({ status, label }: { status: RsvpStatus; label: string }) {
-  const cfg = RSVP_CONFIG[status]
+function SummaryCard({ label, value, accent }: { label: string; value: number; accent: string }) {
   return (
-    <span style={{
-      fontSize: 10,
-      letterSpacing: 1,
-      textTransform: 'uppercase',
-      fontWeight: 600,
-      color: cfg.color,
-      background: cfg.bg,
-      border: `1px solid ${cfg.border}`,
-      borderRadius: 20,
-      padding: '3px 10px',
-      whiteSpace: 'nowrap',
-    }}>
-      {label}
-    </span>
-  )
-}
-
-function ErrorBanner({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div style={{
-      background: 'rgba(196,117,106,0.06)',
-      border: '1px solid rgba(196,117,106,0.2)',
-      borderRadius: 12,
-      padding: '20px 24px',
-    }}>
-      <div style={{ fontSize: 13, color: '#C4756A', fontWeight: 600, marginBottom: 6 }}>{title}</div>
-      <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7 }}>{desc}</div>
-    </div>
-  )
-}
-
-function PageHeader({ copy }: { copy: GuestsCopy }) {
-  return (
-    <div style={{ marginBottom: 28 }}>
-      <div style={{ fontSize: 11, letterSpacing: 3, color: '#C9A84C', textTransform: 'uppercase', marginBottom: 8 }}>
-        {copy.pageLabel}
+    <CouplePanel className="min-w-[130px] flex-1 rounded-[1.25rem] p-4 shadow-none">
+      <div className="mb-2 text-[10px] uppercase tracking-[0.22em]" style={{ color: accent, fontFamily: VELO_MONO_FONT }}>
+        {label}
       </div>
-      <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 32, fontWeight: 300, color: '#F5EDD6', margin: 0 }}>
-        {copy.pageTitle}
-      </h1>
-    </div>
+      <div style={{ fontFamily: VELO_DISPLAY_FONT, fontSize: 32, fontWeight: 300, color: 'var(--velo-ink)' }}>{value}</div>
+    </CouplePanel>
   )
 }
 
-function SummaryCard({ label, value, color }: { label: string; value: number; color: string }) {
+function InfoChip({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
-    <div style={{
-      flex: 1,
-      minWidth: 120,
-      background: '#1A1915',
-      border: `1px solid ${color}20`,
-      borderRadius: 12,
-      padding: '16px 18px',
-    }}>
-      <div style={{ fontSize: 10, letterSpacing: 2, color, textTransform: 'uppercase', marginBottom: 8 }}>{label}</div>
-      <div style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 30, fontWeight: 300, color: '#F5EDD6', lineHeight: 1 }}>
-        {value}
-      </div>
-    </div>
-  )
-}
-
-function FilterTab({ label, count, color, active, onClick }: {
-  label: string
-  count: number
-  color?: string
-  active: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
+    <span
       style={{
-        padding: '6px 14px',
-        borderRadius: 20,
-        cursor: 'pointer',
-        background: active ? (color ?? '#C9A84C') + '18' : 'transparent',
-        border: `1px solid ${active ? (color ?? '#C9A84C') + '50' : '#2A2820'}`,
-        color: active ? (color ?? '#C9A84C') : '#8A7E6A',
-        fontSize: 11,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        display: 'flex',
+        display: 'inline-flex',
         alignItems: 'center',
         gap: 6,
+        fontSize: 11,
+        color: accent ?? 'var(--velo-muted)',
+        background: accent ? `${accent}14` : 'rgba(138,126,106,0.08)',
+        border: `1px solid ${accent ? `${accent}30` : 'var(--velo-border)'}`,
+        borderRadius: 999,
+        padding: '4px 10px',
       }}
     >
-      {label}
-      <span style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 15, fontWeight: 300 }}>{count}</span>
-    </button>
+      <span style={{ textTransform: 'uppercase', letterSpacing: 1, color: 'var(--velo-muted-soft)', fontFamily: VELO_MONO_FONT }}>{label}</span>
+      <span>{value}</span>
+    </span>
   )
 }
 
@@ -199,88 +146,49 @@ function GuestRowCard({ guest, copy }: { guest: GuestRow; copy: GuestsCopy }) {
   const hasDietary = Boolean(guest.dietary?.trim())
   const hasNotes = Boolean(guest.notes?.trim())
   const hasContacts = Boolean(guest.email || guest.phone)
+  const cfg = RSVP_CONFIG[status]
 
   return (
-    <div style={{
-      background: '#1A1915',
-      border: '1px solid #2A2820',
-      borderRadius: 12,
-      padding: '18px 20px',
-      marginBottom: 10,
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: 16,
-    }}>
-      <div style={{
-        flexShrink: 0,
-        width: 10,
-        height: 10,
-        borderRadius: '50%',
-        background: RSVP_CONFIG[status].color,
-        marginTop: 6,
-      }} />
-
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 15, color: '#F5EDD6', fontWeight: 400 }}>
-            {guest.name}
-            {guest.plus_one ? ' +1' : ''}
-          </span>
-          <StatusPill status={status} label={copy.statusLabel(status)} />
-        </div>
-
-        <div style={{ fontSize: 12, color: '#8A7E6A', marginBottom: 10 }}>
-          {copy.groupValue(guest.group_name)} · {copy.sideValue(guest.side)}
-        </div>
-
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: hasContacts || hasNotes ? 10 : 0 }}>
-          <InfoChip label={copy.groupLabel} value={copy.groupValue(guest.group_name)} />
-          <InfoChip label={copy.sideLabel} value={copy.sideValue(guest.side)} />
-          {guest.plus_one && <InfoChip label={copy.plusOne} value="+1" accent="#C9A84C" />}
-          {hasDietary && <InfoChip label={copy.dietaryLabel} value={guest.dietary!.trim()} accent="#7A9E7E" />}
-        </div>
-
-        {hasContacts && (
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 12, color: '#5A5040', marginBottom: hasNotes ? 10 : 0 }}>
-            {guest.email && <span>{copy.emailTitle}: {guest.email}</span>}
-            {guest.phone && <span>{copy.phoneTitle}: {guest.phone}</span>}
+    <CouplePanel className="mb-3 p-5 shadow-none">
+      <div className="flex gap-4">
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: cfg.color, marginTop: 8, flexShrink: 0 }} />
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="text-[15px] text-[var(--velo-ink)]">
+              {guest.name}
+              {guest.plus_one ? ' +1' : ''}
+            </span>
+            <span style={{ fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 600, color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 999, padding: '4px 10px', fontFamily: VELO_MONO_FONT }}>
+              {copy.statusLabel(status)}
+            </span>
           </div>
-        )}
 
-        {hasNotes && (
-          <div style={{
-            fontSize: 12,
-            color: '#8A7E6A',
-            lineHeight: 1.6,
-            background: 'rgba(138,126,106,0.05)',
-            border: '1px solid #24221B',
-            borderRadius: 8,
-            padding: '10px 12px',
-          }}>
-            <span style={{ color: '#C9A84C' }}>{copy.notesLabel}:</span> {guest.notes!.trim()}
+          <div className="mb-3 text-sm text-[var(--velo-muted)]">
+            {copy.groupValue(guest.group_name)} · {copy.sideValue(guest.side)}
           </div>
-        )}
+
+          <div className="mb-3 flex flex-wrap gap-2">
+            <InfoChip label={copy.groupLabel} value={copy.groupValue(guest.group_name)} />
+            <InfoChip label={copy.sideLabel} value={copy.sideValue(guest.side)} />
+            {guest.plus_one && <InfoChip label={copy.plusOne} value="+1" accent="var(--velo-terracotta)" />}
+            {hasDietary && <InfoChip label={copy.dietaryLabel} value={guest.dietary!.trim()} accent="var(--velo-success)" />}
+          </div>
+
+          {hasContacts && (
+            <div className="mb-3 flex flex-wrap gap-4 text-xs text-[var(--velo-muted-soft)]">
+              {guest.email && <span>{copy.emailTitle}: {guest.email}</span>}
+              {guest.phone && <span>{copy.phoneTitle}: {guest.phone}</span>}
+            </div>
+          )}
+
+          {hasNotes && (
+            <div className="rounded-[1rem] border border-[var(--velo-border)] bg-[rgba(255,250,244,0.72)] px-4 py-3 text-sm leading-7 text-[var(--velo-muted)]">
+              <span className="text-[var(--velo-terracotta)]">{copy.notesLabel}:</span> {guest.notes!.trim()}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  )
-}
-
-function InfoChip({ label, value, accent }: { label: string; value: string; accent?: string }) {
-  return (
-    <span style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: 6,
-      fontSize: 11,
-      color: accent ?? '#8A7E6A',
-      background: accent ? `${accent}14` : 'rgba(138,126,106,0.08)',
-      border: `1px solid ${accent ? `${accent}30` : '#2A2820'}`,
-      borderRadius: 999,
-      padding: '4px 10px',
-    }}>
-      <span style={{ textTransform: 'uppercase', letterSpacing: 1, color: '#5A5040' }}>{label}</span>
-      <span>{value}</span>
-    </span>
+    </CouplePanel>
   )
 }
 
@@ -289,38 +197,21 @@ function StatusGroup({ status, guests, copy }: { status: RsvpStatus; guests: Gue
   const [collapsed, setCollapsed] = useState(status === 'declined')
 
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div className="mb-4">
       <button
         onClick={() => setCollapsed(c => !c)}
-        style={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '8px 0',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          borderBottom: `1px solid ${collapsed ? '#1E1D1A' : 'transparent'}`,
-          marginBottom: collapsed ? 0 : 10,
-        }}
+        className="flex w-full items-center gap-3 border-b border-[var(--velo-border)] pb-2"
       >
         <div style={{ width: 7, height: 7, borderRadius: '50%', background: cfg.color, flexShrink: 0 }} />
-        <span style={{ fontSize: 11, letterSpacing: 2, color: cfg.color, textTransform: 'uppercase', fontWeight: 600 }}>
+        <span style={{ fontSize: 10, letterSpacing: 2, color: cfg.color, textTransform: 'uppercase', fontWeight: 600, fontFamily: VELO_MONO_FONT }}>
           {copy.statusLabel(status)}
         </span>
-        <span style={{ fontSize: 12, color: '#3A3830', marginLeft: 4 }}>{guests.length}</span>
-        <svg
-          width="10"
-          height="10"
-          viewBox="0 0 12 12"
-          fill="none"
-          style={{ marginLeft: 'auto', transform: collapsed ? 'rotate(-90deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}
-        >
+        <span className="text-xs text-[var(--velo-muted-soft)]">{guests.length}</span>
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ marginLeft: 'auto', transform: collapsed ? 'rotate(-90deg)' : 'none', transition: 'transform 0.2s' }}>
           <path d="M2 4L6 8L10 4" stroke={cfg.color} strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </button>
-      {!collapsed && guests.map(guest => <GuestRowCard key={guest.id} guest={guest} copy={copy} />)}
+      {!collapsed && <div className="mt-4">{guests.map(guest => <GuestRowCard key={guest.id} guest={guest} copy={copy} />)}</div>}
     </div>
   )
 }
@@ -361,20 +252,13 @@ export default function GuestsPage() {
     load()
   }, [])
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
-        <div style={{ width: 28, height: 28, border: '2px solid #C9A84C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    )
-  }
+  if (loading) return <CoupleLoadingBlock />
 
   if (fetchError) {
     return (
       <div>
-        <PageHeader copy={copy} />
-        <ErrorBanner title={copy.errorTitle} desc={copy.errorDesc} />
+        <CouplePageIntro eyebrow={copy.pageLabel} title={copy.pageTitle} subtitle={copy.pageSub} />
+        <CoupleNotice title={copy.errorTitle} tone="danger">{copy.errorDesc}</CoupleNotice>
       </div>
     )
   }
@@ -388,86 +272,48 @@ export default function GuestsPage() {
   }
 
   const statusesPresent = RSVP_ORDER.filter(status => guests.some(g => normalizeRsvp(g.rsvp) === status))
-  const filteredGuests = filterStatus === 'all'
-    ? guests
-    : guests.filter(g => normalizeRsvp(g.rsvp) === filterStatus)
-
+  const filteredGuests = filterStatus === 'all' ? guests : guests.filter(g => normalizeRsvp(g.rsvp) === filterStatus)
   const groupedStatuses = RSVP_ORDER.filter(status => filteredGuests.some(g => normalizeRsvp(g.rsvp) === status))
 
   return (
     <div>
-      <PageHeader copy={copy} />
+      <CouplePageIntro eyebrow={copy.pageLabel} title={copy.pageTitle} subtitle={copy.pageSub} />
 
       {guests.length > 0 && (
         <>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
-            <SummaryCard label={copy.total} value={counts.total} color="#C9A84C" />
-            <SummaryCard label={copy.confirmed} value={counts.confirmed} color={RSVP_CONFIG.confirmed.color} />
-            <SummaryCard label={copy.pending} value={counts.pending} color={RSVP_CONFIG.pending.color} />
-            <SummaryCard label={copy.seats} value={counts.seats} color="#4A7AB8" />
+          <div className="mb-6 flex flex-wrap gap-3">
+            <SummaryCard label={copy.total} value={counts.total} accent="var(--velo-terracotta)" />
+            <SummaryCard label={copy.confirmed} value={counts.confirmed} accent="var(--velo-success)" />
+            <SummaryCard label={copy.pending} value={counts.pending} accent="var(--velo-muted)" />
+            <SummaryCard label={copy.seats} value={counts.seats} accent="var(--velo-info)" />
           </div>
 
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            marginBottom: 24,
-            padding: '10px 14px',
-            background: 'rgba(138,126,106,0.06)',
-            border: '1px solid #2A2820',
-            borderRadius: 8,
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A7E6A" strokeWidth="1.5">
-              <rect x="3" y="11" width="18" height="11" rx="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            <span style={{ fontSize: 12, color: '#8A7E6A' }}>{copy.readOnly}</span>
-          </div>
+          <CoupleNotice title={locale === 'en' ? 'Read-only on web' : 'Sola lettura sul web'} className="mb-6">
+            {copy.readOnly}
+          </CoupleNotice>
         </>
       )}
 
       {guests.length === 0 ? (
-        <div style={{
-          background: '#1A1915',
-          border: '1px solid #2A2820',
-          borderRadius: 14,
-          padding: '48px 32px',
-          textAlign: 'center',
-        }}>
-          <div style={{ fontSize: 14, color: '#5A5040', marginBottom: 10 }}>{copy.emptyTitle}</div>
-          <div style={{ fontSize: 12, color: '#3A3830', lineHeight: 1.7 }}>{copy.emptyDesc}</div>
-        </div>
+        <CoupleEmptyState title={copy.emptyTitle} body={copy.emptyDesc} />
       ) : (
         <>
           {statusesPresent.length > 1 && (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 24 }}>
-              <FilterTab
-                label={copy.all}
-                count={guests.length}
-                active={filterStatus === 'all'}
-                onClick={() => setFilterStatus('all')}
-              />
+            <div className="mb-6 flex flex-wrap gap-2">
+              <CoupleChip active={filterStatus === 'all'} onClick={() => setFilterStatus('all')}>
+                {copy.all} <span>{guests.length}</span>
+              </CoupleChip>
               {statusesPresent.map(status => (
-                <FilterTab
-                  key={status}
-                  label={copy.statusLabel(status)}
-                  count={guests.filter(g => normalizeRsvp(g.rsvp) === status).length}
-                  color={RSVP_CONFIG[status].color}
-                  active={filterStatus === status}
-                  onClick={() => setFilterStatus(status)}
-                />
+                <CoupleChip key={status} accent={RSVP_CONFIG[status].color} active={filterStatus === status} onClick={() => setFilterStatus(status)}>
+                  {copy.statusLabel(status)} <span>{guests.filter(g => normalizeRsvp(g.rsvp) === status).length}</span>
+                </CoupleChip>
               ))}
             </div>
           )}
 
           {filterStatus === 'all'
             ? groupedStatuses.map(status => (
-                <StatusGroup
-                  key={status}
-                  status={status}
-                  guests={filteredGuests.filter(g => normalizeRsvp(g.rsvp) === status)}
-                  copy={copy}
-                />
+                <StatusGroup key={status} status={status} guests={filteredGuests.filter(g => normalizeRsvp(g.rsvp) === status)} copy={copy} />
               ))
             : filteredGuests.map(guest => <GuestRowCard key={guest.id} guest={guest} copy={copy} />)}
         </>

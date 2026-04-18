@@ -1,6 +1,16 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
+import {
+  CoupleChip,
+  CoupleEmptyState,
+  CoupleLoadingBlock,
+  CoupleNotice,
+  CouplePageIntro,
+  CouplePanel,
+  VELO_DISPLAY_FONT,
+  VELO_MONO_FONT,
+} from '../../../components/couple-ui'
 
 type ExpenseStatus = 'confirmed' | 'to_confirm'
 
@@ -34,14 +44,17 @@ function getBudgetCopy(locale: string) {
   return {
     pageLabel: 'BUDGET',
     pageTitle: isIT ? 'Le vostre stime' : 'Your estimates',
-    readOnly: isIT ? 'Vista in sola lettura — usa l’app VELO per aggiungere voci o confermare importi' : 'Read-only view — use the VELO app to add items or confirm amounts',
+    pageSub: isIT
+      ? 'Una lettura piu chiara di cosa e gia confermato, cosa resta indicativo e come tutto si muove rispetto al budget.'
+      : 'A clearer read of what is confirmed, what remains indicative, and how everything moves against the budget.',
+    readOnly: isIT ? "Vista in sola lettura — usa l'app VELO per aggiungere voci o confermare importi" : 'Read-only view — use the VELO app to add items or confirm amounts',
     planned: isIT ? 'Budget totale' : 'Planned budget',
     estimated: isIT ? 'Stimato' : 'Estimated',
     confirmed: isIT ? 'Confermato' : 'Confirmed',
     available: isIT ? 'Disponibile' : 'Available',
     overPlanned: isIT ? 'Oltre il budget' : 'Over planned',
     noBudgetSet: isIT ? 'Budget non impostato' : 'No budget set',
-    noBudgetSetDesc: isIT ? 'Il budget totale della coppia non è ancora stato impostato. Le voci di spesa sono comunque aggiornate.' : 'The couple planned budget has not been set yet. Expense items are still up to date.',
+    noBudgetSetDesc: isIT ? 'Il budget totale della coppia non e ancora stato impostato. Le voci di spesa sono comunque aggiornate.' : 'The couple planned budget has not been set yet. Expense items are still up to date.',
     budgetLoadErrorTitle: isIT ? 'Budget totale non disponibile' : 'Planned budget unavailable',
     budgetLoadErrorDesc: isIT ? 'Non siamo riusciti a caricare il budget totale della coppia. Le voci di spesa sono comunque aggiornate.' : 'We could not load the couple planned budget total. Expense items are still up to date.',
     all: isIT ? 'Tutti' : 'All',
@@ -49,7 +62,7 @@ function getBudgetCopy(locale: string) {
     category: isIT ? 'Categoria' : 'Category',
     amount: isIT ? 'Importo indicativo' : 'Indicative amount',
     emptyTitle: isIT ? 'Nessuna voce ancora' : 'No items yet',
-    emptyDesc: isIT ? 'Aggiungete le vostre stime dall’app VELO — il budget apparirà qui.' : 'Add your estimates in the VELO app — your budget will appear here.',
+    emptyDesc: isIT ? "Aggiungete le vostre stime dall'app VELO e il budget apparira qui." : 'Add your estimates in the VELO app and your budget will appear here.',
     errorTitle: isIT ? 'Impossibile caricare il budget' : 'Unable to load budget',
     errorDesc: isIT ? 'Potrebbe essere un problema temporaneo. Prova ad aggiornare la pagina.' : 'This may be a temporary connection issue. Try refreshing the page.',
     estimatedPct: isIT ? '% del budget stimato' : '% of budget estimated',
@@ -81,115 +94,27 @@ function stripEmoji(value: string) {
 
 function statusColor(status: ExpenseStatus) {
   if (status === 'confirmed') {
-    return {
-      color: '#7A9E7E',
-      bg: 'rgba(122,158,126,0.10)',
-      border: 'rgba(122,158,126,0.25)',
-    }
+    return { color: 'var(--velo-success)', bg: 'rgba(122,158,126,0.10)', border: 'rgba(122,158,126,0.25)' }
   }
-  return {
-    color: '#8A7E6A',
-    bg: 'rgba(138,126,106,0.10)',
-    border: 'rgba(138,126,106,0.20)',
-  }
+  return { color: 'var(--velo-muted)', bg: 'rgba(138,126,106,0.10)', border: 'rgba(138,126,106,0.20)' }
 }
 
-function PageHeader({ copy }: { copy: BudgetCopy }) {
+function SummaryCard({ label, value, accent, sub }: { label: string; value: string; accent: string; sub?: string }) {
   return (
-    <div style={{ marginBottom: 28 }}>
-      <div style={{ fontSize: 11, letterSpacing: 3, color: '#C9A84C', textTransform: 'uppercase', marginBottom: 8 }}>
-        {copy.pageLabel}
+    <CouplePanel className="min-w-[150px] flex-1 rounded-[1.25rem] p-4 shadow-none">
+      <div className="mb-2 text-[10px] uppercase tracking-[0.22em]" style={{ color: accent, fontFamily: VELO_MONO_FONT }}>
+        {label}
       </div>
-      <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 32, fontWeight: 300, color: '#F5EDD6', margin: 0 }}>
-        {copy.pageTitle}
-      </h1>
-    </div>
-  )
-}
-
-function ErrorBanner({ title, desc, tone = 'danger' }: { title: string; desc: string; tone?: 'danger' | 'warning' }) {
-  const palette = tone === 'warning'
-    ? { bg: 'rgba(201,168,76,0.06)', border: 'rgba(201,168,76,0.2)', title: '#C9A84C' }
-    : { bg: 'rgba(196,117,106,0.06)', border: 'rgba(196,117,106,0.2)', title: '#C4756A' }
-
-  return (
-    <div style={{
-      background: palette.bg,
-      border: `1px solid ${palette.border}`,
-      borderRadius: 12,
-      padding: '20px 24px',
-    }}>
-      <div style={{ fontSize: 13, color: palette.title, fontWeight: 600, marginBottom: 6 }}>{title}</div>
-      <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7 }}>{desc}</div>
-    </div>
-  )
-}
-
-function SummaryCard({ label, value, color, sub }: { label: string; value: string; color: string; sub?: string }) {
-  return (
-    <div style={{
-      flex: 1,
-      minWidth: 140,
-      background: '#1A1915',
-      border: `1px solid ${color}20`,
-      borderRadius: 12,
-      padding: '16px 18px',
-    }}>
-      <div style={{ fontSize: 10, letterSpacing: 2, color, textTransform: 'uppercase', marginBottom: 8 }}>{label}</div>
-      <div style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 28, fontWeight: 300, color: '#F5EDD6', lineHeight: 1.05 }}>
-        {value}
-      </div>
-      {sub && <div style={{ fontSize: 11, color: '#5A5040', marginTop: 6 }}>{sub}</div>}
-    </div>
-  )
-}
-
-function FilterTab({ label, count, color, active, onClick }: {
-  label: string
-  count: number
-  color?: string
-  active: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        padding: '6px 14px',
-        borderRadius: 20,
-        cursor: 'pointer',
-        background: active ? (color ?? '#C9A84C') + '18' : 'transparent',
-        border: `1px solid ${active ? (color ?? '#C9A84C') + '50' : '#2A2820'}`,
-        color: active ? (color ?? '#C9A84C') : '#8A7E6A',
-        fontSize: 11,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-      }}
-    >
-      {label}
-      <span style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 15, fontWeight: 300 }}>{count}</span>
-    </button>
+      <div style={{ fontFamily: VELO_DISPLAY_FONT, fontSize: 30, fontWeight: 300, color: 'var(--velo-ink)', lineHeight: 1.04 }}>{value}</div>
+      {sub && <div className="mt-2 text-[11px] leading-5 text-[var(--velo-muted-soft)]">{sub}</div>}
+    </CouplePanel>
   )
 }
 
 function StatusPill({ status, copy }: { status: ExpenseStatus; copy: BudgetCopy }) {
   const cfg = statusColor(status)
   return (
-    <span style={{
-      fontSize: 10,
-      letterSpacing: 1,
-      textTransform: 'uppercase',
-      fontWeight: 600,
-      color: cfg.color,
-      background: cfg.bg,
-      border: `1px solid ${cfg.border}`,
-      borderRadius: 20,
-      padding: '3px 10px',
-      whiteSpace: 'nowrap',
-    }}>
+    <span style={{ fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 600, color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 999, padding: '4px 10px', fontFamily: VELO_MONO_FONT }}>
       {copy.statusLabel(status)}
     </span>
   )
@@ -200,43 +125,27 @@ function ExpenseCardRow({ expense, copy, locale }: { expense: ExpenseRow; copy: 
   const category = expense.category ? stripEmoji(expense.category) : copy.uncategorized
 
   return (
-    <div style={{
-      background: '#1A1915',
-      border: '1px solid #2A2820',
-      borderRadius: 12,
-      padding: '18px 20px',
-      marginBottom: 10,
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: 16,
-      opacity: status === 'confirmed' ? 0.78 : 1,
-    }}>
-      <div style={{
-        flexShrink: 0,
-        width: 10,
-        height: 10,
-        borderRadius: '50%',
-        background: statusColor(status).color,
-        marginTop: 6,
-      }} />
-
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 15, color: '#F5EDD6', fontWeight: 400 }}>{expense.title}</span>
-          <StatusPill status={status} copy={copy} />
+    <CouplePanel className="mb-3 p-5 shadow-none" tone="paper">
+      <div className="flex gap-4">
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: statusColor(status).color, marginTop: 8, flexShrink: 0 }} />
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="text-[15px] text-[var(--velo-ink)]">{expense.title}</span>
+            <StatusPill status={status} copy={copy} />
+          </div>
+          <div className="text-sm text-[var(--velo-muted)]">
+            {copy.category}: {category}
+          </div>
         </div>
-        <div style={{ fontSize: 12, color: '#8A7E6A', marginBottom: 8 }}>
-          {copy.category}: {category}
+
+        <div className="shrink-0 text-right">
+          <div style={{ fontFamily: VELO_DISPLAY_FONT, fontSize: 30, fontWeight: 300, color: status === 'confirmed' ? 'var(--velo-success)' : 'var(--velo-terracotta)', lineHeight: 1 }}>
+            {formatCurrency(expense.amount ?? 0, locale)}
+          </div>
+          <div className="mt-1 text-[11px] text-[var(--velo-muted-soft)]">{copy.amount}</div>
         </div>
       </div>
-
-      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 28, fontWeight: 300, color: status === 'confirmed' ? '#7A9E7E' : '#C9A84C', lineHeight: 1 }}>
-          {formatCurrency(expense.amount ?? 0, locale)}
-        </div>
-        <div style={{ fontSize: 11, color: '#5A5040', marginTop: 4 }}>{copy.amount}</div>
-      </div>
-    </div>
+    </CouplePanel>
   )
 }
 
@@ -244,52 +153,28 @@ function CategoryGroup({ group, locale, copy }: { group: BudgetCategoryGroup; lo
   const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <div style={{ marginBottom: 16 }}>
-      <button
-        onClick={() => setCollapsed(c => !c)}
-        style={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '8px 0',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          borderBottom: `1px solid ${collapsed ? '#1E1D1A' : 'transparent'}`,
-          marginBottom: collapsed ? 0 : 10,
-        }}
-      >
-        <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#C9A84C', flexShrink: 0 }} />
-        <span style={{ fontSize: 11, letterSpacing: 2, color: '#C9A84C', textTransform: 'uppercase', fontWeight: 600 }}>
+    <div className="mb-4">
+      <button onClick={() => setCollapsed(c => !c)} className="flex w-full items-center gap-3 border-b border-[var(--velo-border)] pb-2">
+        <div className="h-[7px] w-[7px] rounded-full bg-[var(--velo-terracotta)]" />
+        <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
           {group.category}
         </span>
-        <span style={{ fontSize: 12, color: '#3A3830', marginLeft: 4 }}>{group.expenses.length}</span>
-        <span style={{ fontSize: 12, color: '#8A7E6A', marginLeft: 8 }}>
-          {formatCurrency(group.total, locale)}
-        </span>
-        <svg
-          width="10"
-          height="10"
-          viewBox="0 0 12 12"
-          fill="none"
-          style={{ marginLeft: 'auto', transform: collapsed ? 'rotate(-90deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}
-        >
-          <path d="M2 4L6 8L10 4" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" />
+        <span className="text-xs text-[var(--velo-muted-soft)]">{group.expenses.length}</span>
+        <span className="ml-2 text-xs text-[var(--velo-muted)]">{formatCurrency(group.total, locale)}</span>
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ marginLeft: 'auto', transform: collapsed ? 'rotate(-90deg)' : 'none', transition: 'transform 0.2s' }}>
+          <path d="M2 4L6 8L10 4" stroke="var(--velo-terracotta)" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </button>
 
       {!collapsed && (
-        <>
-          {group.expenses.map(expense => (
-            <ExpenseCardRow key={expense.id} expense={expense} copy={copy} locale={locale} />
-          ))}
+        <div className="mt-4">
+          {group.expenses.map(expense => <ExpenseCardRow key={expense.id} expense={expense} copy={copy} locale={locale} />)}
           {group.confirmedTotal > 0 && (
-            <div style={{ fontSize: 11, color: '#5A5040', marginTop: -2, marginBottom: 8, paddingLeft: 18 }}>
+            <div className="mb-2 pl-4 text-[11px] text-[var(--velo-muted-soft)]">
               {copy.confirmed}: {formatCurrency(group.confirmedTotal, locale)}
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   )
@@ -318,16 +203,8 @@ export default function BudgetPage() {
       const uid = session.user.id
 
       const [expensesRes, coupleRes] = await Promise.all([
-        supabase
-          .from('expenses')
-          .select('id, title, amount, category, confirmed')
-          .eq('user_id', uid)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('couples')
-          .select('budget')
-          .eq('user_id', uid)
-          .single(),
+        supabase.from('expenses').select('id, title, amount, category, confirmed').eq('user_id', uid).order('created_at', { ascending: false }),
+        supabase.from('couples').select('budget').eq('user_id', uid).single(),
       ])
 
       if (expensesRes.error) {
@@ -351,20 +228,13 @@ export default function BudgetPage() {
     load()
   }, [])
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
-        <div style={{ width: 28, height: 28, border: '2px solid #C9A84C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    )
-  }
+  if (loading) return <CoupleLoadingBlock />
 
   if (fetchError) {
     return (
       <div>
-        <PageHeader copy={copy} />
-        <ErrorBanner title={copy.errorTitle} desc={copy.errorDesc} />
+        <CouplePageIntro eyebrow={copy.pageLabel} title={copy.pageTitle} subtitle={copy.pageSub} />
+        <CoupleNotice title={copy.errorTitle} tone="danger">{copy.errorDesc}</CoupleNotice>
       </div>
     )
   }
@@ -373,15 +243,11 @@ export default function BudgetPage() {
   const confirmedTotal = expenses.filter(expense => expense.confirmed).reduce((sum, expense) => sum + (expense.amount ?? 0), 0)
   const available = typeof budgetTotal === 'number' ? budgetTotal - estimated : null
   const pct = typeof budgetTotal === 'number' && budgetTotal > 0 ? Math.min(100, Math.round((estimated / budgetTotal) * 100)) : 0
-  const filteredExpenses = filterStatus === 'all'
-    ? expenses
-    : expenses.filter(expense => expenseStatus(expense) === filterStatus)
+  const filteredExpenses = filterStatus === 'all' ? expenses : expenses.filter(expense => expenseStatus(expense) === filterStatus)
 
   const categories = filteredExpenses.reduce<Record<string, BudgetCategoryGroup>>((acc, expense) => {
     const key = expense.category ? stripEmoji(expense.category) : copy.uncategorized
-    if (!acc[key]) {
-      acc[key] = { category: key, expenses: [], total: 0, confirmedTotal: 0 }
-    }
+    if (!acc[key]) acc[key] = { category: key, expenses: [], total: 0, confirmedTotal: 0 }
     acc[key].expenses.push(expense)
     acc[key].total += expense.amount ?? 0
     if (expense.confirmed) acc[key].confirmedTotal += expense.amount ?? 0
@@ -394,118 +260,66 @@ export default function BudgetPage() {
 
   return (
     <div>
-      <PageHeader copy={copy} />
+      <CouplePageIntro eyebrow={copy.pageLabel} title={copy.pageTitle} subtitle={copy.pageSub} />
 
       {budgetLoadError && (
-        <div style={{ marginBottom: 20 }}>
-          <ErrorBanner title={copy.budgetLoadErrorTitle} desc={copy.budgetLoadErrorDesc} tone="warning" />
+        <div className="mb-5">
+          <CoupleNotice title={copy.budgetLoadErrorTitle} tone="warning">{copy.budgetLoadErrorDesc}</CoupleNotice>
         </div>
       )}
 
       {budgetMissing && (
-        <div style={{ marginBottom: 20 }}>
-          <ErrorBanner title={copy.noBudgetSet} desc={copy.noBudgetSetDesc} tone="warning" />
+        <div className="mb-5">
+          <CoupleNotice title={copy.noBudgetSet} tone="warning">{copy.noBudgetSetDesc}</CoupleNotice>
         </div>
       )}
 
       {expenses.length > 0 && (
         <>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-            <SummaryCard
-              label={copy.planned}
-              value={typeof budgetTotal === 'number' ? formatCurrency(budgetTotal, locale) : '—'}
-              color="#4A7AB8"
-              sub={typeof budgetTotal === 'number' ? undefined : (budgetLoadError ? copy.budgetLoadErrorTitle : copy.noBudgetSet)}
-            />
-            <SummaryCard label={copy.estimated} value={formatCurrency(estimated, locale)} color="#C9A84C" />
-            <SummaryCard label={copy.confirmed} value={formatCurrency(confirmedTotal, locale)} color="#7A9E7E" />
+          <div className="mb-6 flex flex-wrap gap-3">
+            <SummaryCard label={copy.planned} value={typeof budgetTotal === 'number' ? formatCurrency(budgetTotal, locale) : '—'} accent="var(--velo-info)" sub={typeof budgetTotal === 'number' ? undefined : (budgetLoadError ? copy.budgetLoadErrorTitle : copy.noBudgetSet)} />
+            <SummaryCard label={copy.estimated} value={formatCurrency(estimated, locale)} accent="var(--velo-terracotta)" />
+            <SummaryCard label={copy.confirmed} value={formatCurrency(confirmedTotal, locale)} accent="var(--velo-success)" />
             {typeof available === 'number' && (
-              <SummaryCard
-                label={available >= 0 ? copy.available : copy.overPlanned}
-                value={formatCurrency(Math.abs(available), locale)}
-                color={available >= 0 ? '#7A9E7E' : '#C4756A'}
-              />
+              <SummaryCard label={available >= 0 ? copy.available : copy.overPlanned} value={formatCurrency(Math.abs(available), locale)} accent={available >= 0 ? 'var(--velo-success)' : 'var(--velo-danger)'} />
             )}
           </div>
 
           {typeof budgetTotal === 'number' && (
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ height: 3, background: '#1E1D1A', borderRadius: 2, overflow: 'hidden' }}>
-                <div
-                  style={{
-                    height: '100%',
-                    width: `${pct}%`,
-                    background: estimated > budgetTotal ? '#C4756A' : '#C9A84C',
-                    borderRadius: 2,
-                    transition: 'width 0.4s ease',
-                  }}
-                />
+            <div className="mb-6">
+              <div className="h-[5px] overflow-hidden rounded-full bg-[rgba(140,104,74,0.16)]">
+                <div style={{ height: '100%', width: `${pct}%`, background: estimated > budgetTotal ? 'var(--velo-danger)' : 'var(--velo-terracotta)', borderRadius: 999, transition: 'width 0.4s ease' }} />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
-                <div style={{ fontSize: 11, color: '#8A7E6A' }}>{pct}% {copy.estimatedPct}</div>
-                <div style={{ fontSize: 11, color: '#5A5040' }}>{copy.disclaimer}</div>
+              <div className="mt-2 flex flex-wrap justify-between gap-3 text-[11px] text-[var(--velo-muted-soft)]">
+                <span>{pct}% {copy.estimatedPct}</span>
+                <span>{copy.disclaimer}</span>
               </div>
             </div>
           )}
 
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            marginBottom: 20,
-            padding: '10px 14px',
-            background: 'rgba(138,126,106,0.06)',
-            border: '1px solid #2A2820',
-            borderRadius: 8,
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A7E6A" strokeWidth="1.5">
-              <rect x="3" y="11" width="18" height="11" rx="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            <span style={{ fontSize: 12, color: '#8A7E6A' }}>{copy.readOnly}</span>
-          </div>
+          <CoupleNotice title={locale === 'en' ? 'Read-only on web' : 'Sola lettura sul web'} className="mb-6">
+            {copy.readOnly}
+          </CoupleNotice>
         </>
       )}
 
       {expenses.length === 0 ? (
-        <div style={{
-          background: '#1A1915',
-          border: '1px solid #2A2820',
-          borderRadius: 14,
-          padding: '48px 32px',
-          textAlign: 'center',
-        }}>
-          <div style={{ fontSize: 14, color: '#5A5040', marginBottom: 10 }}>{copy.emptyTitle}</div>
-          <div style={{ fontSize: 12, color: '#3A3830', lineHeight: 1.7 }}>{copy.emptyDesc}</div>
-        </div>
+        <CoupleEmptyState title={copy.emptyTitle} body={copy.emptyDesc} />
       ) : (
         <>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 24 }}>
-            <FilterTab
-              label={copy.all}
-              count={expenses.length}
-              active={filterStatus === 'all'}
-              onClick={() => setFilterStatus('all')}
-            />
-            <FilterTab
-              label={copy.confirmed}
-              count={confirmedCount}
-              color="#7A9E7E"
-              active={filterStatus === 'confirmed'}
-              onClick={() => setFilterStatus('confirmed')}
-            />
-            <FilterTab
-              label={copy.toConfirm}
-              count={toConfirmCount}
-              color="#8A7E6A"
-              active={filterStatus === 'to_confirm'}
-              onClick={() => setFilterStatus('to_confirm')}
-            />
+          <div className="mb-6 flex flex-wrap gap-2">
+            <CoupleChip active={filterStatus === 'all'} onClick={() => setFilterStatus('all')}>
+              {copy.all} <span>{expenses.length}</span>
+            </CoupleChip>
+            <CoupleChip accent="var(--velo-success)" active={filterStatus === 'confirmed'} onClick={() => setFilterStatus('confirmed')}>
+              {copy.confirmed} <span>{confirmedCount}</span>
+            </CoupleChip>
+            <CoupleChip accent="var(--velo-muted)" active={filterStatus === 'to_confirm'} onClick={() => setFilterStatus('to_confirm')}>
+              {copy.toConfirm} <span>{toConfirmCount}</span>
+            </CoupleChip>
           </div>
 
-          {categoryGroups.map(group => (
-            <CategoryGroup key={group.category} group={group} locale={locale} copy={copy} />
-          ))}
+          {categoryGroups.map(group => <CategoryGroup key={group.category} group={group} locale={locale} copy={copy} />)}
         </>
       )}
     </div>

@@ -1,7 +1,15 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { getT } from '../../../lib/translations'
+import {
+  CoupleLoadingBlock,
+  CoupleNotice,
+  CouplePageIntro,
+  CouplePanel,
+  VELO_DISPLAY_FONT,
+  VELO_MONO_FONT,
+} from '../../../components/couple-ui'
 
 function useLocale() {
   const [locale, setLocale] = useState('it')
@@ -14,18 +22,18 @@ function useLocale() {
 }
 
 const STYLE_LABELS: Record<string, Record<string, string>> = {
-  botanical:  { it: 'Botanico',    en: 'Botanical' },
-  coastal:    { it: 'Costiero',    en: 'Coastal' },
-  luxury:     { it: 'Lusso',       en: 'Luxury' },
-  modern:     { it: 'Moderno',     en: 'Modern' },
-  romantic:   { it: 'Romantico',   en: 'Romantic' },
-  rustic:     { it: 'Rustico',     en: 'Rustic' },
+  botanical: { it: 'Botanico', en: 'Botanical' },
+  coastal: { it: 'Costiero', en: 'Coastal' },
+  luxury: { it: 'Lusso', en: 'Luxury' },
+  modern: { it: 'Moderno', en: 'Modern' },
+  romantic: { it: 'Romantico', en: 'Romantic' },
+  rustic: { it: 'Rustico', en: 'Rustic' },
 }
 
 const CEREMONY_LABELS: Record<string, Record<string, string>> = {
-  civil:      { it: 'Civile',     en: 'Civil' },
-  religious:  { it: 'Religioso',  en: 'Religious' },
-  symbolic:   { it: 'Simbolico',  en: 'Symbolic' },
+  civil: { it: 'Civile', en: 'Civil' },
+  religious: { it: 'Religioso', en: 'Religious' },
+  symbolic: { it: 'Simbolico', en: 'Symbolic' },
 }
 
 interface ProfileData {
@@ -51,6 +59,19 @@ function formatDate(dateStr: string, locale: string): string {
 
 function formatBudget(n: number): string {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
+}
+
+function ProfileRow({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="flex flex-col gap-2 border-b border-[var(--velo-border)] py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--velo-muted-soft)]" style={{ fontFamily: VELO_MONO_FONT }}>
+        {label}
+      </div>
+      <div className={`text-sm leading-7 sm:max-w-[55%] sm:text-right ${accent ? 'text-[var(--velo-terracotta)]' : 'text-[var(--velo-ink)]'}`}>
+        {value}
+      </div>
+    </div>
+  )
 }
 
 export default function ProfilePage() {
@@ -93,114 +114,93 @@ export default function ProfilePage() {
     load()
   }, [])
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
-        <div style={{ width: 28, height: 28, border: '2px solid #C9A84C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    )
-  }
+  if (loading) return <CoupleLoadingBlock />
 
-  if (fetchError) {
-    return (
-      <div>
-        <div style={{ marginBottom: 36 }}>
-          <div style={{ fontSize: 11, letterSpacing: 3, color: '#8A7E6A', textTransform: 'uppercase', marginBottom: 8 }}>{c.profile.label}</div>
-          <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 32, fontWeight: 300, color: '#F5EDD6', margin: 0 }}>{c.profile.title}</h1>
-        </div>
-        <div style={{ background: 'rgba(196,117,106,0.06)', border: '1px solid rgba(196,117,106,0.2)', borderRadius: 12, padding: '20px 24px' }}>
-          <div style={{ fontSize: 13, color: '#C4756A', fontWeight: 600, marginBottom: 6 }}>
-            {locale === 'en' ? 'Unable to load your profile' : 'Impossibile caricare il profilo'}
-          </div>
-          <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7 }}>
-            {locale === 'en'
-              ? 'We could not retrieve your couple details. This may be a temporary connection issue. Try refreshing the page.'
-              : 'Non siamo riusciti a recuperare i dati della coppia. Potrebbe essere un problema temporaneo di connessione. Prova ad aggiornare la pagina.'}
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const location = profile
+    ? [profile.wedding_city, profile.wedding_province, profile.wedding_regione].filter(Boolean).join(' · ')
+    : ''
 
-  if (missingProfile || !profile) {
-    return (
-      <div>
-        <div style={{ marginBottom: 36 }}>
-          <div style={{ fontSize: 11, letterSpacing: 3, color: '#8A7E6A', textTransform: 'uppercase', marginBottom: 8 }}>{c.profile.label}</div>
-          <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 32, fontWeight: 300, color: '#F5EDD6', margin: 0 }}>{c.profile.title}</h1>
-        </div>
-        <div style={{ background: '#1A1915', border: '1px solid rgba(201,168,76,0.25)', borderRadius: 16, padding: '24px 24px 22px' }}>
-          <div style={{ fontSize: 11, letterSpacing: 2, color: '#C9A84C', textTransform: 'uppercase', marginBottom: 10 }}>
-            {locale === 'en' ? 'Complete your profile first' : 'Completa prima il profilo'}
-          </div>
-          <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.8 }}>
-            {locale === 'en'
-              ? 'Your couple profile is not available on web yet. Complete or verify your setup in the VELO app and it will appear here.'
-              : 'Il profilo coppia non è ancora disponibile sul web. Completa o verifica la configurazione nell’app VELO e apparirà qui.'}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const location = [profile.wedding_city, profile.wedding_province, profile.wedding_regione].filter(Boolean).join(' · ')
-
-  const rows = [
-    { label: c.profile.partner1,    value: profile.partner1 },
-    { label: c.profile.partner2,    value: profile.partner2 },
+  const rows = profile ? [
+    { label: c.profile.partner1, value: profile.partner1 },
+    { label: c.profile.partner2, value: profile.partner2 },
     { label: c.profile.weddingDate, value: profile.wedding_date ? formatDate(profile.wedding_date, locale) : null },
-    { label: c.profile.location,    value: location || null },
-    { label: c.profile.style,       value: profile.wedding_style ? (STYLE_LABELS[profile.wedding_style]?.[locale] ?? profile.wedding_style) : null },
-    { label: c.profile.ceremony,    value: profile.ceremony_type ? (CEREMONY_LABELS[profile.ceremony_type]?.[locale] ?? profile.ceremony_type) : null },
-  ].filter(r => r.value)
+    { label: c.profile.location, value: location || null },
+    { label: c.profile.style, value: profile.wedding_style ? (STYLE_LABELS[profile.wedding_style]?.[locale] ?? profile.wedding_style) : null },
+    { label: c.profile.ceremony, value: profile.ceremony_type ? (CEREMONY_LABELS[profile.ceremony_type]?.[locale] ?? profile.ceremony_type) : null },
+  ].filter(r => r.value) : []
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ marginBottom: 36 }}>
-        <div style={{ fontSize: 11, letterSpacing: 3, color: '#8A7E6A', textTransform: 'uppercase', marginBottom: 8 }}>{c.profile.label}</div>
-        <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 32, fontWeight: 300, color: '#F5EDD6', margin: 0 }}>{c.profile.title}</h1>
-      </div>
+      <CouplePageIntro
+        eyebrow={c.profile.label}
+        title={c.profile.title}
+        subtitle={locale === 'en' ? 'The profile that anchors documents, planning, and the rest of your couple area.' : 'Il profilo che tiene insieme documenti, planning e il resto della vostra area coppia.'}
+      />
 
-      {/* Profile card */}
-      <div style={{ background: '#1A1915', border: '1px solid #2A2820', borderRadius: 16, overflow: 'hidden', marginBottom: 20 }}>
-        {rows.map((row, i) => (
-          <div key={i} style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '16px 24px',
-            borderBottom: i < rows.length - 1 ? '1px solid #1E1D1A' : 'none',
-          }}>
-            <div style={{ fontSize: 11, letterSpacing: 2, color: '#8A7E6A', textTransform: 'uppercase' }}>{row.label}</div>
-            <div style={{ fontSize: 14, color: '#F5EDD6', textAlign: 'right', maxWidth: '60%' }}>{row.value}</div>
+      {fetchError && (
+        <CoupleNotice title={locale === 'en' ? 'Unable to load your profile' : 'Impossibile caricare il profilo'} tone="danger">
+          {locale === 'en'
+            ? 'We could not retrieve your couple details. This may be temporary. Try refreshing the page.'
+            : 'Non siamo riusciti a recuperare i dati della coppia. Potrebbe essere temporaneo. Prova ad aggiornare la pagina.'}
+        </CoupleNotice>
+      )}
+
+      {missingProfile && !fetchError && (
+        <CoupleNotice title={locale === 'en' ? 'Complete your profile first' : 'Completa prima il profilo'} tone="warning">
+          {locale === 'en'
+            ? 'Your couple profile is not available on web yet. Complete or verify your setup in the VELO app and it will appear here.'
+            : 'Il profilo coppia non e ancora disponibile sul web. Completa o verifica la configurazione nell app VELO e apparira qui.'}
+        </CoupleNotice>
+      )}
+
+      {profile && (
+        <div className="grid gap-5 lg:grid-cols-[1.04fr_0.96fr]">
+          <CouplePanel>
+            <div className="mb-2 flex items-center justify-between border-b border-[var(--velo-border)] pb-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
+                  {locale === 'en' ? 'Couple profile' : 'Profilo coppia'}
+                </p>
+                <p className="mt-2 text-[1.35rem] text-[var(--velo-ink)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+                  {[profile.partner1, profile.partner2].filter(Boolean).join(' & ') || c.profile.title}
+                </p>
+              </div>
+            </div>
+            <div>
+              {rows.map((row) => (
+                <ProfileRow key={row.label} label={row.label} value={row.value as string} />
+              ))}
+              {profile.budget != null && <ProfileRow label="Budget" value={formatBudget(profile.budget)} accent />}
+            </div>
+          </CouplePanel>
+
+          <div className="space-y-5">
+            <CouplePanel tone="soft">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
+                {locale === 'en' ? 'Planning context' : 'Contesto planning'}
+              </p>
+              <p className="mt-3 text-[1.3rem] leading-snug text-[var(--velo-ink)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+                {locale === 'en' ? 'This profile shapes your documents path, checklist logic, and planning flow.' : 'Questo profilo definisce il percorso documenti, la logica checklist e il flusso del planning.'}
+              </p>
+              <p className="mt-4 text-sm leading-7 text-[var(--velo-muted)]">
+                {locale === 'en'
+                  ? 'Keep it accurate in the VELO app so the rest of the couple area stays aligned.'
+                  : "Tienilo aggiornato nell'app VELO cosi il resto dell area coppia resta coerente."}
+              </p>
+            </CouplePanel>
+
+            <CouplePanel tone="dark">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[#d7b89d]" style={{ fontFamily: VELO_MONO_FONT }}>
+                {locale === 'en' ? 'Editing' : 'Modifiche'}
+              </p>
+              <p className="mt-3 text-[1.2rem] leading-snug text-[var(--velo-paper-2)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+                {locale === 'en' ? 'Profile edits still live in the app.' : 'Le modifiche al profilo restano nell app.'}
+              </p>
+              <p className="mt-4 text-sm leading-7 text-[#d2c3b0]">{c.profile.editInApp}</p>
+            </CouplePanel>
           </div>
-        ))}
-
-        {profile.budget != null && (
-          <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '16px 24px',
-          }}>
-            <div style={{ fontSize: 11, letterSpacing: 2, color: '#8A7E6A', textTransform: 'uppercase' }}>Budget</div>
-            <div style={{ fontSize: 14, color: '#C9A84C', fontWeight: 600 }}>{formatBudget(profile.budget)}</div>
-          </div>
-        )}
-      </div>
-
-      {/* Edit in app notice */}
-      <div style={{
-        border: '1px solid #2A2820',
-        borderRadius: 12,
-        padding: '16px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-      }}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A7E6A" strokeWidth="1.5">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <span style={{ fontSize: 13, color: '#8A7E6A' }}>{c.profile.editInApp}</span>
-      </div>
+        </div>
+      )}
     </div>
   )
 }

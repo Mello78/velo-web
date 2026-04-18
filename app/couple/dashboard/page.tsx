@@ -1,7 +1,16 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { getT } from '../../../lib/translations'
+import {
+  CoupleLoadingBlock,
+  CoupleMetricCard,
+  CoupleNotice,
+  CouplePageIntro,
+  CouplePanel,
+  VELO_DISPLAY_FONT,
+  VELO_MONO_FONT,
+} from '../../../components/couple-ui'
 
 function useLocale() {
   const [locale, setLocale] = useState('en')
@@ -52,13 +61,20 @@ function formatBudget(n: number): string {
 function getDashboardCopy(locale: string) {
   const isIT = locale === 'it'
   return {
-    title: 'Dashboard',
+    title: isIT ? 'La dashboard del matrimonio' : 'The wedding dashboard',
+    subtitle: isIT
+      ? 'Una vista calma su data, progressi, fornitori, ospiti e budget.'
+      : 'A calm overview of date, progress, vendors, guests, and budget.',
     confirmedBudget: isIT ? 'confermato' : 'confirmed',
-    appTitle: isIT ? 'Esperienza completa sull\'app VELO' : 'Full experience on the VELO app',
+    appTitle: isIT ? "L'esperienza completa continua nell'app VELO" : 'The full experience continues in the VELO app',
     appDesc: isIT
-      ? 'Chatta con i fornitori, gestisci task e ospiti, tieni traccia del budget.'
-      : 'Chat with vendors, manage tasks and guests, track your budget.',
-    appCta: 'App Store →',
+      ? 'Chat con i fornitori, gestione task e aggiornamenti rapidi restano sincronizzati con questo spazio.'
+      : 'Vendor chat, task management, and quick updates stay in sync with this space.',
+    appCta: isIT ? 'Continua su App Store →' : 'Continue on App Store →',
+    noDateTitle: isIT ? 'Data non ancora definita' : 'Date not set yet',
+    noDateBody: isIT
+      ? 'Quando la data sara confermata, il countdown apparira qui insieme al ritmo del planning.'
+      : 'Once the date is confirmed, your countdown will appear here with the planning rhythm.',
   }
 }
 
@@ -114,125 +130,87 @@ export default function DashboardPage() {
     load()
   }, [])
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
-        <div style={{ width: 28, height: 28, border: '2px solid #C9A84C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    )
-  }
+  if (loading) return <CoupleLoadingBlock />
 
   const days = couple?.wedding_date ? daysUntil(couple.wedding_date) : null
+  const meta = couple?.wedding_city
+    ? (
+      <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--velo-muted-soft)]" style={{ fontFamily: VELO_MONO_FONT }}>
+        {couple.wedding_city}{couple.wedding_region ? ` · ${couple.wedding_region}` : ''}
+      </p>
+    )
+    : undefined
 
   return (
     <div>
-      <div style={{ marginBottom: 36 }}>
-        <div style={{ fontSize: 11, letterSpacing: 3, color: '#8A7E6A', textTransform: 'uppercase', marginBottom: 8 }}>
-          {c.dashboard.greeting}{couple?.partner1 ? `, ${couple.partner1}` : ''}
-          {couple?.partner2 ? ` & ${couple.partner2}` : ''}
-        </div>
-        <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 32, fontWeight: 300, color: '#F5EDD6', margin: 0, lineHeight: 1.2 }}>
-          {copy.title}
-        </h1>
-        {couple?.wedding_city && (
-          <div style={{ fontSize: 13, color: '#8A7E6A', marginTop: 6 }}>
-            {couple.wedding_city}{couple.wedding_region ? ` · ${couple.wedding_region}` : ''}
+      <CouplePageIntro
+        eyebrow={c.dashboard.greeting + (couple?.partner1 ? `, ${couple.partner1}` : '') + (couple?.partner2 ? ` & ${couple.partner2}` : '')}
+        title={copy.title}
+        subtitle={copy.subtitle}
+        meta={meta}
+      />
+
+      <div className="grid gap-5 lg:grid-cols-[1.12fr_0.88fr]">
+        <CouplePanel tone="dark" className="relative overflow-hidden">
+          <div className="absolute right-[-1rem] top-[-1rem] h-28 w-28 rounded-full border border-white/10" />
+          <div className="absolute right-6 top-6 h-14 w-14 rounded-full border border-white/8" />
+          {days !== null ? (
+            <>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[#d7b89d]" style={{ fontFamily: VELO_MONO_FONT }}>
+                {c.dashboard.countdown}
+              </p>
+              <div className="mt-5 flex items-end gap-4">
+                <span className="text-[4.8rem] font-light leading-none text-[#f7efe4]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+                  {days > 0 ? days : 0}
+                </span>
+                <span className="pb-2 text-base text-[#d2c3b0]">{c.dashboard.days}</span>
+              </div>
+              <p className="mt-4 text-sm leading-7 text-[#d2c3b0]">
+                {couple?.wedding_date ? formatDate(couple.wedding_date, locale) : ''}
+              </p>
+            </>
+          ) : (
+            <CoupleNotice title={copy.noDateTitle} tone="neutral" className="border-white/10 bg-white/[0.04] text-[#d2c3b0]">
+              {copy.noDateBody}
+            </CoupleNotice>
+          )}
+        </CouplePanel>
+
+        <CouplePanel>
+          <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
+            {copy.appTitle}
+          </p>
+          <p className="mt-4 text-[1.35rem] leading-snug text-[var(--velo-ink)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+            {locale === 'en' ? 'The couple space stays connected across web and app.' : "Lo spazio coppia resta connesso tra web e app."}
+          </p>
+          <p className="mt-4 text-sm leading-7 text-[var(--velo-muted)]">{copy.appDesc}</p>
+          <div className="mt-6 inline-flex rounded-full border border-[var(--velo-border)] bg-[rgba(255,250,244,0.72)] px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
+            {copy.appCta}
           </div>
-        )}
-      </div>
-
-      <div style={{
-        background: 'linear-gradient(135deg, #1A1915 0%, #0F0E0C 100%)',
-        border: '1px solid #2A2820',
-        borderRadius: 16,
-        padding: '32px 28px',
-        marginBottom: 24,
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        <div style={{ position: 'absolute', top: -20, right: -20, width: 120, height: 120, borderRadius: '50%', border: '1px solid rgba(201,168,76,0.15)' }} />
-        <div style={{ position: 'absolute', top: 10, right: 10, width: 60, height: 60, borderRadius: '50%', border: '1px solid rgba(201,168,76,0.08)' }} />
-
-        {days !== null ? (
-          <>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 8 }}>
-              <span style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 72, fontWeight: 300, color: '#C9A84C', lineHeight: 1 }}>
-                {days > 0 ? days : 0}
-              </span>
-              <span style={{ fontSize: 16, color: '#8A7E6A', fontWeight: 300 }}>{c.dashboard.days}</span>
-            </div>
-            <div style={{ fontSize: 14, color: '#8A7E6A', letterSpacing: 1 }}>{c.dashboard.countdown}</div>
-            <div style={{ fontSize: 13, color: '#5A5040', marginTop: 8 }}>
-              {formatDate(couple!.wedding_date!, locale)}
-            </div>
-          </>
-        ) : (
-          <div style={{ fontSize: 16, color: '#5A5040', fontStyle: 'italic' }}>{c.dashboard.noDate}</div>
-        )}
+        </CouplePanel>
       </div>
 
       {stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 24 }} className="stats-grid">
-          <StatCard
+        <div className="mt-5 flex flex-wrap gap-4">
+          <CoupleMetricCard
             label={c.dashboard.vendorsStat}
-            value={`${stats.confirmedVendors}`}
-            sub={stats.totalVendors > 0 ? `/ ${stats.totalVendors}` : undefined}
+            value={<>{stats.confirmedVendors}<span className="ml-2 text-sm text-[var(--velo-muted-soft)]">/ {stats.totalVendors}</span></>}
+            accent="var(--velo-success)"
           />
-          <StatCard
+          <CoupleMetricCard
             label={c.dashboard.tasksStat}
-            value={`${stats.completedTasks}`}
-            sub={stats.totalTasks > 0 ? `/ ${stats.totalTasks}` : undefined}
+            value={<>{stats.completedTasks}<span className="ml-2 text-sm text-[var(--velo-muted-soft)]">/ {stats.totalTasks}</span></>}
+            accent="var(--velo-terracotta)"
           />
-          <StatCard
-            label={c.dashboard.guestsStat}
-            value={`${stats.guestCount}`}
-          />
-          <StatCard
+          <CoupleMetricCard label={c.dashboard.guestsStat} value={stats.guestCount} accent="var(--velo-info)" />
+          <CoupleMetricCard
             label={c.dashboard.budgetStat}
             value={couple?.budget ? formatBudget(couple.budget) : '—'}
+            accent="var(--velo-terracotta)"
             sub={stats.spentBudget > 0 ? `${formatBudget(stats.spentBudget)} ${copy.confirmedBudget}` : undefined}
           />
         </div>
       )}
-
-      <div style={{
-        border: '1px solid #2A2820',
-        borderRadius: 12,
-        padding: '20px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 16,
-      }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 13, color: '#F5EDD6', marginBottom: 4 }}>{copy.appTitle}</div>
-          <div style={{ fontSize: 12, color: '#8A7E6A' }}>{copy.appDesc}</div>
-        </div>
-        <div style={{ fontSize: 13, color: '#C9A84C', whiteSpace: 'nowrap' }}>{copy.appCta}</div>
-      </div>
-
-      <style>{`
-        @media (min-width: 600px) {
-          .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
-        }
-      `}</style>
-    </div>
-  )
-}
-
-function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div style={{
-      background: '#1A1915',
-      border: '1px solid #2A2820',
-      borderRadius: 12,
-      padding: '20px 18px',
-    }}>
-      <div style={{ fontSize: 11, letterSpacing: 2, color: '#8A7E6A', textTransform: 'uppercase', marginBottom: 10 }}>{label}</div>
-      <div style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 36, fontWeight: 300, color: '#F5EDD6', lineHeight: 1 }}>
-        {value}
-        {sub && <span style={{ fontSize: 14, color: '#8A7E6A', marginLeft: 6 }}>{sub}</span>}
-      </div>
     </div>
   )
 }

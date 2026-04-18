@@ -1,6 +1,15 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
+import {
+  CoupleEmptyState,
+  CoupleLoadingBlock,
+  CoupleNotice,
+  CouplePageIntro,
+  CouplePanel,
+  VELO_DISPLAY_FONT,
+  VELO_MONO_FONT,
+} from '../../../components/couple-ui'
 
 interface Task {
   id: string
@@ -58,17 +67,20 @@ function getChecklistCopy(locale: string) {
   return {
     pageLabel: 'PLANNING',
     pageTitle: isIT ? 'La vostra roadmap' : 'Your roadmap',
+    pageSub: isIT
+      ? 'Un ordine piu calmo per capire cosa richiede attenzione adesso, cosa viene dopo e cosa e gia chiuso.'
+      : 'A calmer order for seeing what needs attention now, what comes next, and what is already complete.',
     progress: isIT ? 'Completamento' : 'Overall completion',
     tasksSuffix: isIT ? 'task' : 'tasks',
     interactionHint: isIT
-      ? 'Puoi segnare i task come completati anche da web - usa l\'app VELO per creare o modificare i task.'
-      : 'You can mark tasks complete from web too - use the VELO app to create or edit tasks.',
+      ? "Puoi segnare i task come completati anche da web. Usa l'app VELO per creare o modificare i task."
+      : 'You can mark tasks complete on web too. Use the VELO app to create or edit tasks.',
     synced: isIT ? 'sincronizzato' : 'synced',
     updating: isIT ? 'aggiornamento...' : 'updating...',
     emptyTitle: isIT ? 'Nessun task ancora' : 'No tasks yet',
     emptyDesc: isIT
-      ? 'Apri l\'app VELO per aggiungere il primo task - la checklist apparira qui.'
-      : 'Open the VELO app to add your first task - your checklist will appear here.',
+      ? "Apri l'app VELO per aggiungere il primo task: la checklist apparira qui."
+      : 'Open the VELO app to add your first task and the checklist will appear here.',
     errorTitle: isIT ? 'Impossibile caricare la checklist' : 'Unable to load checklist',
     errorDesc: isIT
       ? 'Potrebbe essere un problema temporaneo. Prova ad aggiornare la pagina.'
@@ -123,10 +135,10 @@ function formatDate(dateStr: string, locale: string): string {
 
 function phaseConfig(phase: PhaseKey, locale: string) {
   const copy = getChecklistCopy(locale)
-  const colors: Record<PhaseKey, { color: string; accent: string }> = {
-    urgent: { color: '#C4756A', accent: 'rgba(196,117,106,0.08)' },
-    soon: { color: '#C9A84C', accent: 'rgba(201,168,76,0.06)' },
-    done: { color: '#7A9E7E', accent: 'rgba(122,158,126,0.06)' },
+  const colors: Record<PhaseKey, { color: string; bg: string }> = {
+    urgent: { color: 'var(--velo-danger)', bg: 'rgba(196,117,106,0.08)' },
+    soon: { color: 'var(--velo-terracotta)', bg: 'rgba(184,90,46,0.08)' },
+    done: { color: 'var(--velo-success)', bg: 'rgba(122,158,126,0.08)' },
   }
   return { label: copy.phaseLabel(phase), ...colors[phase] }
 }
@@ -134,61 +146,45 @@ function phaseConfig(phase: PhaseKey, locale: string) {
 function sourceBadge(source: string, locale: string) {
   const copy = getChecklistCopy(locale)
   const colorMap: Record<string, string> = {
-    vendor: '#4A7AB8',
-    vendor_custom: '#4A7AB8',
-    setup: '#8A7E6A',
-    documents: '#7A9E7E',
-    countdown: '#C4756A',
-    budget: '#C9A84C',
-    guests: '#8A7E6A',
+    vendor: 'var(--velo-info)',
+    vendor_custom: 'var(--velo-info)',
+    setup: 'var(--velo-muted)',
+    documents: 'var(--velo-success)',
+    countdown: 'var(--velo-danger)',
+    budget: 'var(--velo-terracotta)',
+    guests: 'var(--velo-muted)',
   }
   return {
     label: copy.sourceLabel(source),
-    color: colorMap[source] ?? '#8A7E6A',
+    color: colorMap[source] ?? 'var(--velo-muted)',
   }
-}
-
-function ErrorBanner({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div
-      style={{
-        background: 'rgba(196,117,106,0.06)',
-        border: '1px solid rgba(196,117,106,0.2)',
-        borderRadius: 12,
-        padding: '20px 24px',
-      }}
-    >
-      <div style={{ fontSize: 13, color: '#C4756A', fontWeight: 600, marginBottom: 6 }}>{title}</div>
-      <div style={{ fontSize: 13, color: '#9A9080', lineHeight: 1.7 }}>{desc}</div>
-    </div>
-  )
 }
 
 function ProgressBar({ done, total, copy }: { done: number; total: number; copy: ChecklistCopy }) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0
   return (
-    <div style={{ marginBottom: 32 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-        <div style={{ fontSize: 11, letterSpacing: 2, color: '#8A7E6A', textTransform: 'uppercase' }}>
+    <div className="mb-8">
+      <div className="mb-3 flex items-end justify-between gap-4">
+        <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--velo-muted-soft)]" style={{ fontFamily: VELO_MONO_FONT }}>
           {copy.progress}
         </div>
-        <div style={{ fontSize: 13, color: '#F5EDD6' }}>
-          <span style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 20, fontWeight: 300 }}>{done}</span>
-          <span style={{ color: '#5A5040', fontSize: 13 }}> / {total} {copy.tasksSuffix}</span>
+        <div className="text-sm text-[var(--velo-ink)]">
+          <span style={{ fontFamily: VELO_DISPLAY_FONT, fontSize: 28, fontWeight: 300 }}>{done}</span>
+          <span className="text-[var(--velo-muted-soft)]"> / {total} {copy.tasksSuffix}</span>
         </div>
       </div>
-      <div style={{ height: 3, background: '#1E1D1A', borderRadius: 2, overflow: 'hidden' }}>
+      <div className="h-[5px] overflow-hidden rounded-full bg-[rgba(140,104,74,0.16)]">
         <div
           style={{
             height: '100%',
             width: `${pct}%`,
-            background: pct === 100 ? '#7A9E7E' : '#C9A84C',
-            borderRadius: 2,
+            background: pct === 100 ? 'var(--velo-success)' : 'var(--velo-terracotta)',
+            borderRadius: 999,
             transition: 'width 0.4s ease',
           }}
         />
       </div>
-      <div style={{ fontSize: 11, color: '#5A5040', marginTop: 6, textAlign: 'right' }}>{pct}%</div>
+      <div className="mt-2 text-right text-[11px] text-[var(--velo-muted-soft)]">{pct}%</div>
     </div>
   )
 }
@@ -207,21 +203,13 @@ function TaskRow({
   const title = taskTitle(task, locale)
   const body = taskBody(task, locale)
   const badge = task.source && task.source !== 'user' ? sourceBadge(task.source, locale) : null
-  const isVendor = task.source === 'vendor' || task.source === 'vendor_custom'
   const isDone = task.completed
   const copy = getChecklistCopy(locale)
 
   return (
     <div
-      style={{
-        display: 'flex',
-        gap: 14,
-        padding: '14px 18px',
-        borderBottom: '1px solid #1A1915',
-        opacity: isDone ? 0.55 : 1,
-        background: isVendor ? 'rgba(74,122,184,0.04)' : 'transparent',
-        transition: 'opacity 0.15s',
-      }}
+      style={{ opacity: isDone ? 0.58 : 1, transition: 'opacity 0.15s' }}
+      className={`flex gap-4 border-b border-[var(--velo-border)] px-4 py-4 last:border-b-0 ${task.source === 'vendor' || task.source === 'vendor_custom' ? 'bg-[rgba(74,122,184,0.04)]' : 'bg-transparent'}`}
     >
       <button
         type="button"
@@ -234,8 +222,8 @@ function TaskRow({
           width: 18,
           height: 18,
           borderRadius: 4,
-          border: `1.5px solid ${isDone ? '#7A9E7E' : '#3A3830'}`,
-          background: isDone ? 'rgba(122,158,126,0.2)' : 'transparent',
+          border: `1.5px solid ${isDone ? 'var(--velo-success)' : 'var(--velo-border-strong)'}`,
+          background: isDone ? 'rgba(122,158,126,0.18)' : 'rgba(255,250,244,0.72)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -251,9 +239,9 @@ function TaskRow({
         )}
       </button>
 
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="min-w-0 flex-1">
         {badge && (
-          <div style={{ marginBottom: 5 }}>
+          <div className="mb-2">
             <span
               style={{
                 fontSize: 10,
@@ -261,8 +249,9 @@ function TaskRow({
                 textTransform: 'uppercase',
                 color: badge.color,
                 background: `${badge.color}18`,
-                borderRadius: 4,
-                padding: '2px 7px',
+                borderRadius: 999,
+                padding: '4px 10px',
+                fontFamily: VELO_MONO_FONT,
               }}
             >
               {badge.label}
@@ -270,29 +259,16 @@ function TaskRow({
             </span>
           </div>
         )}
-        <div
-          style={{
-            fontSize: 14,
-            color: isDone ? '#5A5040' : '#F5EDD6',
-            textDecoration: isDone ? 'line-through' : 'none',
-            lineHeight: 1.5,
-          }}
-        >
+        <div style={{ fontSize: 14, color: isDone ? 'var(--velo-muted-soft)' : 'var(--velo-ink)', textDecoration: isDone ? 'line-through' : 'none', lineHeight: 1.55 }}>
           {title}
         </div>
-        {body && !isDone && <div style={{ fontSize: 12, color: '#8A7E6A', marginTop: 4, lineHeight: 1.6 }}>{body}</div>}
+        {body && !isDone && <div style={{ fontSize: 12, color: 'var(--velo-muted)', marginTop: 6, lineHeight: 1.7 }}>{body}</div>}
         {task.due_date && (
-          <div
-            style={{
-              fontSize: 11,
-              marginTop: 5,
-              color: task.urgent && !isDone ? '#C4756A' : '#5A5040',
-            }}
-          >
+          <div style={{ fontSize: 11, marginTop: 6, color: task.urgent && !isDone ? 'var(--velo-danger)' : 'var(--velo-muted-soft)', fontFamily: VELO_MONO_FONT }}>
             {formatDate(task.due_date, locale)}
           </div>
         )}
-        {pending && <div style={{ fontSize: 11, marginTop: 5, color: '#5A5040' }}>{copy.updating}</div>}
+        {pending && <div style={{ fontSize: 11, marginTop: 6, color: 'var(--velo-muted-soft)', fontFamily: VELO_MONO_FONT }}>{copy.updating}</div>}
       </div>
     </div>
   )
@@ -315,7 +291,7 @@ function PhaseGroup({
   const [collapsed, setCollapsed] = useState(phase === 'done')
 
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div className="mb-4">
       <button
         onClick={() => setCollapsed(c => !c)}
         style={{
@@ -323,46 +299,30 @@ function PhaseGroup({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '10px 18px',
-          background: cfg.accent,
-          border: `1px solid ${cfg.color}20`,
+          padding: '12px 18px',
+          background: cfg.bg,
+          border: `1px solid ${cfg.color}22`,
           borderBottom: collapsed ? undefined : 'none',
-          borderRadius: collapsed ? 10 : '10px 10px 0 0',
+          borderRadius: collapsed ? 16 : '16px 16px 0 0',
           cursor: 'pointer',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: cfg.color, flexShrink: 0 }} />
-          <span style={{ fontSize: 11, letterSpacing: 2, color: cfg.color, textTransform: 'uppercase', fontWeight: 600 }}>
+        <div className="flex items-center gap-3">
+          <div style={{ width: 7, height: 7, borderRadius: '50%', background: cfg.color, flexShrink: 0 }} />
+          <span style={{ fontSize: 10, letterSpacing: 2, color: cfg.color, textTransform: 'uppercase', fontWeight: 600, fontFamily: VELO_MONO_FONT }}>
             {cfg.label}
           </span>
-          <span style={{ fontSize: 12, color: '#5A5040' }}>{tasks.length}</span>
+          <span className="text-xs text-[var(--velo-muted-soft)]">{tasks.length}</span>
         </div>
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 12 12"
-          fill="none"
-          style={{ transform: collapsed ? 'rotate(-90deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}
-        >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: collapsed ? 'rotate(-90deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>
           <path d="M2 4L6 8L10 4" stroke={cfg.color} strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </button>
 
       {!collapsed && (
-        <div
-          style={{
-            background: '#1A1915',
-            border: `1px solid ${cfg.color}20`,
-            borderTop: 'none',
-            borderRadius: '0 0 10px 10px',
-            overflow: 'hidden',
-          }}
-        >
-          {tasks.map((task, i) => (
-            <div key={task.id} style={{ borderTop: i === 0 ? 'none' : undefined }}>
-              <TaskRow task={task} locale={locale} pending={pendingIds.has(task.id)} onToggle={onToggle} />
-            </div>
+        <div className="overflow-hidden rounded-b-[1rem] border border-t-0 border-[var(--velo-border)] bg-[var(--velo-card)]">
+          {tasks.map((task) => (
+            <TaskRow key={task.id} task={task} locale={locale} pending={pendingIds.has(task.id)} onToggle={onToggle} />
           ))}
         </div>
       )}
@@ -448,27 +408,13 @@ export default function ChecklistPage() {
     setPendingIds(prev => prev.filter(id => id !== task.id))
   }
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
-        <div style={{ width: 28, height: 28, border: '2px solid #C9A84C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    )
-  }
+  if (loading) return <CoupleLoadingBlock />
 
   if (fetchError) {
     return (
       <div>
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 11, letterSpacing: 3, color: '#C9A84C', textTransform: 'uppercase', marginBottom: 8 }}>
-            {copy.pageLabel}
-          </div>
-          <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 32, fontWeight: 300, color: '#F5EDD6', margin: 0 }}>
-            {copy.pageTitle}
-          </h1>
-        </div>
-        <ErrorBanner title={copy.errorTitle} desc={copy.errorDesc} />
+        <CouplePageIntro eyebrow={copy.pageLabel} title={copy.pageTitle} subtitle={copy.pageSub} />
+        <CoupleNotice title={copy.errorTitle} tone="danger">{copy.errorDesc}</CoupleNotice>
       </div>
     )
   }
@@ -494,84 +440,37 @@ export default function ChecklistPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, letterSpacing: 3, color: '#C9A84C', textTransform: 'uppercase', marginBottom: 8 }}>
-          {copy.pageLabel}
-        </div>
-        <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 32, fontWeight: 300, color: '#F5EDD6', margin: 0 }}>
-          {copy.pageTitle}
-        </h1>
-      </div>
+      <CouplePageIntro eyebrow={copy.pageLabel} title={copy.pageTitle} subtitle={copy.pageSub} />
 
       {total > 0 && <ProgressBar done={done} total={total} copy={copy} />}
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          marginBottom: 24,
-          padding: '10px 14px',
-          background: 'rgba(138,126,106,0.06)',
-          border: '1px solid #2A2820',
-          borderRadius: 8,
-        }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A7E6A" strokeWidth="1.5">
-          <rect x="3" y="11" width="18" height="11" rx="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
-        <span style={{ fontSize: 12, color: '#8A7E6A' }}>
-          {copy.interactionHint}
-          {lastSync && <span style={{ color: '#3A3830' }}> · {copy.synced} {lastSync}</span>}
-        </span>
-      </div>
+      <CoupleNotice title={locale === 'en' ? 'Read-only on web' : 'Sola lettura sul web'} className="mb-6">
+        {copy.interactionHint}
+        {lastSync && <span className="text-[var(--velo-muted-soft)]"> · {copy.synced} {lastSync}</span>}
+      </CoupleNotice>
 
       {writeError && (
-        <div style={{ marginBottom: 16 }}>
-          <ErrorBanner title={copy.writeErrorTitle} desc={copy.writeErrorDesc} />
+        <div className="mb-4">
+          <CoupleNotice title={copy.writeErrorTitle} tone="danger">{copy.writeErrorDesc}</CoupleNotice>
         </div>
       )}
 
-      {grouped.length === 0 && (
-        <div
-          style={{
-            background: '#1A1915',
-            border: '1px solid #2A2820',
-            borderRadius: 14,
-            padding: '48px 32px',
-            textAlign: 'center',
-          }}
-        >
-          <div style={{ fontSize: 14, color: '#5A5040', marginBottom: 10 }}>{copy.emptyTitle}</div>
-          <div style={{ fontSize: 12, color: '#3A3830', lineHeight: 1.7 }}>{copy.emptyDesc}</div>
-        </div>
-      )}
+      {grouped.length === 0 && <CoupleEmptyState title={copy.emptyTitle} body={copy.emptyDesc} />}
 
       {grouped.map(({ phase, tasks: phaseTasks }) => (
         <PhaseGroup key={phase} phase={phase} tasks={phaseTasks} locale={locale} pendingIds={pendingSet} onToggle={handleToggle} />
       ))}
 
       {grouped.length > 0 && (
-        <div style={{ marginTop: 24, display: 'flex', gap: 12, flexWrap: 'wrap' }} className="task-stats">
-          {PHASE_ORDER.filter(p => grouped.some(g => g.phase === p)).map(phase => {
+        <div className="mt-6 flex flex-wrap gap-3">
+          {PHASE_ORDER.filter(p => grouped.some(g => g.phase === p)).map((phase) => {
             const cfg = phaseConfig(phase, locale)
             const count = grouped.find(g => g.phase === phase)?.tasks.length ?? 0
             return (
-              <div
-                key={phase}
-                style={{
-                  flex: 1,
-                  minWidth: 100,
-                  background: '#1A1915',
-                  border: `1px solid ${cfg.color}20`,
-                  borderRadius: 10,
-                  padding: '14px 16px',
-                }}
-              >
-                <div style={{ fontSize: 10, letterSpacing: 2, color: cfg.color, textTransform: 'uppercase', marginBottom: 6 }}>{cfg.label}</div>
-                <div style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 28, fontWeight: 300, color: '#F5EDD6' }}>{count}</div>
-              </div>
+              <CouplePanel key={phase} className="min-w-[120px] flex-1 rounded-[1.25rem] p-4 shadow-none">
+                <div style={{ fontSize: 10, letterSpacing: 2, color: cfg.color, textTransform: 'uppercase', marginBottom: 6, fontFamily: VELO_MONO_FONT }}>{cfg.label}</div>
+                <div style={{ fontFamily: VELO_DISPLAY_FONT, fontSize: 32, fontWeight: 300, color: 'var(--velo-ink)' }}>{count}</div>
+              </CouplePanel>
             )
           })}
         </div>

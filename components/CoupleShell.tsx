@@ -1,10 +1,16 @@
 'use client'
-import { useState, useEffect, ReactNode } from 'react'
-import { supabase } from '../lib/supabase'
-import { getT } from '../lib/translations'
+import { ReactNode, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import CoupleOnboarding from './CoupleOnboarding'
+import { supabase } from '../lib/supabase'
+import { getT } from '../lib/translations'
+import {
+  CoupleLoadingBlock,
+  CoupleNotice,
+  VELO_DISPLAY_FONT,
+  VELO_MONO_FONT,
+} from './couple-ui'
 
 type AuthState = 'loading' | 'login' | 'dashboard' | 'vendor' | 'not_couple' | 'error'
 
@@ -45,13 +51,8 @@ async function resolveAuthenticatedUser(userId: string): Promise<
     .order('created_at', { ascending: false })
     .limit(1)
 
-  if (coupleError) {
-    return { state: 'error' }
-  }
-
-  if (couples && couples.length > 0) {
-    return { state: 'dashboard', couple: couples[0] }
-  }
+  if (coupleError) return { state: 'error' }
+  if (couples && couples.length > 0) return { state: 'dashboard', couple: couples[0] }
 
   const { data: vendors, error: vendorError } = await supabase
     .from('vendor_accounts')
@@ -59,15 +60,19 @@ async function resolveAuthenticatedUser(userId: string): Promise<
     .eq('user_id', userId)
     .limit(1)
 
-  if (vendorError) {
-    return { state: 'error' }
-  }
-
-  if (vendors && vendors.length > 0) {
-    return { state: 'vendor' }
-  }
-
+  if (vendorError) return { state: 'error' }
+  if (vendors && vendors.length > 0) return { state: 'vendor' }
   return { state: 'not_couple' }
+}
+
+function AuthFrame({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-screen bg-[linear-gradient(180deg,var(--velo-paper)_0%,#efe1cd_58%,#f8f0e4_100%)] px-6 py-10 sm:px-8 lg:px-10">
+      <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-[1120px] items-center justify-center">
+        {children}
+      </div>
+    </div>
+  )
 }
 
 export default function CoupleShell({ children }: { children: ReactNode }) {
@@ -136,6 +141,7 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
     e.preventDefault()
     setLoginLoading(true)
     setLoginError('')
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error || !data.session) {
       setLoginError(c.login.error)
@@ -161,7 +167,7 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
     setAuthState('login')
   }
 
-  const NAV_ITEMS = [
+  const navItems = [
     { href: '/couple/dashboard', label: c.nav.dashboard },
     { href: '/couple/profile', label: c.nav.profile },
     { href: '/couple/documents', label: c.nav.documents },
@@ -173,258 +179,264 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
 
   if (authState === 'loading') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0F0E0C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 36, height: 36, border: '2px solid #C9A84C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
+      <AuthFrame>
+        <CoupleLoadingBlock />
+      </AuthFrame>
     )
   }
 
   if (authState === 'login') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0F0E0C', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-        {/* Wordmark */}
-        <div style={{ marginBottom: 48, textAlign: 'center' }}>
-          <div style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 36, fontWeight: 300, letterSpacing: 8, color: '#C9A84C' }}>VELO</div>
-          <div style={{ fontSize: 11, letterSpacing: 4, color: '#8A7E6A', marginTop: 4, textTransform: 'uppercase' }}>Wedding</div>
-        </div>
-
-        {/* Login card */}
-        <div style={{ width: '100%', maxWidth: 400, background: '#1A1915', border: '1px solid #2A2820', borderRadius: 12, padding: 36 }}>
-          <h2 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 24, fontWeight: 400, color: '#F5EDD6', margin: '0 0 8px' }}>{c.login.title}</h2>
-          <p style={{ fontSize: 13, color: '#8A7E6A', margin: '0 0 28px' }}>{c.login.subtitle}</p>
-
-          <form onSubmit={handleLogin}>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 11, letterSpacing: 2, color: '#8A7E6A', textTransform: 'uppercase', marginBottom: 8 }}>{c.login.emailLabel}</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                style={{ width: '100%', background: '#0F0E0C', border: '1px solid #2A2820', borderRadius: 8, padding: '12px 14px', color: '#F5EDD6', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-              />
+      <AuthFrame>
+        <div className="grid w-full max-w-[1080px] gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div className="max-w-[420px]">
+            <p className="mb-4 text-[10px] uppercase tracking-[0.34em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
+              Couple area
+            </p>
+            <h1 className="text-[2.6rem] font-light leading-[0.96] text-[var(--velo-ink)] sm:text-[3.1rem]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+              {locale === 'en' ? 'Plan the wedding in one calm room.' : 'Tenete il matrimonio in una sola stanza calma.'}
+            </h1>
+            <p className="mt-5 text-sm leading-7 text-[var(--velo-muted)] sm:text-[1rem]">
+              {locale === 'en'
+                ? 'Sign in to your VELO couple area for documents, checklist, guests, vendors, and budget.'
+                : 'Entrate nella vostra area coppia VELO per documenti, checklist, ospiti, fornitori e budget.'}
+            </p>
+            <div className="mt-8 rounded-[1.4rem] border border-[var(--velo-border)] bg-[rgba(255,250,244,0.72)] p-5">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
+                VELO
+              </p>
+              <p className="mt-3 text-lg leading-snug text-[var(--velo-ink)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+                {locale === 'en' ? 'For couples marrying in Italy, especially from abroad.' : "Per coppie che si sposano in Italia, soprattutto dall'estero."}
+              </p>
             </div>
-            <div style={{ marginBottom: 24 }}>
-              <label style={{ display: 'block', fontSize: 11, letterSpacing: 2, color: '#8A7E6A', textTransform: 'uppercase', marginBottom: 8 }}>{c.login.passwordLabel}</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                style={{ width: '100%', background: '#0F0E0C', border: '1px solid #2A2820', borderRadius: 8, padding: '12px 14px', color: '#F5EDD6', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-              />
-            </div>
+          </div>
 
-            {loginError && (
-              <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(196,117,106,0.12)', border: '1px solid rgba(196,117,106,0.3)', borderRadius: 8, fontSize: 13, color: '#C4756A' }}>
-                {loginError}
+          <div className="rounded-[2rem] border border-[var(--velo-border)] bg-[var(--velo-card)] p-6 shadow-[0_24px_70px_rgba(45,31,22,0.1)] sm:p-8">
+            <div className="mb-8">
+              <div className="text-[10px] uppercase tracking-[0.34em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
+                VELO
               </div>
-            )}
+              <h2 className="mt-3 text-[2rem] font-light text-[var(--velo-ink)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+                {c.login.title}
+              </h2>
+              <p className="mt-2 text-sm leading-7 text-[var(--velo-muted)]">{c.login.subtitle}</p>
+            </div>
 
-            <button
-              type="submit"
-              disabled={loginLoading}
-              style={{ width: '100%', padding: '13px', background: loginLoading ? '#2A2820' : '#C9A84C', color: loginLoading ? '#8A7E6A' : '#0F0E0C', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', cursor: loginLoading ? 'default' : 'pointer' }}
-            >
-              {loginLoading ? c.login.loading : c.login.loginBtn}
-            </button>
-          </form>
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-[10px] uppercase tracking-[0.24em] text-[var(--velo-muted-soft)]" style={{ fontFamily: VELO_MONO_FONT }}>
+                  {c.login.emailLabel}
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  className="w-full rounded-[1rem] border border-[var(--velo-border)] bg-[rgba(255,250,244,0.72)] px-4 py-3 text-sm text-[var(--velo-ink)] outline-none transition-colors focus:border-[var(--velo-terracotta)]"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-[10px] uppercase tracking-[0.24em] text-[var(--velo-muted-soft)]" style={{ fontFamily: VELO_MONO_FONT }}>
+                  {c.login.passwordLabel}
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  className="w-full rounded-[1rem] border border-[var(--velo-border)] bg-[rgba(255,250,244,0.72)] px-4 py-3 text-sm text-[var(--velo-ink)] outline-none transition-colors focus:border-[var(--velo-terracotta)]"
+                />
+              </div>
 
-          <p style={{ marginTop: 24, fontSize: 12, color: '#8A7E6A', textAlign: 'center', lineHeight: 1.6 }}>{c.login.noAccount}</p>
+              {loginError && (
+                <CoupleNotice title={locale === 'en' ? 'Sign-in issue' : 'Problema di accesso'} tone="danger">
+                  {loginError}
+                </CoupleNotice>
+              )}
+
+              <button
+                type="submit"
+                disabled={loginLoading}
+                className="inline-flex w-full items-center justify-center rounded-full bg-[var(--velo-terracotta)] px-6 py-3.5 text-[11px] uppercase tracking-[0.2em] text-[var(--velo-paper-2)] transition-colors hover:bg-[var(--velo-terracotta-deep)] disabled:cursor-default disabled:opacity-60"
+                style={{ fontFamily: VELO_MONO_FONT }}
+              >
+                {loginLoading ? c.login.loading : c.login.loginBtn}
+              </button>
+            </form>
+
+            <p className="mt-6 text-center text-sm leading-7 text-[var(--velo-muted)]">{c.login.noAccount}</p>
+            <Link href="/" className="mt-4 inline-flex text-xs uppercase tracking-[0.18em] text-[var(--velo-muted-soft)]" style={{ fontFamily: VELO_MONO_FONT }}>
+              ← velowedding.it
+            </Link>
+          </div>
         </div>
-
-        {/* Back to site */}
-        <Link href="/" style={{ marginTop: 24, fontSize: 12, color: '#8A7E6A', textDecoration: 'none' }}>
-          ← velowedding.it
-        </Link>
-      </div>
+      </AuthFrame>
     )
   }
 
   if (authState === 'not_couple') {
-    return (
-      <CoupleOnboarding
-        initialLocale={locale}
-        onComplete={retryAuthenticatedLoad}
-      />
-    )
+    return <CoupleOnboarding initialLocale={locale} onComplete={retryAuthenticatedLoad} />
   }
 
   if (authState === 'vendor') {
-    const title = locale === 'en' ? 'This account is set up as a vendor' : 'Questo account e impostato come fornitore'
+    const title = locale === 'en' ? 'This account is already set up as a vendor.' : 'Questo account e gia impostato come fornitore.'
     const body = locale === 'en'
-      ? 'You are signed in with a vendor account, so the couple onboarding is not available here. Open your vendor area instead, or sign out to use a different account.'
-      : 'Hai effettuato l accesso con un account fornitore, quindi il percorso coppia non e disponibile qui. Apri la tua area fornitore oppure esci per usare un altro account.'
+      ? 'The couple area is reserved for couple accounts. Open your vendor workspace instead, or sign out and use a different account.'
+      : 'L area coppia e riservata agli account coppia. Apri il tuo spazio fornitore oppure esci e usa un altro account.'
 
     return (
-      <div style={{ minHeight: '100vh', background: '#0F0E0C', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-        <div style={{ width: '100%', maxWidth: 480, background: '#1A1915', border: '1px solid #2A2820', borderRadius: 12, padding: 36 }}>
-          <div style={{ fontSize: 11, letterSpacing: 3, color: '#C9A84C', textTransform: 'uppercase', marginBottom: 8 }}>
-            VELO
-          </div>
-          <h2 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 24, fontWeight: 400, color: '#F5EDD6', margin: '0 0 10px' }}>
-            {title}
-          </h2>
-          <p style={{ fontSize: 13, color: '#8A7E6A', lineHeight: 1.7, margin: '0 0 24px' }}>{body}</p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Link
-              href="/vendor"
-              style={{ padding: '12px 16px', background: '#C9A84C', color: '#0F0E0C', borderRadius: 8, fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', textDecoration: 'none' }}
-            >
-              {locale === 'en' ? 'Open vendor area' : 'Apri area fornitore'}
-            </Link>
-            <button
-              onClick={handleLogout}
-              style={{ padding: '12px 16px', background: 'transparent', color: '#8A7E6A', border: '1px solid #2A2820', borderRadius: 8, fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}
-            >
-              {locale === 'en' ? 'Sign out' : 'Esci'}
-            </button>
-          </div>
+      <AuthFrame>
+        <div className="w-full max-w-[640px]">
+          <CoupleNotice title="VELO" tone="warning" className="p-8">
+            <p className="text-[2rem] font-light leading-[1] text-[var(--velo-ink)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+              {title}
+            </p>
+            <p className="mt-4 text-sm leading-7">{body}</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href="/vendor"
+                className="inline-flex items-center justify-center rounded-full bg-[var(--velo-terracotta)] px-5 py-3 text-[11px] uppercase tracking-[0.2em] text-[var(--velo-paper-2)]"
+                style={{ fontFamily: VELO_MONO_FONT }}
+              >
+                {locale === 'en' ? 'Open vendor area' : 'Apri area fornitore'}
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center justify-center rounded-full border border-[var(--velo-border-strong)] px-5 py-3 text-[11px] uppercase tracking-[0.2em] text-[var(--velo-muted)]"
+                style={{ fontFamily: VELO_MONO_FONT }}
+              >
+                {locale === 'en' ? 'Sign out' : 'Esci'}
+              </button>
+            </div>
+          </CoupleNotice>
         </div>
-      </div>
+      </AuthFrame>
     )
   }
 
   if (authState === 'error') {
-    const title = locale === 'en' ? 'Unable to load your couple area' : 'Impossibile caricare l\u2019area coppia'
+    const title = locale === 'en' ? 'Unable to load your couple area.' : 'Impossibile caricare l area coppia.'
     const body = locale === 'en'
-      ? 'You are signed in, but we could not load your couple data. This may be a temporary connection issue. Please try again.'
-      : 'Hai effettuato l\u2019accesso, ma non siamo riusciti a caricare i dati della coppia. Potrebbe essere un problema temporaneo di connessione. Riprova.'
+      ? 'You are signed in, but we could not retrieve your couple data. This may be temporary. Please try again.'
+      : 'Hai effettuato l accesso, ma non siamo riusciti a recuperare i dati della coppia. Potrebbe essere temporaneo. Riprova.'
 
     return (
-      <div style={{ minHeight: '100vh', background: '#0F0E0C', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-        <div style={{ width: '100%', maxWidth: 460, background: '#1A1915', border: '1px solid #2A2820', borderRadius: 12, padding: 36 }}>
-          <div style={{ fontSize: 11, letterSpacing: 3, color: '#C9A84C', textTransform: 'uppercase', marginBottom: 8 }}>
-            VELO
-          </div>
-          <h2 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 24, fontWeight: 400, color: '#F5EDD6', margin: '0 0 10px' }}>
-            {title}
-          </h2>
-          <p style={{ fontSize: 13, color: '#8A7E6A', lineHeight: 1.7, margin: '0 0 24px' }}>{body}</p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <button
-              onClick={retryAuthenticatedLoad}
-              style={{ padding: '12px 16px', background: '#C9A84C', color: '#0F0E0C', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}
-            >
-              {locale === 'en' ? 'Try again' : 'Riprova'}
-            </button>
-            <button
-              onClick={handleLogout}
-              style={{ padding: '12px 16px', background: 'transparent', color: '#8A7E6A', border: '1px solid #2A2820', borderRadius: 8, fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}
-            >
-              {locale === 'en' ? 'Sign out' : 'Esci'}
-            </button>
-          </div>
+      <AuthFrame>
+        <div className="w-full max-w-[640px]">
+          <CoupleNotice title="VELO" tone="danger" className="p-8">
+            <p className="text-[2rem] font-light leading-[1] text-[var(--velo-ink)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+              {title}
+            </p>
+            <p className="mt-4 text-sm leading-7">{body}</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                onClick={retryAuthenticatedLoad}
+                className="inline-flex items-center justify-center rounded-full bg-[var(--velo-terracotta)] px-5 py-3 text-[11px] uppercase tracking-[0.2em] text-[var(--velo-paper-2)]"
+                style={{ fontFamily: VELO_MONO_FONT }}
+              >
+                {locale === 'en' ? 'Try again' : 'Riprova'}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center justify-center rounded-full border border-[var(--velo-border-strong)] px-5 py-3 text-[11px] uppercase tracking-[0.2em] text-[var(--velo-muted)]"
+                style={{ fontFamily: VELO_MONO_FONT }}
+              >
+                {locale === 'en' ? 'Sign out' : 'Esci'}
+              </button>
+            </div>
+          </CoupleNotice>
         </div>
-      </div>
+      </AuthFrame>
     )
   }
 
-  // Dashboard shell
   const greeting = couple?.partner1 ? `${c.dashboard.greeting}, ${couple.partner1}` : c.dashboard.greeting
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0F0E0C', display: 'flex' }}>
-      {/* Sidebar overlay (mobile) */}
+    <div className="min-h-screen bg-[linear-gradient(180deg,var(--velo-paper)_0%,#efe1cd_58%,#f8f0e4_100%)] text-[var(--velo-ink)]">
       {sidebarOpen && (
-        <div
+        <button
+          type="button"
+          aria-label="Close navigation"
           onClick={() => setSidebarOpen(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 40, display: 'block' }}
+          className="fixed inset-0 z-40 bg-[rgba(31,24,18,0.42)] md:hidden"
         />
       )}
 
-      {/* Sidebar */}
-      <aside style={{
-        position: 'fixed', top: 0, left: sidebarOpen ? 0 : -260, width: 240, height: '100vh',
-        background: '#0F0E0C', borderRight: '1px solid #1E1D1A',
-        display: 'flex', flexDirection: 'column',
-        zIndex: 50, transition: 'left 0.25s ease',
-        // Desktop: always visible via media query handled in style tag below
-      }}>
-        {/* Logo */}
-        <div style={{ padding: '28px 24px 20px', borderBottom: '1px solid #1E1D1A' }}>
-          <div style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 22, fontWeight: 300, letterSpacing: 6, color: '#C9A84C' }}>VELO</div>
-          <div style={{ fontSize: 10, letterSpacing: 3, color: '#8A7E6A', marginTop: 2, textTransform: 'uppercase' }}>Wedding</div>
+      <aside className={`fixed inset-y-0 left-0 z-50 w-[256px] border-r border-[#3a2b20] bg-[var(--velo-sidebar)] text-[var(--velo-paper-2)] transition-transform duration-200 md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="border-b border-[#3a2b20] px-6 pb-5 pt-7">
+          <div className="text-[1.5rem] font-light tracking-[0.32em] text-[var(--velo-paper-2)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+            VELO
+          </div>
+          <p className="mt-1 text-[9px] uppercase tracking-[0.26em] text-[#c9b49d]" style={{ fontFamily: VELO_MONO_FONT }}>
+            Couple area
+          </p>
         </div>
 
-        {/* Greeting */}
-        <div style={{ padding: '16px 24px 8px' }}>
-          <div style={{ fontSize: 12, color: '#8A7E6A', marginBottom: 2 }}>{greeting}</div>
-          {couple?.partner2 && (
-            <div style={{ fontSize: 11, color: '#5A5040' }}>& {couple.partner2}</div>
+        <div className="border-b border-[#3a2b20] px-6 py-5">
+          <p className="text-sm text-[var(--velo-paper-2)]">{greeting}</p>
+          {couple?.partner2 && <p className="mt-1 text-xs text-[#c9b49d]">&amp; {couple.partner2}</p>}
+          {(couple?.wedding_city || couple?.wedding_region) && (
+            <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-[#b89a5b]" style={{ fontFamily: VELO_MONO_FONT }}>
+              {[couple?.wedding_city, couple?.wedding_region].filter(Boolean).join(' · ')}
+            </p>
           )}
         </div>
 
-        {/* Nav */}
-        <nav style={{ flex: 1, padding: '8px 12px', overflowY: 'auto' }}>
-          {NAV_ITEMS.map(item => {
-            const isActive = pathname === item.href
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 12px', borderRadius: 8, marginBottom: 2,
-                  textDecoration: 'none',
-                  background: isActive ? 'rgba(201,168,76,0.10)' : 'transparent',
-                  color: isActive ? '#C9A84C' : '#8A7E6A',
-                  fontSize: 13, fontWeight: isActive ? 600 : 400,
-                  borderLeft: isActive ? '2px solid #C9A84C' : '2px solid transparent',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {item.label}
-              </Link>
-            )
-          })}
+        <nav className="flex-1 px-4 py-5">
+          <div className="space-y-1.5">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center rounded-[1rem] px-4 py-3 text-sm transition-colors ${isActive ? 'bg-[rgba(184,90,46,0.18)] text-[var(--velo-paper-2)]' : 'text-[#d2c3b0] hover:bg-white/[0.04] hover:text-[var(--velo-paper-2)]'}`}
+                >
+                  <span className={`mr-3 h-1.5 w-1.5 rounded-full ${isActive ? 'bg-[var(--velo-terracotta)]' : 'bg-[#7a6653]'}`} />
+                  {item.label}
+                </Link>
+              )
+            })}
+          </div>
         </nav>
 
-        {/* Logout */}
-        <div style={{ padding: '16px 24px', borderTop: '1px solid #1E1D1A' }}>
+        <div className="border-t border-[#3a2b20] px-6 py-5">
           <button
             onClick={handleLogout}
-            style={{ background: 'none', border: 'none', color: '#5A5040', fontSize: 12, cursor: 'pointer', padding: 0, letterSpacing: 1 }}
+            className="text-[10px] uppercase tracking-[0.24em] text-[#c9b49d] transition-colors hover:text-[var(--velo-paper-2)]"
+            style={{ fontFamily: VELO_MONO_FONT }}
           >
             Logout
           </button>
         </div>
       </aside>
 
-      {/* Main content area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }} className="couple-main">
-        {/* Top bar (mobile hamburger) */}
-        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #1E1D1A' }} className="couple-topbar">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            style={{ background: 'none', border: 'none', color: '#C9A84C', cursor: 'pointer', padding: 0 }}
-            className="couple-hamburger"
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <line x1="3" y1="7" x2="21" y2="7" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="17" x2="21" y2="17" />
-            </svg>
-          </button>
-          <div style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 18, fontWeight: 300, letterSpacing: 5, color: '#C9A84C' }}>VELO</div>
-          <div style={{ width: 22 }} />
+      <div className="md:pl-[256px]">
+        <header className="sticky top-0 z-30 border-b border-[var(--velo-border)] bg-[rgba(251,244,229,0.86)] backdrop-blur md:hidden">
+          <div className="flex items-center justify-between px-5 py-4">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--velo-border)] text-[var(--velo-terracotta)]"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <line x1="3" y1="7" x2="21" y2="7" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="17" x2="21" y2="17" />
+              </svg>
+            </button>
+            <div className="text-[1.2rem] font-light tracking-[0.28em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
+              VELO
+            </div>
+            <div className="w-10" />
+          </div>
         </header>
 
-        <main style={{ flex: 1, padding: '28px 24px', maxWidth: 900, width: '100%', margin: '0 auto' }}>
+        <main className="mx-auto w-full max-w-[1080px] px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
           {children}
         </main>
       </div>
-
-      <style>{`
-        @media (min-width: 768px) {
-          .couple-main { margin-left: 240px; }
-          .couple-topbar { display: none !important; }
-          aside { left: 0 !important; }
-        }
-        @media (max-width: 767px) {
-          .couple-hamburger { display: block; }
-        }
-      `}</style>
     </div>
   )
 }
