@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../../../lib/couple-locale'
 import { supabase } from '../../../lib/supabase'
+import type { Locale } from '../../../lib/translations'
 import {
   CoupleChip,
   CoupleEmptyState,
@@ -33,16 +35,6 @@ const RSVP_CONFIG: Record<RsvpStatus, { color: string; bg: string; border: strin
   confirmed: { color: 'var(--velo-success)', bg: 'rgba(122,158,126,0.10)', border: 'rgba(122,158,126,0.25)' },
   pending: { color: 'var(--velo-muted)', bg: 'rgba(138,126,106,0.10)', border: 'rgba(138,126,106,0.20)' },
   declined: { color: 'var(--velo-danger)', bg: 'rgba(196,117,106,0.08)', border: 'rgba(196,117,106,0.20)' },
-}
-
-function useLocale() {
-  const [locale, setLocale] = useState('en')
-  useEffect(() => {
-    const m = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
-    if (m) setLocale(m[1])
-    else if (!navigator.language.startsWith('en')) setLocale('it')
-  }, [])
-  return locale
 }
 
 function getGuestsCopy(locale: string) {
@@ -217,7 +209,7 @@ function StatusGroup({ status, guests, copy }: { status: RsvpStatus; guests: Gue
 }
 
 export default function GuestsPage() {
-  const locale = useLocale()
+  const [locale, setLocale] = useState<Locale>('en')
   const copy = getGuestsCopy(locale)
   const [guests, setGuests] = useState<GuestRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -226,10 +218,27 @@ export default function GuestsPage() {
 
   useEffect(() => {
     const load = async () => {
+      const fallbackLocale = getPreferredSiteLocale()
+      setLocale(fallbackLocale)
+
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         setLoading(false)
         return
+      }
+
+      const coupleLocaleRes = await supabase
+        .from('couples')
+        .select('nationality, country_of_origin')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      const coupleLocaleData = coupleLocaleRes.data?.[0]
+      if (coupleLocaleData) {
+        const nextLocale = getCoupleLocale(coupleLocaleData, fallbackLocale)
+        persistCoupleLocale(nextLocale)
+        setLocale(nextLocale)
       }
 
       const { data, error } = await supabase

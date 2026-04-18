@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../../../lib/couple-locale'
 import { supabase } from '../../../lib/supabase'
+import type { Locale } from '../../../lib/translations'
 import {
   CoupleChip,
   CoupleEmptyState,
@@ -27,16 +29,6 @@ interface BudgetCategoryGroup {
   expenses: ExpenseRow[]
   total: number
   confirmedTotal: number
-}
-
-function useLocale() {
-  const [locale, setLocale] = useState('en')
-  useEffect(() => {
-    const m = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
-    if (m) setLocale(m[1])
-    else if (!navigator.language.startsWith('en')) setLocale('it')
-  }, [])
-  return locale
 }
 
 function getBudgetCopy(locale: string) {
@@ -181,7 +173,7 @@ function CategoryGroup({ group, locale, copy }: { group: BudgetCategoryGroup; lo
 }
 
 export default function BudgetPage() {
-  const locale = useLocale()
+  const [locale, setLocale] = useState<Locale>('en')
   const copy = getBudgetCopy(locale)
   const [expenses, setExpenses] = useState<ExpenseRow[]>([])
   const [budgetTotal, setBudgetTotal] = useState<number | null>(null)
@@ -193,6 +185,9 @@ export default function BudgetPage() {
 
   useEffect(() => {
     const load = async () => {
+      const fallbackLocale = getPreferredSiteLocale()
+      setLocale(fallbackLocale)
+
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         setFetchError(true)
@@ -204,7 +199,7 @@ export default function BudgetPage() {
 
       const [expensesRes, coupleRes] = await Promise.all([
         supabase.from('expenses').select('id, title, amount, category, confirmed').eq('user_id', uid).order('created_at', { ascending: false }),
-        supabase.from('couples').select('budget').eq('user_id', uid).single(),
+        supabase.from('couples').select('budget, nationality, country_of_origin').eq('user_id', uid).single(),
       ])
 
       if (expensesRes.error) {
@@ -217,6 +212,9 @@ export default function BudgetPage() {
         if (coupleRes.error.code === 'PGRST116') setBudgetMissing(true)
         else setBudgetLoadError(true)
       } else {
+        const nextLocale = getCoupleLocale(coupleRes.data, fallbackLocale)
+        persistCoupleLocale(nextLocale)
+        setLocale(nextLocale)
         setBudgetTotal(coupleRes.data?.budget ?? null)
         if (coupleRes.data?.budget == null) setBudgetMissing(true)
       }

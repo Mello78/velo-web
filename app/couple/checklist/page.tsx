@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../../../lib/couple-locale'
 import { supabase } from '../../../lib/supabase'
+import type { Locale } from '../../../lib/translations'
 import {
   CoupleEmptyState,
   CoupleLoadingBlock,
@@ -50,16 +52,6 @@ function normalizePhase(p: string): PhaseKey {
 function nextPhaseForToggle(task: Task): string {
   if (!task.completed) return 'done'
   return task.urgent ? 'urgent' : 'soon'
-}
-
-function useLocale() {
-  const [locale, setLocale] = useState('en')
-  useEffect(() => {
-    const m = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
-    if (m) setLocale(m[1])
-    else if (!navigator.language.startsWith('en')) setLocale('it')
-  }, [])
-  return locale
 }
 
 function getChecklistCopy(locale: string) {
@@ -331,7 +323,7 @@ function PhaseGroup({
 }
 
 export default function ChecklistPage() {
-  const locale = useLocale()
+  const [locale, setLocale] = useState<Locale>('en')
   const copy = getChecklistCopy(locale)
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
@@ -351,11 +343,28 @@ export default function ChecklistPage() {
 
   useEffect(() => {
     const load = async () => {
+      const fallbackLocale = getPreferredSiteLocale()
+      setLocale(fallbackLocale)
+
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         setFetchError(true)
         setLoading(false)
         return
+      }
+
+      const coupleLocaleRes = await supabase
+        .from('couples')
+        .select('nationality, country_of_origin')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      const coupleLocaleData = coupleLocaleRes.data?.[0]
+      if (coupleLocaleData) {
+        const nextLocale = getCoupleLocale(coupleLocaleData, fallbackLocale)
+        persistCoupleLocale(nextLocale)
+        setLocale(nextLocale)
       }
 
       const { data, error } = await supabase
@@ -378,7 +387,7 @@ export default function ChecklistPage() {
     }
 
     load()
-  }, [locale])
+  }, [])
 
   const handleToggle = async (task: Task) => {
     if (pendingIds.includes(task.id)) return

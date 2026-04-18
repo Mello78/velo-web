@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../../../lib/couple-locale'
 import { supabase } from '../../../lib/supabase'
-import { getT } from '../../../lib/translations'
+import { getT, type Locale } from '../../../lib/translations'
 import {
   CoupleLoadingBlock,
   CoupleNotice,
@@ -10,16 +11,6 @@ import {
   VELO_DISPLAY_FONT,
   VELO_MONO_FONT,
 } from '../../../components/couple-ui'
-
-function useLocale() {
-  const [locale, setLocale] = useState('en')
-  useEffect(() => {
-    const m = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
-    if (m) setLocale(m[1])
-    else if (!navigator.language.startsWith('en')) setLocale('it')
-  }, [])
-  return locale
-}
 
 const STYLE_LABELS: Record<string, Record<string, string>> = {
   botanical: { it: 'Botanico', en: 'Botanical' },
@@ -49,6 +40,7 @@ interface ProfileData {
   ceremony_type: string | null
   wedding_size: string | null
   nationality: string | null
+  country_of_origin: string | null
 }
 
 function formatDate(dateStr: string, locale: string): string {
@@ -75,7 +67,7 @@ function ProfileRow({ label, value, accent }: { label: string; value: string; ac
 }
 
 export default function ProfilePage() {
-  const locale = useLocale()
+  const [locale, setLocale] = useState<Locale>('en')
   const d = getT(locale)
   const c = (d as any).couple
 
@@ -86,6 +78,9 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const load = async () => {
+      const fallbackLocale = getPreferredSiteLocale()
+      setLocale(fallbackLocale)
+
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         setFetchError(true)
@@ -94,7 +89,7 @@ export default function ProfilePage() {
       }
       const { data, error } = await supabase
         .from('couples')
-        .select('partner1, partner2, wedding_date, budget, wedding_city, wedding_region, wedding_regione, wedding_province, wedding_style, ceremony_type, wedding_size, nationality')
+        .select('partner1, partner2, wedding_date, budget, wedding_city, wedding_region, wedding_regione, wedding_province, wedding_style, ceremony_type, wedding_size, nationality, country_of_origin')
         .eq('user_id', session.user.id)
         .single()
       if (error) {
@@ -108,6 +103,9 @@ export default function ProfilePage() {
         setLoading(false)
         return
       }
+      const nextLocale = getCoupleLocale(data, fallbackLocale)
+      persistCoupleLocale(nextLocale)
+      setLocale(nextLocale)
       setProfile(data)
       setLoading(false)
     }

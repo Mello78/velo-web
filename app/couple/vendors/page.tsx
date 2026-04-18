@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../../../lib/couple-locale'
 import { supabase } from '../../../lib/supabase'
+import type { Locale } from '../../../lib/translations'
 import {
   CoupleChip,
   CoupleEmptyState,
@@ -70,16 +72,6 @@ const STATUS_CONFIG: Record<EngagementStatus, { color: string; bg: string; borde
 }
 
 const PIPELINE_ORDER: EngagementStatus[] = ['booked', 'agreed', 'quote_sent', 'lead', 'completed', 'cancelled']
-
-function useLocale() {
-  const [locale, setLocale] = useState('en')
-  useEffect(() => {
-    const m = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
-    if (m) setLocale(m[1])
-    else if (!navigator.language.startsWith('en')) setLocale('it')
-  }, [])
-  return locale
-}
 
 function getVendorsCopy(locale: string) {
   const isIT = locale === 'it'
@@ -229,7 +221,7 @@ function StatusGroup({ status, vendors, copy }: { status: EngagementStatus; vend
 }
 
 export default function VendorsPage() {
-  const locale = useLocale()
+  const [locale, setLocale] = useState<Locale>('en')
   const [vendors, setVendors] = useState<VendorCard[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
@@ -239,10 +231,27 @@ export default function VendorsPage() {
 
   useEffect(() => {
     const load = async () => {
+      const fallbackLocale = getPreferredSiteLocale()
+      setLocale(fallbackLocale)
+
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { setLoading(false); return }
 
       const uid = session.user.id
+
+      const coupleLocaleRes = await supabase
+        .from('couples')
+        .select('nationality, country_of_origin')
+        .eq('user_id', uid)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      const coupleLocaleData = coupleLocaleRes.data?.[0]
+      if (coupleLocaleData) {
+        const nextLocale = getCoupleLocale(coupleLocaleData, fallbackLocale)
+        persistCoupleLocale(nextLocale)
+        setLocale(nextLocale)
+      }
 
       const { data: vendorRows, error: vErr } = await supabase
         .from('vendors')
@@ -312,7 +321,7 @@ export default function VendorsPage() {
     }
 
     load()
-  }, [locale])
+  }, [])
 
   const copy = getVendorsCopy(locale)
 

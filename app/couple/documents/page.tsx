@@ -3,7 +3,9 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { COUNTRIES, CountryDoc } from '../../../lib/countries'
+import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../../../lib/couple-locale'
 import { supabase } from '../../../lib/supabase'
+import type { Locale } from '../../../lib/translations'
 import {
   CoupleChip,
   CoupleLoadingBlock,
@@ -76,16 +78,6 @@ interface DocumentsCopy {
   datePassed: string
   ceremonyLabel: (ceremony: CeremonyType) => string
   internalStatusLabel: (mode: DocumentsMode) => string
-}
-
-function useLocale() {
-  const [locale, setLocale] = useState('en')
-  useEffect(() => {
-    const match = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
-    if (match) setLocale(match[1])
-    else if (!navigator.language.startsWith('en')) setLocale('it')
-  }, [])
-  return locale
 }
 
 function getDocumentsCopy(locale: string): DocumentsCopy {
@@ -471,7 +463,7 @@ function GuideCard({ section }: { section: GuideSection }) {
 }
 
 export default function DocumentsPage() {
-  const locale = useLocale()
+  const [locale, setLocale] = useState<Locale>('en')
   const copy = useMemo(() => getDocumentsCopy(locale), [locale])
 
   const [couple, setCouple] = useState<CoupleDoc | null>(null)
@@ -484,6 +476,9 @@ export default function DocumentsPage() {
 
     const load = async () => {
       try {
+        const fallbackLocale = getPreferredSiteLocale()
+        if (!cancelled) setLocale(fallbackLocale)
+
         const {
           data: { session },
           error: sessionError,
@@ -514,7 +509,11 @@ export default function DocumentsPage() {
           setCouple(null)
           setMissingProfile(true)
         } else {
-          setCouple(data[0] as CoupleDoc)
+          const coupleData = data[0] as CoupleDoc
+          const nextLocale = getCoupleLocale(coupleData, fallbackLocale)
+          persistCoupleLocale(nextLocale)
+          setLocale(nextLocale)
+          setCouple(coupleData)
           setMissingProfile(false)
         }
       } catch (error) {
