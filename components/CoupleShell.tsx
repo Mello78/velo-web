@@ -191,7 +191,7 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
         <div className="grid w-full max-w-[1080px] gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div className="max-w-[420px]">
             <p className="mb-4 text-[10px] uppercase tracking-[0.34em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
-              Couple area
+              {c.login.title}
             </p>
             <h1 className="text-[2.6rem] font-light leading-[0.96] text-[var(--velo-ink)] sm:text-[3.1rem]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
               {locale === 'en' ? 'Plan the wedding in one calm room.' : 'Tenete il matrimonio in una sola stanza calma.'}
@@ -369,7 +369,7 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
             VELO
           </div>
           <p className="mt-1 text-[9px] uppercase tracking-[0.26em] text-[#c9b49d]" style={{ fontFamily: VELO_MONO_FONT }}>
-            Couple area
+            {c.login.title}
           </p>
         </div>
 
@@ -408,7 +408,7 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
             className="text-[10px] uppercase tracking-[0.24em] text-[#c9b49d] transition-colors hover:text-[var(--velo-paper-2)]"
             style={{ fontFamily: VELO_MONO_FONT }}
           >
-            Logout
+            {c.nav.logout}
           </button>
         </div>
       </aside>

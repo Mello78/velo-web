@@ -12,11 +12,11 @@ import {
 } from '../../../components/couple-ui'
 
 function useLocale() {
-  const [locale, setLocale] = useState('it')
+  const [locale, setLocale] = useState('en')
   useEffect(() => {
     const m = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
     if (m) setLocale(m[1])
-    else if (navigator.language.startsWith('en')) setLocale('en')
+    else if (!navigator.language.startsWith('en')) setLocale('it')
   }, [])
   return locale
 }

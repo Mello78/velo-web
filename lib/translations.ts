@@ -213,6 +213,7 @@ export const t = {
         guests: 'Ospiti',
         budget: 'Budget',
         documents: 'Documenti',
+        logout: 'Esci',
       },
       login: {
         title: 'Area coppie',
@@ -465,6 +466,7 @@ export const t = {
         guests: 'Guests',
         budget: 'Budget',
         documents: 'Documents',
+        logout: 'Sign out',
       },
       login: {
         title: 'Couple area',
