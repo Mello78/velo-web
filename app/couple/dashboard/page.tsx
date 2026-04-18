@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../../../lib/couple-locale'
 import { supabase } from '../../../lib/supabase'
-import { getT } from '../../../lib/translations'
+import { getT, type Locale } from '../../../lib/translations'
 import {
   CoupleLoadingBlock,
   CoupleMetricCard,
@@ -12,16 +13,6 @@ import {
   VELO_MONO_FONT,
 } from '../../../components/couple-ui'
 
-function useLocale() {
-  const [locale, setLocale] = useState('en')
-  useEffect(() => {
-    const m = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
-    if (m) setLocale(m[1])
-    else if (!navigator.language.startsWith('en')) setLocale('it')
-  }, [])
-  return locale
-}
-
 interface DashboardData {
   partner1: string
   partner2: string
@@ -29,6 +20,8 @@ interface DashboardData {
   budget: number | null
   wedding_city: string | null
   wedding_region: string | null
+  nationality: string | null
+  country_of_origin: string | null
 }
 
 interface Stats {
@@ -79,7 +72,7 @@ function getDashboardCopy(locale: string) {
 }
 
 export default function DashboardPage() {
-  const locale = useLocale()
+  const [locale, setLocale] = useState<Locale>('en')
   const d = getT(locale)
   const c = (d as any).couple
   const copy = getDashboardCopy(locale)
@@ -90,6 +83,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const load = async () => {
+      const fallbackLocale = getPreferredSiteLocale()
+      setLocale(fallbackLocale)
+
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
@@ -97,7 +93,7 @@ export default function DashboardPage() {
 
       const [coupleRes, engagementsRes, tasksRes, guestsRes, expensesRes] = await Promise.all([
         supabase.from('couples')
-          .select('partner1, partner2, wedding_date, budget, wedding_city, wedding_region')
+          .select('partner1, partner2, wedding_date, budget, wedding_city, wedding_region, nationality, country_of_origin')
           .eq('user_id', userId).single(),
         supabase.from('engagements')
           .select('status').eq('user_id', userId),
@@ -109,7 +105,14 @@ export default function DashboardPage() {
           .select('amount, confirmed').eq('user_id', userId),
       ])
 
-      setCouple(coupleRes.data)
+      const coupleData = coupleRes.data
+      if (coupleData) {
+        const nextLocale = getCoupleLocale(coupleData, fallbackLocale)
+        persistCoupleLocale(nextLocale)
+        setLocale(nextLocale)
+      }
+
+      setCouple(coupleData)
 
       const engagements = engagementsRes.data ?? []
       const tasks = tasksRes.data ?? []
