@@ -3,8 +3,9 @@ import { ReactNode, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import CoupleOnboarding from './CoupleOnboarding'
+import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../lib/couple-locale'
 import { supabase } from '../lib/supabase'
-import { getT } from '../lib/translations'
+import { getT, type Locale } from '../lib/translations'
 import {
   CoupleLoadingBlock,
   CoupleNotice,
@@ -13,16 +14,6 @@ import {
 } from './couple-ui'
 
 type AuthState = 'loading' | 'login' | 'dashboard' | 'vendor' | 'not_couple' | 'error'
-
-function useLocale() {
-  const [locale, setLocale] = useState('en')
-  useEffect(() => {
-    const m = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
-    if (m) setLocale(m[1])
-    else if (!navigator.language.startsWith('en')) setLocale('it')
-  }, [])
-  return locale
-}
 
 interface CoupleData {
   partner1: string
@@ -34,9 +25,10 @@ interface CoupleData {
   wedding_style: string | null
   ceremony_type: string | null
   nationality: string | null
+  country_of_origin: string | null
 }
 
-const COUPLE_SELECT = 'partner1, partner2, wedding_date, budget, wedding_city, wedding_region, wedding_style, ceremony_type, nationality'
+const COUPLE_SELECT = 'partner1, partner2, wedding_date, budget, wedding_city, wedding_region, wedding_style, ceremony_type, nationality, country_of_origin'
 
 async function resolveAuthenticatedUser(userId: string): Promise<
   { state: 'dashboard'; couple: CoupleData } |
@@ -76,7 +68,7 @@ function AuthFrame({ children }: { children: ReactNode }) {
 }
 
 export default function CoupleShell({ children }: { children: ReactNode }) {
-  const locale = useLocale()
+  const [locale, setLocale] = useState<Locale>('en')
   const d = getT(locale)
   const c = (d as any).couple
   const pathname = usePathname()
@@ -93,9 +85,13 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
     let mounted = true
 
     const load = async () => {
+      const fallbackLocale = getPreferredSiteLocale()
+      if (mounted) setLocale(fallbackLocale)
+
       const { data: { session } } = await supabase.auth.getSession()
       if (!mounted) return
       if (!session) {
+        setLocale(fallbackLocale)
         setAuthState('login')
         return
       }
@@ -104,11 +100,15 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
       if (!mounted) return
 
       if (result.state === 'dashboard') {
+        const nextLocale = getCoupleLocale(result.couple, fallbackLocale)
+        persistCoupleLocale(nextLocale)
+        setLocale(nextLocale)
         setCouple(result.couple)
         setAuthState('dashboard')
         return
       }
 
+      setLocale(fallbackLocale)
       setCouple(null)
       setAuthState(result.state)
     }
@@ -119,6 +119,9 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
 
   const retryAuthenticatedLoad = async () => {
     setAuthState('loading')
+    const fallbackLocale = getPreferredSiteLocale()
+    setLocale(fallbackLocale)
+
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
       setCouple(null)
@@ -128,11 +131,15 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
 
     const result = await resolveAuthenticatedUser(session.user.id)
     if (result.state === 'dashboard') {
+      const nextLocale = getCoupleLocale(result.couple, fallbackLocale)
+      persistCoupleLocale(nextLocale)
+      setLocale(nextLocale)
       setCouple(result.couple)
       setAuthState('dashboard')
       return
     }
 
+    setLocale(fallbackLocale)
     setCouple(null)
     setAuthState(result.state)
   }
@@ -141,6 +148,7 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
     e.preventDefault()
     setLoginLoading(true)
     setLoginError('')
+    const fallbackLocale = getPreferredSiteLocale()
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error || !data.session) {
@@ -151,9 +159,13 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
 
     const result = await resolveAuthenticatedUser(data.session.user.id)
     if (result.state === 'dashboard') {
+      const nextLocale = getCoupleLocale(result.couple, fallbackLocale)
+      persistCoupleLocale(nextLocale)
+      setLocale(nextLocale)
       setCouple(result.couple)
       setAuthState('dashboard')
     } else {
+      setLocale(fallbackLocale)
       setCouple(null)
       setAuthState(result.state)
     }
