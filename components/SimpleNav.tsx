@@ -19,15 +19,13 @@ export default function SimpleNav({ locale, backHref, backLabel, rightLabel, rig
             {backLabel}
           </Link>
         ) : (
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <img src="/favicon.png" alt="" className="h-7 w-auto" />
-            <span className="text-gold text-xl tracking-[0.3em] font-light">VELO</span>
+          <Link href="/" className="flex items-center shrink-0">
+            <img src="/brand/logo-dark-full.svg" alt="VELO" className="h-7 w-auto" />
           </Link>
         )}
         {backHref && (
-          <Link href="/" className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
-            <img src="/favicon.png" alt="" className="h-7 w-auto" />
-            <span className="text-gold text-xl tracking-[0.3em] font-light hidden sm:block">VELO</span>
+          <Link href="/" className="flex items-center absolute left-1/2 -translate-x-1/2">
+            <img src="/brand/logo-dark-full.svg" alt="VELO" className="h-7 w-auto" />
           </Link>
         )}
         <div className="flex items-center gap-3 shrink-0">

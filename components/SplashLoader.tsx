@@ -28,7 +28,7 @@ export default function SplashLoader() {
       pointerEvents: fading ? 'none' : 'all',
     }}>
       <div style={{ animation: 'veloIn 0.9s ease forwards', opacity: 0, textAlign: 'center' }}>
-        <img src="/logo_velo.png" alt="VELO" style={{ width: 240, height: 'auto', marginBottom: 0 }} />
+        <img src="/brand/logo-dark-full.svg" alt="VELO" style={{ width: 200, height: 'auto', marginBottom: 0 }} />
       </div>
       <style>{`
         @keyframes veloIn {

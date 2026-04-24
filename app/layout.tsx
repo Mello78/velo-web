@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://velowedding.it'),
   alternates: { canonical: '/' },
   icons: {
-    icon: '/favicon.png',
+    icon: '/brand/favicon.svg',
     apple: '/favicon_180.png',
   },
   openGraph: {
