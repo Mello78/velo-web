@@ -30,9 +30,9 @@ export default function NavBar({
     <nav className="fixed inset-x-0 top-0 z-50 px-4 pt-5 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1380px] rounded-[2rem] border border-[#e2d0bb] bg-[rgba(251,244,229,0.78)] shadow-[0_18px_40px_rgba(49,35,24,0.12)] backdrop-blur-xl">
         <div className="mx-auto flex h-[74px] items-center justify-between px-5 sm:px-7">
-          <Link href="/" className="flex items-center shrink-0">
-            <img src="/brand/logo-light-full.svg" alt="VELO" className="h-9 w-auto" />
-          </Link>
+            <Link href="/" className="flex items-center shrink-0">
+              <img src="/brand/logo-header-light.svg" alt="VELO" className="h-8 w-auto md:h-10" />
+            </Link>
           <div className="hidden md:flex items-center gap-6">
             <Link href="/couple" className="text-[#2c2219] hover:text-[#8a3e1e] text-[12px] transition-colors tracking-[0.18em] uppercase">{couplesLabel}</Link>
             <Link href="/fornitori" className="text-[#6d5b4a] hover:text-[#8a3e1e] text-[12px] transition-colors tracking-[0.18em] uppercase">{vendorLabel}</Link>
