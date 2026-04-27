@@ -198,12 +198,12 @@ export function CoupleSection({
               {eyebrow}
             </p>
           )}
-          <p
+          <h2
             className="text-[1.25rem] font-light leading-snug text-[var(--velo-ink)]"
             style={{ fontFamily: VELO_DISPLAY_FONT }}
           >
             {title}
-          </p>
+          </h2>
         </div>
         {cta && <div className="shrink-0">{cta}</div>}
       </div>
@@ -227,7 +227,6 @@ export function CoupleProgressBar({
           height: '100%',
           width: `${Math.min(100, pct)}%`,
           background: fill,
-          borderRadius: 999,
           transition: 'width 0.4s ease',
         }}
       />
@@ -249,7 +248,7 @@ export function CoupleRsvpBar({
   if (total === 0) return null
   const pctConf = Math.round((confirmed / total) * 100)
   const pctPend = Math.round((pending / total) * 100)
-  const pctDecl = 100 - pctConf - pctPend
+  const pctDecl = Math.max(0, 100 - pctConf - pctPend)
 
   return (
     <div className="flex h-[5px] overflow-hidden rounded-full">
@@ -266,7 +265,7 @@ export function CoupleRsvpBar({
         <div
           style={{
             width: `${pctPend}%`,
-            background: 'var(--velo-border-strong)',
+            background: 'var(--velo-muted-soft)',
             transition: 'width 0.4s ease',
           }}
         />
@@ -306,18 +305,12 @@ export function CoupleStatusPill({
   const cfg = PILL_COLORS[status]
   return (
     <span
+      className="inline-block rounded-full px-[10px] py-1 text-[10px] font-semibold uppercase tracking-[0.06em] whitespace-nowrap"
       style={{
-        fontSize: 10,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        fontWeight: 600,
         color: cfg.color,
         background: cfg.bg,
         border: `1px solid ${cfg.border}`,
-        borderRadius: 999,
-        padding: '4px 10px',
         fontFamily: VELO_MONO_FONT,
-        whiteSpace: 'nowrap',
       }}
     >
       {label}
