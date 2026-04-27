@@ -172,3 +172,166 @@ export function CoupleLoadingBlock() {
     </div>
   )
 }
+
+// ─── Dashboard primitives ───────────────────────────────────────────
+
+export function CoupleSection({
+  title,
+  eyebrow,
+  cta,
+  children,
+}: {
+  title: string
+  eyebrow?: string
+  cta?: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <CouplePanel>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          {eyebrow && (
+            <p
+              className="mb-1 text-[10px] uppercase tracking-[0.24em] text-[var(--velo-terracotta)]"
+              style={{ fontFamily: VELO_MONO_FONT }}
+            >
+              {eyebrow}
+            </p>
+          )}
+          <p
+            className="text-[1.25rem] font-light leading-snug text-[var(--velo-ink)]"
+            style={{ fontFamily: VELO_DISPLAY_FONT }}
+          >
+            {title}
+          </p>
+        </div>
+        {cta && <div className="shrink-0">{cta}</div>}
+      </div>
+      {children}
+    </CouplePanel>
+  )
+}
+
+export function CoupleProgressBar({
+  pct,
+  tone = 'default',
+}: {
+  pct: number
+  tone?: 'default' | 'danger'
+}) {
+  const fill = tone === 'danger' ? 'var(--velo-danger)' : 'var(--velo-terracotta)'
+  return (
+    <div className="h-[5px] overflow-hidden rounded-full bg-[rgba(140,104,74,0.16)]">
+      <div
+        style={{
+          height: '100%',
+          width: `${Math.min(100, pct)}%`,
+          background: fill,
+          borderRadius: 999,
+          transition: 'width 0.4s ease',
+        }}
+      />
+    </div>
+  )
+}
+
+export function CoupleRsvpBar({
+  confirmed,
+  pending,
+  declined,
+  total,
+}: {
+  confirmed: number
+  pending: number
+  declined: number
+  total: number
+}) {
+  if (total === 0) return null
+  const pctConf = Math.round((confirmed / total) * 100)
+  const pctPend = Math.round((pending / total) * 100)
+  const pctDecl = 100 - pctConf - pctPend
+
+  return (
+    <div className="flex h-[5px] overflow-hidden rounded-full">
+      {pctConf > 0 && (
+        <div
+          style={{
+            width: `${pctConf}%`,
+            background: 'var(--velo-success)',
+            transition: 'width 0.4s ease',
+          }}
+        />
+      )}
+      {pctPend > 0 && (
+        <div
+          style={{
+            width: `${pctPend}%`,
+            background: 'var(--velo-border-strong)',
+            transition: 'width 0.4s ease',
+          }}
+        />
+      )}
+      {pctDecl > 0 && (
+        <div
+          style={{
+            width: `${pctDecl}%`,
+            background: 'var(--velo-danger)',
+            opacity: 0.5,
+            transition: 'width 0.4s ease',
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+type EngPillStatus = 'lead' | 'quote_sent' | 'agreed' | 'booked' | 'completed' | 'cancelled'
+
+const PILL_COLORS: Record<EngPillStatus, { color: string; bg: string; border: string }> = {
+  lead: { color: 'var(--velo-muted)', bg: 'rgba(138,126,106,0.10)', border: 'rgba(138,126,106,0.2)' },
+  quote_sent: { color: 'var(--velo-info)', bg: 'rgba(74,122,184,0.10)', border: 'rgba(74,122,184,0.25)' },
+  agreed: { color: 'var(--velo-terracotta)', bg: 'rgba(184,90,46,0.10)', border: 'rgba(184,90,46,0.28)' },
+  booked: { color: 'var(--velo-success)', bg: 'rgba(122,158,126,0.10)', border: 'rgba(122,158,126,0.25)' },
+  completed: { color: 'var(--velo-success)', bg: 'rgba(122,158,126,0.10)', border: 'rgba(122,158,126,0.2)' },
+  cancelled: { color: 'var(--velo-danger)', bg: 'rgba(196,117,106,0.08)', border: 'rgba(196,117,106,0.2)' },
+}
+
+export function CoupleStatusPill({
+  status,
+  label,
+}: {
+  status: EngPillStatus
+  label: string
+}) {
+  const cfg = PILL_COLORS[status]
+  return (
+    <span
+      style={{
+        fontSize: 10,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        fontWeight: 600,
+        color: cfg.color,
+        background: cfg.bg,
+        border: `1px solid ${cfg.border}`,
+        borderRadius: 999,
+        padding: '4px 10px',
+        fontFamily: VELO_MONO_FONT,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {label}
+    </span>
+  )
+}
+
+export function CoupleReadOnlyNotice({ text }: { text: string }) {
+  return (
+    <p
+      className="mt-3 text-[10px] uppercase tracking-[0.2em] text-[var(--velo-muted-soft)]"
+      style={{ fontFamily: VELO_MONO_FONT }}
+    >
+      {text}
+    </p>
+  )
+}
