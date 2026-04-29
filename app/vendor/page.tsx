@@ -11,6 +11,8 @@ const CATEGORIES = [
   '🏛️ Location', '💌 Partecipazioni', '🎂 Torta', '🌺 Fiori', '🚗 Auto',
   '💄 Trucco & Parrucco', '👗 Abiti', '🎉 Animazione', '🎁 Bomboniere', '📋 Wedding Planner',
 ]
+// Phase-1 acquisition: Wedding Planner excluded from new partner setup
+const CATEGORIES_PHASE1 = CATEGORIES.filter(c => c !== '📋 Wedding Planner')
 
 const LINGUE = ['Italiano', 'English', 'Français', 'Deutsch', 'Español', 'Português', '中文', 'العربية']
 const SPECIALITA_PER_CATEGORIA: Record<string, string[]> = {
@@ -45,6 +47,23 @@ function useLocale() {
     else if (navigator.language.startsWith('en')) setLocale('en')
   }, [])
   return locale
+}
+
+type VendorGateStatus = {
+  allowed: boolean
+  reason: string | null
+  status: string | null
+}
+
+async function fetchVendorGateStatus(): Promise<VendorGateStatus> {
+  const { data, error } = await supabase.rpc('get_my_vendor_gate_status')
+  if (error) throw error
+  const gate = (data ?? {}) as Record<string, unknown>
+  return {
+    allowed: gate.allowed === true,
+    reason: typeof gate.reason === 'string' ? gate.reason : null,
+    status: typeof gate.status === 'string' ? gate.status : null,
+  }
 }
 
 async function geocodeCity(city: string): Promise<{ lat: number; lng: number } | null> {
@@ -146,6 +165,7 @@ export default function VendorPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [gateMessage, setGateMessage] = useState('')
   const [vendorData, setVendorData] = useState<any>(null)
   const [userId, setUserId] = useState<string>('')
 
@@ -157,23 +177,51 @@ export default function VendorPage() {
         setEmail(data.session.user.email || '')
         const { data: va } = await supabase.from('vendor_accounts').select('*').eq('user_id', uid).single()
         if (va) { setVendorData(va); setMode('dashboard') }
+        else {
+          try {
+            const gate = await fetchVendorGateStatus()
+            if (gate.allowed) setMode('setup')
+            else {
+              await supabase.auth.signOut()
+              setMode('auth')
+              setGateMessage(tr.vendor.betaDesc)
+            }
+          } catch {
+            await supabase.auth.signOut()
+            setMode('auth')
+            setGateMessage(tr.vendor.betaDesc)
+          }
+        }
       }
     })
-  }, [])
+  }, [tr.vendor.betaDesc])
 
   const handle = async () => {
-    setLoading(true); setError(''); setSuccess('')
-    if (isLogin) {
-      const { data, error: err } = await supabase.auth.signInWithPassword({ email, password })
-      if (err) { setError(err.message); setLoading(false); return }
-      const uid = data.user.id; setUserId(uid)
-      const { data: va } = await supabase.from('vendor_accounts').select('*').eq('user_id', uid).single()
-      if (va) { setVendorData(va); setMode('dashboard') }
-      else setMode('setup')
+    setLoading(true); setError(''); setSuccess(''); setGateMessage('')
+    if (!isLogin) { setLoading(false); return } // vendor self-registration is closed
+
+    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password })
+    if (err) { setError(err.message); setLoading(false); return }
+
+    const uid = data.user.id
+    setUserId(uid)
+    const { data: va } = await supabase.from('vendor_accounts').select('*').eq('user_id', uid).single()
+    if (va) {
+      setVendorData(va)
+      setMode('dashboard')
     } else {
-      const { error: err } = await supabase.auth.signUp({ email, password })
-      if (err) setError(err.message)
-      else setSuccess("✓ Registrazione completata! Controlla la tua email e clicca sul link di conferma, poi torna qui ad accedere. Se non trovi l'email, controlla la cartella spam.")
+      try {
+        const gate = await fetchVendorGateStatus()
+        if (gate.allowed) {
+          setMode('setup')
+        } else {
+          await supabase.auth.signOut()
+          setGateMessage(tr.vendor.betaDesc)
+        }
+      } catch {
+        await supabase.auth.signOut()
+        setGateMessage(tr.vendor.betaDesc)
+      }
     }
     setLoading(false)
   }
@@ -200,43 +248,62 @@ export default function VendorPage() {
             </h1>
           </div>
           <div className="bg-dark border border-border rounded-2xl p-8">
-            <div className="space-y-4">
-              <div>
-                <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.emailLabel}</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                  className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
-                  placeholder="email@example.com" onKeyDown={e => e.key === 'Enter' && handle()} autoFocus />
-              </div>
-              <div>
-                <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.passwordLabel}</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                  className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
-                  placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handle()} />
-              </div>
-            </div>
-            {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
-            {success && <p className="text-green-400 text-sm mt-4">{success}</p>}
-            <button onClick={handle} disabled={loading}
-              className="w-full bg-gold text-bg font-semibold py-4 rounded-xl mt-6 hover:opacity-90 disabled:opacity-50">
-              {loading ? tr.vendor.loading : isLogin ? tr.vendor.loginBtn : tr.vendor.registerBtn}
-            </button>
-            <p className="text-center text-muted text-sm mt-5">
-              {isLogin ? (
-                <>{tr.vendor.dashboard.newToVelo}{' '}
-                  <button onClick={() => { setIsLogin(false); setError(''); setSuccess('') }}
-                    className="text-gold hover:opacity-70 transition-opacity underline underline-offset-2">
-                    Crea il tuo profilo gratuito →
+            {!isLogin ? (
+              <div className="py-4 text-center space-y-4">
+                <p className="text-gold text-sm font-medium tracking-wide">{tr.vendor.betaTitle}</p>
+                <p className="text-muted text-sm leading-relaxed">{tr.vendor.betaDesc}</p>
+                <a
+                  href={`mailto:hello@velowedding.it?subject=${encodeURIComponent('Richiesta valutazione partner VELO')}&body=${encodeURIComponent('Nome attività:\nCategoria:\nZona/Regione:\n\nBreve presentazione:')}`}
+                  className="text-xs border border-gold/40 text-gold rounded-full px-5 py-2.5 hover:bg-gold/10 transition-colors inline-block mt-2"
+                >
+                  {tr.vendor.betaCta}
+                </a>
+                <p className="mt-4">
+                  <button
+                    onClick={() => { setIsLogin(true); setError(''); setSuccess(''); setGateMessage('') }}
+                    className="text-gold text-sm hover:opacity-70 transition-opacity underline underline-offset-2"
+                  >
+                    {tr.vendor.betaLoginLink}
                   </button>
-                </>
-              ) : (
-                <>{tr.vendor.dashboard.alreadyAccount}{' '}
-                  <button onClick={() => { setIsLogin(true); setError(''); setSuccess('') }}
+                </p>
+              </div>
+            ) : (
+              <>
+                {gateMessage && (
+                  <div className="mb-5 rounded-2xl border border-gold/20 bg-gold/5 px-4 py-4">
+                    <p className="text-gold text-xs tracking-[0.28em] uppercase mb-2">{tr.vendor.betaTitle}</p>
+                    <p className="text-muted text-sm leading-relaxed">{gateMessage}</p>
+                  </div>
+                )}
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.emailLabel}</label>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                      className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
+                      placeholder="email@example.com" onKeyDown={e => e.key === 'Enter' && handle()} autoFocus />
+                  </div>
+                  <div>
+                    <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.passwordLabel}</label>
+                    <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+                      className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
+                      placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handle()} />
+                  </div>
+                </div>
+                {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
+                {success && <p className="text-green-400 text-sm mt-4">{success}</p>}
+                <button onClick={handle} disabled={loading}
+                  className="w-full bg-gold text-bg font-semibold py-4 rounded-xl mt-6 hover:opacity-90 disabled:opacity-50">
+                  {loading ? tr.vendor.loading : tr.vendor.loginBtn}
+                </button>
+                <p className="text-center text-muted text-sm mt-5">
+                  {tr.vendor.dashboard.newToVelo}{' '}
+                  <button onClick={() => { setIsLogin(false); setError(''); setSuccess(''); setGateMessage('') }}
                     className="text-gold hover:opacity-70 transition-opacity underline underline-offset-2">
-                    Accedi →
+                    {tr.vendor.dashboard.registerLink}
                   </button>
-                </>
-              )}
-            </p>
+                </p>
+              </>
+            )}
           </div>
           <div className="mt-6 bg-gold/5 border border-gold/20 rounded-2xl p-5">
             <p className="text-gold text-sm font-medium mb-1">{tr.vendor.earlyTitle}</p>
@@ -254,7 +321,7 @@ function ProfileSetup({ locale, userId, onComplete }: {
 }) {
   const tr = getT(locale)
   const [businessName, setBusinessName] = useState('')
-  const [category, setCategory] = useState(CATEGORIES[0])
+  const [category, setCategory] = useState(CATEGORIES_PHASE1[0])
   const [location, setLocation] = useState('')
   const [phone, setPhone] = useState('')
   const [bio, setBio] = useState('')
@@ -262,6 +329,33 @@ function ProfileSetup({ locale, userId, onComplete }: {
   const [logoPreview, setLogoPreview] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [gateChecking, setGateChecking] = useState(true)
+  const [gateAllowed, setGateAllowed] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    const checkGate = async () => {
+      try {
+        const gate = await fetchVendorGateStatus()
+        if (!active) return
+        setGateAllowed(gate.allowed)
+        if (!gate.allowed) setError(tr.vendor.betaDesc)
+      } catch {
+        if (!active) return
+        setGateAllowed(false)
+        setError(tr.vendor.betaDesc)
+      } finally {
+        if (active) setGateChecking(false)
+      }
+    }
+    void checkGate()
+    return () => { active = false }
+  }, [tr.vendor.betaDesc])
+
+  const backToAuth = async () => {
+    await supabase.auth.signOut()
+    window.location.href = '/vendor'
+  }
 
   const handleLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -272,6 +366,18 @@ function ProfileSetup({ locale, userId, onComplete }: {
     if (!businessName.trim()) { setError("Il nome dell'attività è obbligatorio"); return }
     if (!location.trim()) { setError('La città è obbligatoria'); return }
     setSaving(true); setError('')
+    try {
+      const gate = await fetchVendorGateStatus()
+      if (!gate.allowed) {
+        setError(tr.vendor.betaDesc)
+        setSaving(false)
+        return
+      }
+    } catch {
+      setError(tr.vendor.betaDesc)
+      setSaving(false)
+      return
+    }
     const coords = await geocodeCity(location)
     let logoUrl: string | null = null
     if (logoFile) {
@@ -286,6 +392,40 @@ function ProfileSetup({ locale, userId, onComplete }: {
     }).select().single()
     if (err) { setError(err.message); setSaving(false); return }
     onComplete(data)
+  }
+
+  if (gateChecking) {
+    return (
+      <main className="min-h-screen bg-bg text-cream">
+        <SimpleNav locale={locale} />
+        <div className="max-w-lg mx-auto px-6 pt-28 pb-16">
+          <div className="bg-dark border border-border rounded-2xl p-6 text-center text-muted text-sm">
+            {tr.vendor.loading}
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  if (!gateAllowed) {
+    return (
+      <main className="min-h-screen bg-bg text-cream">
+        <SimpleNav locale={locale} />
+        <div className="max-w-lg mx-auto px-6 pt-28 pb-16">
+          <div className="bg-dark border border-gold/20 rounded-2xl p-6">
+            <p className="text-gold text-xs tracking-[0.3em] uppercase mb-2">{tr.vendor.betaTitle}</p>
+            <h1 className="text-3xl font-light mb-3">{tr.vendor.betaTitle}</h1>
+            <p className="text-muted text-sm leading-relaxed mb-6">{tr.vendor.betaDesc}</p>
+            <button
+              onClick={backToAuth}
+              className="w-full bg-gold text-bg font-semibold py-4 rounded-xl hover:opacity-90"
+            >
+              {tr.vendor.betaLoginLink}
+            </button>
+          </div>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -320,7 +460,7 @@ function ProfileSetup({ locale, userId, onComplete }: {
             <label className="text-muted text-xs uppercase tracking-wider block mb-2">Categoria *</label>
             <select value={category} onChange={e => setCategory(e.target.value)}
               className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold">
-              {CATEGORIES.map(c => <option key={c} value={c} className="bg-[#1a1a1a]">{c}</option>)}
+              {CATEGORIES_PHASE1.map(c => <option key={c} value={c} className="bg-[#1a1a1a]">{c}</option>)}
             </select>
           </div>
           <div>
