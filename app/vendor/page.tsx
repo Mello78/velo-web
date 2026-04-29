@@ -55,8 +55,27 @@ type VendorGateStatus = {
   status: string | null
 }
 
+type VendorEmailGateStatus = {
+  allowed: boolean
+  reason: string | null
+  status: string | null
+}
+
+type AuthStep = 'email' | 'approved' | 'login' | 'activate'
+
 async function fetchVendorGateStatus(): Promise<VendorGateStatus> {
   const { data, error } = await supabase.rpc('get_my_vendor_gate_status')
+  if (error) throw error
+  const gate = (data ?? {}) as Record<string, unknown>
+  return {
+    allowed: gate.allowed === true,
+    reason: typeof gate.reason === 'string' ? gate.reason : null,
+    status: typeof gate.status === 'string' ? gate.status : null,
+  }
+}
+
+async function checkVendorCandidateEmailGate(email: string): Promise<VendorEmailGateStatus> {
+  const { data, error } = await supabase.rpc('check_vendor_candidate_email_gate', { p_email: email })
   if (error) throw error
   const gate = (data ?? {}) as Record<string, unknown>
   return {
@@ -159,9 +178,10 @@ export default function VendorPage() {
   const locale = useLocale()
   const tr = getT(locale)
   const [mode, setMode] = useState<'auth' | 'setup' | 'dashboard'>('auth')
-  const [isLogin, setIsLogin] = useState(true)
+  const [authStep, setAuthStep] = useState<AuthStep>('email')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -185,23 +205,58 @@ export default function VendorPage() {
               await supabase.auth.signOut()
               setMode('auth')
               setGateMessage(tr.vendor.betaDesc)
+              setAuthStep('email')
             }
           } catch {
             await supabase.auth.signOut()
             setMode('auth')
             setGateMessage(tr.vendor.betaDesc)
+            setAuthStep('email')
           }
         }
       }
     })
   }, [tr.vendor.betaDesc])
 
-  const handle = async () => {
-    setLoading(true); setError(''); setSuccess(''); setGateMessage('')
-    if (!isLogin) { setLoading(false); return } // vendor self-registration is closed
+  const resetMessages = () => {
+    setError('')
+    setSuccess('')
+    setGateMessage('')
+  }
 
-    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password })
-    if (err) { setError(err.message); setLoading(false); return }
+  const handleEmailContinue = async () => {
+    const normalizedEmail = email.trim()
+    if (!normalizedEmail) {
+      setError(locale === 'it' ? 'Inserisci una email valida.' : 'Please enter a valid email.')
+      return
+    }
+    setLoading(true)
+    resetMessages()
+    try {
+      const gate = await checkVendorCandidateEmailGate(normalizedEmail)
+      if (gate.allowed) {
+        setEmail(normalizedEmail)
+        setAuthStep('approved')
+      } else {
+        setGateMessage(tr.vendor.betaDesc)
+        setAuthStep('email')
+      }
+    } catch {
+      setError(locale === 'it' ? 'Impossibile verificare la tua email adesso.' : 'We could not verify your email right now.')
+    }
+    setLoading(false)
+  }
+
+  const handleLogin = async () => {
+    setLoading(true)
+    resetMessages()
+    const { data, error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+    if (err) {
+      if (err.message.toLowerCase().includes('invalid login credentials')) setError(tr.vendor.wrongPassword)
+      else setError(err.message)
+      setLoading(false)
+      return
+    }
 
     const uid = data.user.id
     setUserId(uid)
@@ -217,13 +272,71 @@ export default function VendorPage() {
         } else {
           await supabase.auth.signOut()
           setGateMessage(tr.vendor.betaDesc)
+          setAuthStep('email')
         }
       } catch {
         await supabase.auth.signOut()
         setGateMessage(tr.vendor.betaDesc)
+        setAuthStep('email')
       }
     }
     setLoading(false)
+  }
+
+  const handleActivation = async () => {
+    const normalizedEmail = email.trim()
+    if (!password || password.length < 8) {
+      setError(tr.vendor.passwordTooShort)
+      return
+    }
+    if (password !== confirmPassword) {
+      setError(tr.vendor.passwordMismatch)
+      return
+    }
+
+    setLoading(true)
+    resetMessages()
+    try {
+      const gate = await checkVendorCandidateEmailGate(normalizedEmail)
+      if (!gate.allowed) {
+        setGateMessage(tr.vendor.betaDesc)
+        setAuthStep('email')
+        setLoading(false)
+        return
+      }
+
+      const { error: err } = await supabase.auth.signUp({ email: normalizedEmail, password })
+      if (err) {
+        if (err.message.toLowerCase().includes('already registered')) {
+          setError(locale === 'it' ? 'Accesso già creato. Usa Accedi con password o recupera password.' : 'Access already created. Use Sign in with password or reset password.')
+          setAuthStep('login')
+        } else {
+          setError(err.message)
+        }
+      } else {
+        setSuccess(tr.vendor.activationSuccess)
+        setPassword('')
+        setConfirmPassword('')
+        setAuthStep('login')
+      }
+    } catch {
+      setError(locale === 'it' ? 'Impossibile attivare l’accesso adesso.' : 'We could not activate access right now.')
+    }
+    setLoading(false)
+  }
+
+  const handlePasswordReset = async () => {
+    const normalizedEmail = email.trim()
+    if (!normalizedEmail) return
+    setLoading(true)
+    setError('')
+    try {
+      const { error: err } = await supabase.auth.resetPasswordForEmail(normalizedEmail)
+      if (err) setError(err.message)
+      else setSuccess(tr.vendor.forgotPasswordSent)
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (mode === 'setup') return (
@@ -244,65 +357,169 @@ export default function VendorPage() {
           <div className="text-center mb-10">
             <p className="text-gold text-xs tracking-[0.3em] uppercase mb-3">{tr.vendor.title}</p>
             <h1 className="text-3xl font-light text-cream">
-              {isLogin ? tr.vendor.dashboard.loginTitle : tr.vendor.dashboard.registerTitle}
+              {authStep === 'activate'
+                ? tr.vendor.activationTitle
+                : authStep === 'login'
+                  ? tr.vendor.loginStepTitle
+                  : authStep === 'approved'
+                    ? tr.vendor.approvedTitle
+                    : tr.vendor.dashboard.loginTitle}
             </h1>
           </div>
           <div className="bg-dark border border-border rounded-2xl p-8">
-            {!isLogin ? (
-              <div className="py-4 text-center space-y-4">
-                <p className="text-gold text-sm font-medium tracking-wide">{tr.vendor.betaTitle}</p>
-                <p className="text-muted text-sm leading-relaxed">{tr.vendor.betaDesc}</p>
-                <a
-                  href={`mailto:hello@velowedding.it?subject=${encodeURIComponent('Richiesta valutazione partner VELO')}&body=${encodeURIComponent('Nome attività:\nCategoria:\nZona/Regione:\n\nBreve presentazione:')}`}
-                  className="text-xs border border-gold/40 text-gold rounded-full px-5 py-2.5 hover:bg-gold/10 transition-colors inline-block mt-2"
-                >
-                  {tr.vendor.betaCta}
-                </a>
-                <p className="mt-4">
-                  <button
-                    onClick={() => { setIsLogin(true); setError(''); setSuccess(''); setGateMessage('') }}
-                    className="text-gold text-sm hover:opacity-70 transition-opacity underline underline-offset-2"
-                  >
-                    {tr.vendor.betaLoginLink}
-                  </button>
-                </p>
+            {gateMessage && (
+              <div className="mb-5 rounded-2xl border border-gold/20 bg-gold/5 px-4 py-4">
+                <p className="text-gold text-xs tracking-[0.28em] uppercase mb-2">{tr.vendor.betaTitle}</p>
+                <p className="text-muted text-sm leading-relaxed">{gateMessage}</p>
               </div>
-            ) : (
+            )}
+            {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+            {success && <p className="text-green-400 text-sm mb-4">{success}</p>}
+
+            {authStep === 'email' && (
               <>
-                {gateMessage && (
-                  <div className="mb-5 rounded-2xl border border-gold/20 bg-gold/5 px-4 py-4">
-                    <p className="text-gold text-xs tracking-[0.28em] uppercase mb-2">{tr.vendor.betaTitle}</p>
-                    <p className="text-muted text-sm leading-relaxed">{gateMessage}</p>
-                  </div>
-                )}
                 <div className="space-y-4">
                   <div>
-                    <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.emailLabel}</label>
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                    <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.emailFirstLabel}</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
                       className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
-                      placeholder="email@example.com" onKeyDown={e => e.key === 'Enter' && handle()} autoFocus />
-                  </div>
-                  <div>
-                    <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.passwordLabel}</label>
-                    <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                      className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
-                      placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handle()} />
+                      placeholder="email@example.com"
+                      onKeyDown={e => e.key === 'Enter' && handleEmailContinue()}
+                      autoFocus
+                    />
                   </div>
                 </div>
-                {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
-                {success && <p className="text-green-400 text-sm mt-4">{success}</p>}
-                <button onClick={handle} disabled={loading}
+                <button onClick={handleEmailContinue} disabled={loading}
                   className="w-full bg-gold text-bg font-semibold py-4 rounded-xl mt-6 hover:opacity-90 disabled:opacity-50">
-                  {loading ? tr.vendor.loading : tr.vendor.loginBtn}
+                  {loading ? tr.vendor.loading : tr.vendor.emailFirstBtn}
                 </button>
-                <p className="text-center text-muted text-sm mt-5">
-                  {tr.vendor.dashboard.newToVelo}{' '}
-                  <button onClick={() => { setIsLogin(false); setError(''); setSuccess(''); setGateMessage('') }}
-                    className="text-gold hover:opacity-70 transition-opacity underline underline-offset-2">
-                    {tr.vendor.dashboard.registerLink}
-                  </button>
-                </p>
+                <div className="mt-6 text-center">
+                  <a
+                    href={`mailto:hello@velowedding.it?subject=${encodeURIComponent('Richiesta valutazione partner VELO')}&body=${encodeURIComponent('Nome attività:\nCategoria:\nZona/Regione:\n\nBreve presentazione:')}`}
+                    className="text-gold text-sm hover:opacity-70 transition-opacity underline underline-offset-2"
+                  >
+                    {tr.vendor.betaCta}
+                  </a>
+                </div>
               </>
+            )}
+
+            {authStep === 'approved' && (
+              <div className="space-y-4">
+                <p className="text-muted text-sm leading-relaxed">{tr.vendor.approvedDesc}</p>
+                <div className="rounded-2xl border border-border bg-bg px-4 py-3">
+                  <p className="text-muted text-xs uppercase tracking-wider mb-1">{tr.vendor.emailLabel}</p>
+                  <p className="text-cream text-sm">{email}</p>
+                </div>
+                <button
+                  onClick={() => { resetMessages(); setPassword(''); setConfirmPassword(''); setAuthStep('activate') }}
+                  className="w-full bg-gold text-bg font-semibold py-4 rounded-xl hover:opacity-90"
+                >
+                  {tr.vendor.approvedActivateChoice}
+                </button>
+                <button
+                  onClick={() => { resetMessages(); setPassword(''); setAuthStep('login') }}
+                  className="w-full border border-border text-cream font-medium py-4 rounded-xl hover:border-gold/30 hover:text-gold transition-colors"
+                >
+                  {tr.vendor.approvedLoginChoice}
+                </button>
+                <button
+                  onClick={() => { resetMessages(); setAuthStep('email'); setPassword(''); setConfirmPassword('') }}
+                  className="w-full text-muted text-sm hover:text-cream transition-colors"
+                >
+                  {locale === 'it' ? 'Usa un’altra email' : 'Use another email'}
+                </button>
+              </div>
+            )}
+
+            {authStep === 'login' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.emailLabel}</label>
+                  <input
+                    type="email"
+                    value={email}
+                    readOnly
+                    className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream/70 text-sm focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.passwordLabel}</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
+                    placeholder="••••••••"
+                    onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                    autoFocus
+                  />
+                </div>
+                <button onClick={handleLogin} disabled={loading}
+                  className="w-full bg-gold text-bg font-semibold py-4 rounded-xl hover:opacity-90 disabled:opacity-50">
+                  {loading ? tr.vendor.loading : tr.vendor.loginStepBtn}
+                </button>
+                <button onClick={handlePasswordReset} disabled={loading}
+                  className="w-full text-gold text-sm hover:opacity-70 transition-opacity"
+                >
+                  {tr.vendor.forgotPassword}
+                </button>
+                <button
+                  onClick={() => { resetMessages(); setPassword(''); setAuthStep('approved') }}
+                  className="w-full text-muted text-sm hover:text-cream transition-colors"
+                >
+                  {locale === 'it' ? 'Torna alle opzioni' : 'Back to options'}
+                </button>
+              </div>
+            )}
+
+            {authStep === 'activate' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.emailLabel}</label>
+                  <input
+                    type="email"
+                    value={email}
+                    readOnly
+                    className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream/70 text-sm focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.passwordLabel}</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
+                    placeholder="••••••••"
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="text-muted text-xs tracking-wider uppercase block mb-2">{tr.vendor.confirmPasswordLabel}</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold"
+                    placeholder="••••••••"
+                    onKeyDown={e => e.key === 'Enter' && handleActivation()}
+                  />
+                </div>
+                <button onClick={handleActivation} disabled={loading}
+                  className="w-full bg-gold text-bg font-semibold py-4 rounded-xl hover:opacity-90 disabled:opacity-50">
+                  {loading ? tr.vendor.loading : tr.vendor.activationBtn}
+                </button>
+                <button
+                  onClick={() => { resetMessages(); setPassword(''); setConfirmPassword(''); setAuthStep('approved') }}
+                  className="w-full text-muted text-sm hover:text-cream transition-colors"
+                >
+                  {locale === 'it' ? 'Torna alle opzioni' : 'Back to options'}
+                </button>
+              </div>
             )}
           </div>
           <div className="mt-6 bg-gold/5 border border-gold/20 rounded-2xl p-5">
