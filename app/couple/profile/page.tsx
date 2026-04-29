@@ -28,6 +28,7 @@ const CEREMONY_LABELS: Record<string, Record<string, string>> = {
 }
 
 interface ProfileData {
+  id: string
   partner1: string | null
   partner2: string | null
   wedding_date: string | null
@@ -66,6 +67,14 @@ function ProfileRow({ label, value, accent }: { label: string; value: string; ac
   )
 }
 
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <label className="block text-[10px] uppercase tracking-[0.22em] text-[var(--velo-muted-soft)] mb-1.5" style={{ fontFamily: VELO_MONO_FONT }}>
+      {children}
+    </label>
+  )
+}
+
 export default function ProfilePage() {
   const [locale, setLocale] = useState<Locale>('en')
   const d = getT(locale)
@@ -76,6 +85,13 @@ export default function ProfilePage() {
   const [fetchError, setFetchError] = useState(false)
   const [missingProfile, setMissingProfile] = useState(false)
 
+  // Edit form state — only for the 3 editable fields
+  const [editDate, setEditDate] = useState('')
+  const [editBudget, setEditBudget] = useState('')
+  const [editCeremony, setEditCeremony] = useState('')
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [budgetError, setBudgetError] = useState(false)
+
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -84,15 +100,16 @@ export default function ProfilePage() {
         setLoading(false)
         return
       }
-      // Fetch couple first
       const { data, error } = await supabase
         .from('couples')
-        .select('partner1, partner2, wedding_date, budget, wedding_city, wedding_region, wedding_regione, wedding_province, wedding_style, ceremony_type, wedding_size, nationality, country_of_origin')
+        .select('id, partner1, partner2, wedding_date, budget, wedding_city, wedding_region, wedding_regione, wedding_province, wedding_style, ceremony_type, wedding_size, nationality, country_of_origin')
         .eq('user_id', session.user.id)
-        .single()
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+        .limit(1)
+        .maybeSingle()
       if (error) {
-        if (error.code === 'PGRST116') setMissingProfile(true)
-        else setFetchError(true)
+        setFetchError(true)
         setLoading(false)
         return
       }
@@ -101,21 +118,65 @@ export default function ProfilePage() {
         setLoading(false)
         return
       }
-      // Determine locale from couple data
       const fallbackLocale = getPreferredSiteLocale()
       const nextLocale = getCoupleLocale(data, fallbackLocale)
       persistCoupleLocale(nextLocale)
       setLocale(nextLocale)
       setProfile(data)
+      // Seed the edit form from loaded data
+      setEditDate(data.wedding_date ?? '')
+      setEditBudget(data.budget != null ? String(data.budget) : '')
+      setEditCeremony(data.ceremony_type ?? '')
       setLoading(false)
     }
     load()
   }, [])
 
+  const handleSave = async () => {
+    if (!profile) return
+
+    // Validate budget
+    const rawBudget = editBudget.trim()
+    let parsedBudget: number | null = null
+    if (rawBudget !== '') {
+      const n = Number(rawBudget.replace(/[.,\s]/g, ''))
+      if (!Number.isInteger(n) || n <= 0) {
+        setBudgetError(true)
+        return
+      }
+      parsedBudget = n
+    }
+    setBudgetError(false)
+    setSaveState('saving')
+
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { setSaveState('error'); return }
+
+    const patch = {
+      wedding_date: editDate || null,
+      budget: parsedBudget,
+      ceremony_type: editCeremony || null,
+    }
+
+    const { error } = await supabase
+      .from('couples')
+      .update(patch)
+      .eq('id', profile.id)
+
+    if (error) {
+      setSaveState('error')
+      return
+    }
+
+    setProfile(prev => prev ? { ...prev, ...patch } : prev)
+    setSaveState('saved')
+    setTimeout(() => setSaveState('idle'), 2500)
+  }
+
   if (loading) return <CoupleLoadingBlock />
 
   const location = profile
-    ? [profile.wedding_city, profile.wedding_province, profile.wedding_regione].filter(Boolean).join(' · ')
+    ? [profile.wedding_city, profile.wedding_province, profile.wedding_regione].filter(Boolean).join(' - ')
     : ''
 
   const rows = profile ? [
@@ -127,12 +188,19 @@ export default function ProfilePage() {
     { label: c.profile.ceremony, value: profile.ceremony_type ? (CEREMONY_LABELS[profile.ceremony_type]?.[locale] ?? profile.ceremony_type) : null },
   ].filter(r => r.value) : []
 
+  const inputBase = [
+    'w-full rounded-xl border px-3 py-2.5 text-sm',
+    'bg-[var(--velo-paper-2)] text-[var(--velo-ink)]',
+    'border-[var(--velo-border)] focus:border-[var(--velo-terracotta)]',
+    'outline-none transition-colors',
+  ].join(' ')
+
   return (
     <div>
       <CouplePageIntro
         eyebrow={c.profile.label}
         title={c.profile.title}
-        subtitle={locale === 'en' ? 'The profile that anchors documents, planning, and the rest of your couple area.' : 'Il profilo che tiene insieme documenti, planning e il resto della vostra area coppia.'}
+        subtitle={locale === 'en' ? 'The profile that keeps documents, planning, and the rest of your couple area aligned.' : 'Il profilo che tiene allineati documenti, planning e il resto della vostra area coppia.'}
       />
 
       {fetchError && (
@@ -147,7 +215,7 @@ export default function ProfilePage() {
         <CoupleNotice title={locale === 'en' ? 'Complete your profile first' : 'Completa prima il profilo'} tone="warning">
           {locale === 'en'
             ? 'Your couple profile is not available on web yet. Complete or verify your setup in the VELO app and it will appear here.'
-            : 'Il profilo coppia non e ancora disponibile sul web. Completa o verifica la configurazione nell app VELO e apparira qui.'}
+            : "Il profilo coppia non e ancora disponibile sul web. Completa o verifica la configurazione nell'app VELO e apparira qui."}
         </CoupleNotice>
       )}
 
@@ -178,23 +246,85 @@ export default function ProfilePage() {
                 {locale === 'en' ? 'Planning context' : 'Contesto planning'}
               </p>
               <p className="mt-3 text-[1.3rem] leading-snug text-[var(--velo-ink)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
-                {locale === 'en' ? 'This profile shapes your documents path, checklist logic, and planning flow.' : 'Questo profilo definisce il percorso documenti, la logica checklist e il flusso del planning.'}
+                {locale === 'en' ? 'This profile helps shape your documents path, checklist logic, and planning flow.' : 'Questo profilo aiuta a tenere coerenti il percorso documenti, la logica checklist e il flusso del planning.'}
               </p>
               <p className="mt-4 text-sm leading-7 text-[var(--velo-muted)]">
                 {locale === 'en'
                   ? 'Keep it accurate in the VELO app so the rest of the couple area stays aligned.'
-                  : "Tienilo aggiornato nell'app VELO cosi il resto dell area coppia resta coerente."}
+                  : "Tienilo aggiornato nell'app VELO cosi il resto dell'area coppia resta coerente."}
               </p>
             </CouplePanel>
 
-            <CouplePanel tone="dark">
-              <p className="text-[10px] uppercase tracking-[0.28em] text-[#d7b89d]" style={{ fontFamily: VELO_MONO_FONT }}>
-                {locale === 'en' ? 'Editing' : 'Modifiche'}
+            {/* Partial edit panel — date, budget, ceremony only */}
+            <CouplePanel>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--velo-terracotta)] mb-2" style={{ fontFamily: VELO_MONO_FONT }}>
+                {c.profile.editTitle}
               </p>
-              <p className="mt-3 text-[1.2rem] leading-snug text-[var(--velo-paper-2)]" style={{ fontFamily: VELO_DISPLAY_FONT }}>
-                {locale === 'en' ? 'Profile edits still live in the app.' : 'Le modifiche al profilo restano nell app.'}
+              <p className="text-sm leading-6 text-[var(--velo-muted)] mb-5">
+                {c.profile.editNotice}
               </p>
-              <p className="mt-4 text-sm leading-7 text-[#d2c3b0]">{c.profile.editInApp}</p>
+
+              <div className="space-y-4">
+                {/* Wedding date */}
+                <div>
+                  <FieldLabel>{c.profile.editDate}</FieldLabel>
+                  <input
+                    type="date"
+                    value={editDate}
+                    onChange={e => { setEditDate(e.target.value); setSaveState('idle') }}
+                    className={inputBase}
+                  />
+                </div>
+
+                {/* Budget */}
+                <div>
+                  <FieldLabel>{c.profile.editBudget}</FieldLabel>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1000}
+                    value={editBudget}
+                    onChange={e => { setEditBudget(e.target.value); setBudgetError(false); setSaveState('idle') }}
+                    placeholder={c.profile.editBudgetPlaceholder}
+                    className={`${inputBase} ${budgetError ? 'border-[var(--velo-danger)]' : ''}`}
+                  />
+                  {budgetError && (
+                    <p className="mt-1 text-[11px] text-[var(--velo-danger)]">{c.profile.editBudgetInvalid}</p>
+                  )}
+                </div>
+
+                {/* Ceremony type */}
+                <div>
+                  <FieldLabel>{c.profile.editCeremony}</FieldLabel>
+                  <select
+                    value={editCeremony}
+                    onChange={e => { setEditCeremony(e.target.value); setSaveState('idle') }}
+                    className={`${inputBase} cursor-pointer`}
+                  >
+                    <option value="">{c.profile.editCeremonyNone}</option>
+                    <option value="civil">{CEREMONY_LABELS.civil[locale]}</option>
+                    <option value="religious">{CEREMONY_LABELS.religious[locale]}</option>
+                    <option value="symbolic">{CEREMONY_LABELS.symbolic[locale]}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-center gap-3">
+                <button
+                  onClick={handleSave}
+                  disabled={saveState === 'saving'}
+                  className="rounded-xl bg-[var(--velo-terracotta)] px-5 py-2.5 text-sm text-white transition-opacity disabled:opacity-60 hover:opacity-90"
+                  style={{ fontFamily: VELO_MONO_FONT }}
+                >
+                  {saveState === 'saving' ? c.profile.editSaving : c.profile.editSave}
+                </button>
+                {saveState === 'saved' && (
+                  <span className="text-sm text-[var(--velo-success)]">{c.profile.editSaved}</span>
+                )}
+                {saveState === 'error' && (
+                  <span className="text-sm text-[var(--velo-danger)]">{c.profile.editError}</span>
+                )}
+              </div>
             </CouplePanel>
           </div>
         </div>
