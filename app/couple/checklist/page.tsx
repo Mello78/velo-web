@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../../../lib/couple-locale'
+import { getCoupleLocale, getPreferredSiteLocale, hasExplicitLocaleCookie, persistCoupleLocale } from '../../../lib/couple-locale'
 import { supabase } from '../../../lib/supabase'
 import type { Locale } from '../../../lib/translations'
 import {
@@ -356,12 +356,13 @@ export default function ChecklistPage() {
         .select('nationality, country_of_origin')
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
         .limit(1)
 
       const fallbackLocale = getPreferredSiteLocale()
       const coupleLocaleData = coupleLocaleRes.data?.[0]
       if (coupleLocaleData) {
-        const nextLocale = getCoupleLocale(coupleLocaleData, fallbackLocale)
+        const nextLocale = hasExplicitLocaleCookie() ? fallbackLocale : getCoupleLocale(coupleLocaleData, fallbackLocale)
         persistCoupleLocale(nextLocale)
         setLocale(nextLocale)
       }
@@ -452,7 +453,7 @@ export default function ChecklistPage() {
 
       {total > 0 && <ProgressBar done={done} total={total} copy={copy} />}
 
-      <CoupleNotice title={locale === 'en' ? 'Read-only on web' : 'Sola lettura sul web'} className="mb-6">
+      <CoupleNotice title={locale === 'en' ? 'Checklist updates on web' : 'Checklist aggiornabile dal web'} className="mb-6">
         {copy.interactionHint}
         {lastSync && <span className="text-[var(--velo-muted-soft)]"> · {copy.synced} {lastSync}</span>}
       </CoupleNotice>

@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../../../lib/couple-locale'
+import { getCoupleLocale, getPreferredSiteLocale, hasExplicitLocaleCookie, persistCoupleLocale } from '../../../lib/couple-locale'
 import { supabase } from '../../../lib/supabase'
 import type { Locale } from '../../../lib/translations'
 import {
@@ -79,19 +79,19 @@ function getVendorsCopy(locale: string) {
     pageLabel: isIT ? 'FORNITORI' : 'VENDORS',
     pageTitle: isIT ? 'I vostri fornitori' : 'Your vendors',
     pageSub: isIT
-      ? 'Una pipeline piu leggibile per capire chi e solo in valutazione, chi e vicino e chi e gia confermato.'
-      : 'A clearer pipeline for seeing who is exploratory, who is close, and who is already confirmed.',
+      ? 'Una lettura piu chiara di chi state valutando, chi e vicino a una conferma e chi fa gia parte del matrimonio.'
+      : 'A clearer view of who is still being explored, who is close, and who is already part of the wedding.',
     filterAll: isIT ? 'Tutti' : 'All',
-    readOnly: isIT ? "Vista in sola lettura — usa l'app VELO per gestire i fornitori e avanzare lo stato" : 'Read-only view — use the VELO app to manage vendors and advance status',
-    agreedNudge: isIT ? "Accordo raggiunto — apri l'app VELO per confermare e bloccare la data." : 'Agreement reached — open the VELO app to confirm and lock this vendor.',
+    readOnly: isIT ? "Rivedi sul web - usa l'app VELO per scrivere ai fornitori, salvarli o confermarli e aggiornare lo stato" : 'Review on web - use the VELO app to message vendors, save or confirm them, and update status',
+    agreedNudge: isIT ? "Accordo raggiunto - apri l'app VELO per confermare e bloccare la data." : 'Agreement reached - open the VELO app to confirm and lock this vendor.',
     emptyTitle: isIT ? 'Nessun fornitore' : 'No vendors yet',
-    emptyDesc: isIT ? "Sfoglia e aggiungi fornitori dall'app VELO e la lista apparira qui." : 'Browse and add vendors in the VELO app and the list will appear here.',
+    emptyDesc: isIT ? "Sfoglia e salva i fornitori dall'app VELO e la lista apparira qui." : 'Browse and save vendors in the VELO app and the list will appear here.',
     errorTitle: isIT ? 'Impossibile caricare i fornitori' : 'Unable to load vendors',
     errorDesc: isIT ? 'Potrebbe essere un problema temporaneo. Prova ad aggiornare la pagina.' : 'This may be a temporary connection issue. Try refreshing the page.',
     engErrorTitle: isIT ? 'Stato fornitori non disponibile' : 'Vendor status unavailable',
     engErrorDesc: isIT ? 'Non e stato possibile caricare lo stato degli engagement. Riprova piu tardi.' : 'Engagement status could not be loaded. Please try again later.',
     pubPartialDesc: isIT ? 'Alcuni dettagli fornitore non sono disponibili.' : 'Some vendor details could not be loaded.',
-    partnerBadge: isIT ? 'Partner VELO' : 'VELO Partner',
+    partnerBadge: 'Partner VELO',
     statusLabel: (status: EngagementStatus): string => {
       const map: Record<EngagementStatus, [string, string]> = {
         lead: ['Aggiunto', 'Added'],
@@ -173,7 +173,7 @@ function VendorCardRow({ vendor, copy }: { vendor: VendorCard; copy: VendorsCopy
             </span>
           </div>
           <div className="text-sm text-[var(--velo-muted)]">
-            {categoryLabel(vendor.category)} · {vendor.location}
+            {categoryLabel(vendor.category)} - {vendor.location}
           </div>
           <div className="mt-3 flex flex-wrap gap-3 text-xs text-[var(--velo-muted-soft)]">
             {showRating && <span>★ {vendor.rating?.toFixed(1)}</span>}
@@ -242,12 +242,13 @@ export default function VendorsPage() {
         .select('nationality, country_of_origin')
         .eq('user_id', uid)
         .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
         .limit(1)
 
       const fallbackLocale = getPreferredSiteLocale()
       const coupleLocaleData = coupleLocaleRes.data?.[0]
       if (coupleLocaleData) {
-        const nextLocale = getCoupleLocale(coupleLocaleData, fallbackLocale)
+        const nextLocale = hasExplicitLocaleCookie() ? fallbackLocale : getCoupleLocale(coupleLocaleData, fallbackLocale)
         persistCoupleLocale(nextLocale)
         setLocale(nextLocale)
       }
@@ -377,7 +378,7 @@ export default function VendorsPage() {
             </div>
           )}
 
-          <CoupleNotice title={locale === 'en' ? 'Read-only on web' : 'Sola lettura sul web'} className="mb-6">
+          <CoupleNotice title={locale === 'en' ? 'Review on web, manage in app' : "Rivedi sul web, gestisci nell'app"} className="mb-6">
             {copy.readOnly}
           </CoupleNotice>
 

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { COUNTRIES, CountryDoc } from '../../../lib/countries'
-import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../../../lib/couple-locale'
+import { getCoupleLocale, getPreferredSiteLocale, hasExplicitLocaleCookie, persistCoupleLocale } from '../../../lib/couple-locale'
 import { supabase } from '../../../lib/supabase'
 import type { Locale } from '../../../lib/translations'
 import {
@@ -497,6 +497,7 @@ useEffect(() => {
           .select('partner1, partner2, nationality, country_of_origin, ceremony_type, wedding_date')
           .eq('user_id', session.user.id)
           .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
           .limit(1)
 
         if (error) throw error
@@ -510,7 +511,7 @@ useEffect(() => {
           setMissingProfile(true)
         } else {
           const coupleData = data[0] as CoupleDoc
-          const nextLocale = getCoupleLocale(coupleData, fallbackLocale)
+          const nextLocale = hasExplicitLocaleCookie() ? fallbackLocale : getCoupleLocale(coupleData, fallbackLocale)
           persistCoupleLocale(nextLocale)
           setLocale(nextLocale)
           setCouple(coupleData)

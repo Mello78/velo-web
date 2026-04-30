@@ -3,7 +3,7 @@ import { ReactNode, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import CoupleOnboarding from './CoupleOnboarding'
-import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../lib/couple-locale'
+import { getCoupleLocale, getPreferredSiteLocale, hasExplicitLocaleCookie, persistCoupleLocale } from '../lib/couple-locale'
 import { supabase } from '../lib/supabase'
 import { getT, type Locale } from '../lib/translations'
 import {
@@ -41,6 +41,7 @@ async function resolveAuthenticatedUser(userId: string): Promise<
     .select(COUPLE_SELECT)
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .limit(1)
 
   if (coupleError) return { state: 'error' }
@@ -100,7 +101,9 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
       if (!mounted) return
 
       if (result.state === 'dashboard') {
-        const nextLocale = getCoupleLocale(result.couple, fallbackLocale)
+        // Explicit locale cookie always wins. Never override user preference.
+        const hasCookie = hasExplicitLocaleCookie()
+        const nextLocale = hasCookie ? getPreferredSiteLocale() : getCoupleLocale(result.couple, fallbackLocale)
         persistCoupleLocale(nextLocale)
         setLocale(nextLocale)
         setCouple(result.couple)
@@ -131,7 +134,9 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
 
     const result = await resolveAuthenticatedUser(session.user.id)
     if (result.state === 'dashboard') {
-      const nextLocale = getCoupleLocale(result.couple, fallbackLocale)
+      // Explicit locale cookie always wins. Never override user preference.
+      const hasCookie = hasExplicitLocaleCookie()
+      const nextLocale = hasCookie ? getPreferredSiteLocale() : getCoupleLocale(result.couple, fallbackLocale)
       persistCoupleLocale(nextLocale)
       setLocale(nextLocale)
       setCouple(result.couple)
@@ -159,7 +164,9 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
 
     const result = await resolveAuthenticatedUser(data.session.user.id)
     if (result.state === 'dashboard') {
-      const nextLocale = getCoupleLocale(result.couple, fallbackLocale)
+      // Explicit locale cookie always wins. Never override user preference.
+      const hasCookie = hasExplicitLocaleCookie()
+      const nextLocale = hasCookie ? getPreferredSiteLocale() : getCoupleLocale(result.couple, fallbackLocale)
       persistCoupleLocale(nextLocale)
       setLocale(nextLocale)
       setCouple(result.couple)
@@ -294,7 +301,7 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
     const title = locale === 'en' ? 'This account is already set up as a vendor.' : 'Questo account e gia impostato come fornitore.'
     const body = locale === 'en'
       ? 'The couple area is reserved for couple accounts. Open your vendor workspace instead, or sign out and use a different account.'
-      : 'L area coppia e riservata agli account coppia. Apri il tuo spazio fornitore oppure esci e usa un altro account.'
+      : "L'area coppia e riservata agli account coppia. Apri il tuo spazio fornitore oppure esci e usa un altro account."
 
     return (
       <AuthFrame>
@@ -327,10 +334,10 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
   }
 
   if (authState === 'error') {
-    const title = locale === 'en' ? 'Unable to load your couple area.' : 'Impossibile caricare l area coppia.'
+    const title = locale === 'en' ? 'Unable to load your couple area.' : "Impossibile caricare l'area coppia."
     const body = locale === 'en'
       ? 'You are signed in, but we could not retrieve your couple data. This may be temporary. Please try again.'
-      : 'Hai effettuato l accesso, ma non siamo riusciti a recuperare i dati della coppia. Potrebbe essere temporaneo. Riprova.'
+      : "Hai effettuato l'accesso, ma non siamo riusciti a recuperare i dati della coppia. Potrebbe essere temporaneo. Riprova."
 
     return (
       <AuthFrame>
@@ -363,6 +370,15 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
   }
 
   const greeting = couple?.partner1 ? `${c.dashboard.greeting}, ${couple.partner1}` : c.dashboard.greeting
+  const webCompanionNotice = locale === 'en'
+    ? {
+        title: 'Web couple area',
+        body: 'This web space is a calm companion to the VELO app. Here you can review your dashboard, profile, documents, checklist, and the current status of vendors and guests. Budget items and guest RSVPs, notes, and dietary requirements are editable here too. Vendor messaging and saved-vendor actions still happen in the VELO app.',
+      }
+    : {
+        title: 'Area coppia web',
+        body: "Questo spazio web accompagna l'app VELO con una vista chiara del vostro matrimonio. Qui potete rivedere dashboard, profilo, documenti, checklist e lo stato attuale di fornitori e ospiti. Le voci di budget e gli RSVP, note ed esigenze alimentari degli ospiti si aggiornano anche dal web. Messaggi ai fornitori e salvataggi/conferme dei fornitori restano nell'app VELO.",
+      }
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,var(--velo-paper)_0%,#efe1cd_58%,#f8f0e4_100%)] text-[var(--velo-ink)]">
@@ -390,7 +406,7 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
           {couple?.partner2 && <p className="mt-1 text-xs text-[#c9b49d]">&amp; {couple.partner2}</p>}
           {(couple?.wedding_city || couple?.wedding_region) && (
             <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-[#b89a5b]" style={{ fontFamily: VELO_MONO_FONT }}>
-              {[couple?.wedding_city, couple?.wedding_region].filter(Boolean).join(' · ')}
+              {[couple?.wedding_city, couple?.wedding_region].filter(Boolean).join(' - ')}
             </p>
           )}
         </div>
@@ -446,6 +462,9 @@ export default function CoupleShell({ children }: { children: ReactNode }) {
         </header>
 
         <main className="mx-auto w-full max-w-[1080px] px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
+          <CoupleNotice title={webCompanionNotice.title} className="mb-6">
+            {webCompanionNotice.body}
+          </CoupleNotice>
           {children}
         </main>
       </div>
