@@ -15,6 +15,13 @@ export function getPreferredSiteLocale(): Locale {
   return navigator.language.startsWith('en') ? 'en' : 'it'
 }
 
+export function hasExplicitLocaleCookie(): boolean {
+  if (typeof document === 'undefined') return false
+  return document.cookie
+    .split(';')
+    .some((cookie) => cookie.trim().startsWith('NEXT_LOCALE='))
+}
+
 export function getCoupleLocale(
   context: CoupleLanguageContext | null | undefined,
   fallbackLocale: Locale,
