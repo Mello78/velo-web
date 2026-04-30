@@ -1,7 +1,13 @@
 # Couple Web Dashboard — Design Spec
 
+**⚠️ STORICO / SUPERSEDED**
+
+Questo documento descrive uno stato precedente alla chiusura di WEB COUPLE EXPANSION — Practical Actions v1.
+Lo stato canonico corrente è in `VELO_CURRENT_STATE.md`.
+Budget e Guests non sono più read-only: budget ha CRUD web; guests supporta update RSVP/notes/dietary da web.
+
 **Date:** 2026-04-28
-**Status:** Approved
+**Status:** Approved (SUPERSEDED)
 **Scope:** velo-web-temp only. No mobile app changes. No schema/RLS changes.
 
 ---

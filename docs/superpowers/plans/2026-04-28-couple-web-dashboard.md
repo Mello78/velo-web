@@ -1,5 +1,11 @@
 # Couple Web Dashboard — Implementation Plan
 
+**⚠️ STORICO / SUPERSEDED**
+
+Questo documento descrive uno stato precedente alla chiusura di WEB COUPLE EXPANSION — Practical Actions v1.
+Lo stato canonico corrente è in `VELO_CURRENT_STATE.md`.
+Budget e Guests non sono più read-only: budget ha CRUD web; guests supporta update RSVP/notes/dietary da web.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Rewrite `/couple/dashboard` from a minimal countdown page into a 7-section wedding hub (hero, next step, documents, vendors, guests, budget, checklist).

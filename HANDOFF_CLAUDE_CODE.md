@@ -15,46 +15,22 @@ App mobile + sito web per pianificazione matrimoni in Italia.
 
 ---
 
-## PROBLEMA URGENTE DA RISOLVERE — Build Vercel fallisce
+## ⚠️ STORICO — Build Vercel (pre-30 aprile 2026)
 
-Vercel dà errore `npm run build exited with 1`.
+**STATO CHIUSO:** Il build Vercel ora passa (`npm run build` ✅).
 
-**Causa:** Webpack non risolve gli import `@/lib/supabase` in alcuni file.
-Il file `lib/supabase.ts` importa `@supabase/supabase-js` e questo causa
-problemi di risoluzione con il path alias `@/` durante il build di produzione.
+**Stato precedente (risolto):**
+Vercel dava errore `npm run build exited with 1`.
+Causa: Webpack non risolveva gli import `@/lib/supabase` in alcuni file.
 
-**Fix già applicato parzialmente:**
-- `app/admin/page.tsx` → import già cambiato in `../../lib/supabase` ✅
+**Fix applicati:**
+- `app/admin/page.tsx` → import cambiato in `../../lib/supabase` ✅
+- `app/fornitori/page.tsx` → import relativo ✅
+- `app/vendor/page.tsx` → import relativo ✅
 - `tsconfig.json` → aggiunto `"baseUrl": "."` ✅
 - `next.config.js` → rimossa opzione `turbopack` non supportata ✅
 
-**Fix ancora da fare (2 file):**
-
-1. `app/fornitori/page.tsx` riga 3:
-   ```ts
-   // DA:
-   import { supabase } from '@/lib/supabase'
-   // A:
-   import { supabase } from '../../lib/supabase'
-   ```
-
-2. `app/vendor/page.tsx` riga 3:
-   ```ts
-   // DA:
-   import { supabase } from '@/lib/supabase'
-   // A:
-   import { supabase } from '../../lib/supabase'
-   ```
-
-**Dopo il fix:**
-```
-cd C:\Users\mello\velo-web-temp
-node_modules\.bin\next build
-```
-Se il build passa:
-```
-git add -A && git commit -m "fix-import-paths-build" && git push origin main
-```
+**Build attuale:** `npm run build` ✅ passa — sprint Web Couple Expansion closed.
 
 ---
 
@@ -87,10 +63,8 @@ TASK.md               # Task pendenti
 
 ## Regole critiche Next.js per questo progetto
 
-1. **Import supabase** → usare SEMPRE percorsi relativi:
-   - Da `app/` → `../../lib/supabase`
-   - Da `app/sottocartella/` → `../../../lib/supabase`
-   - MAI usare `@/lib/supabase` (rompe il build)
+1. **Import supabase nel sito** → seguire il pattern già usato nel repo.
+   Evitare alias/import che rompono il build Vercel; verificare sempre con `npm run build`.
 
 2. **Import translations e components** → `@/lib/translations` e `@/components/X` funzionano ✅
 

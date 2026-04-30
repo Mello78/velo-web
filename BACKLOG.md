@@ -45,10 +45,10 @@
 
 ## 🔴 DA FARE — Alta priorità
 
-- [ ] **RESEND_API_KEY secret da aggiungere** su Supabase Dashboard → Edge Functions → Secrets
+- [x] **RESEND_API_KEY** — ✅ AGGIUNTO (27/03) su Supabase Dashboard → Edge Functions → Secrets
   - Nome: `RESEND_API_KEY`
   - Serve per: velo-send-emails (auguri + review) e send-vendor-invite
-  - Setup Resend: resend.com → API Keys → crea chiave → verifica dominio velowedding.it
+  - Setup Resend: resend.com → API Keys → verifica dominio velowedding.it
 
 ---
 
@@ -65,6 +65,7 @@
 - [ ] **Analisi AI preventivo esterno**: upload PDF → VELO AI analizza e suggerisce (struttura base già presente con QuoteAnalyzer)
 - [ ] **SEO**: gestire province/regioni/comuni come keyword; valutare tagline senza "wedding planner"
 - [ ] **Notifiche push**: nessun sistema di notifica push implementato — le coppie non ricevono notifica quando arriva un messaggio dal fornitore (solo badge all'apertura dell'app)
+- [ ] **Full invite email automation**: da verificare end-to-end (vedi TASK.md: "non invia email reali") — 🔲 Later
 
 ---
 
