@@ -36,16 +36,17 @@ async function resolveAuthenticatedUser(userId: string): Promise<
   { state: 'not_couple' } |
   { state: 'error' }
 > {
-  const { data: couples, error: coupleError } = await supabase
+  const { data: couple, error: coupleError } = await supabase
     .from('couples')
     .select(COUPLE_SELECT)
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .order('id', { ascending: false })
     .limit(1)
+    .maybeSingle()
 
   if (coupleError) return { state: 'error' }
-  if (couples && couples.length > 0) return { state: 'dashboard', couple: couples[0] }
+  if (couple) return { state: 'dashboard', couple }
 
   const { data: vendors, error: vendorError } = await supabase
     .from('vendor_accounts')

@@ -499,6 +499,7 @@ useEffect(() => {
           .order('created_at', { ascending: false })
           .order('id', { ascending: false })
           .limit(1)
+          .maybeSingle()
 
         if (error) throw error
 
@@ -506,11 +507,11 @@ useEffect(() => {
 
         const fallbackLocale = getPreferredSiteLocale()
 
-        if (!data || data.length === 0) {
+        if (!data) {
           setCouple(null)
           setMissingProfile(true)
         } else {
-          const coupleData = data[0] as CoupleDoc
+          const coupleData = data as CoupleDoc
           const nextLocale = hasExplicitLocaleCookie() ? fallbackLocale : getCoupleLocale(coupleData, fallbackLocale)
           persistCoupleLocale(nextLocale)
           setLocale(nextLocale)

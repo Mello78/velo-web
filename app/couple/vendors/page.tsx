@@ -244,9 +244,10 @@ export default function VendorsPage() {
         .order('created_at', { ascending: false })
         .order('id', { ascending: false })
         .limit(1)
+        .maybeSingle()
 
       const fallbackLocale = getPreferredSiteLocale()
-      const coupleLocaleData = coupleLocaleRes.data?.[0]
+      const coupleLocaleData = coupleLocaleRes.data
       if (coupleLocaleData) {
         const nextLocale = hasExplicitLocaleCookie() ? fallbackLocale : getCoupleLocale(coupleLocaleData, fallbackLocale)
         persistCoupleLocale(nextLocale)

@@ -227,10 +227,12 @@ export default function CoupleOnboarding({ initialLocale, onComplete }: Props) {
       .select('id')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(1)
+      .maybeSingle()
 
     if (error) throw error
-    return data && data.length > 0 ? data[0] : null
+    return data ?? null
   }
 
   // ─── Save — writes to couples table, same fields as mobile ───────────────

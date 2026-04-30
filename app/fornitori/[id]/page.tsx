@@ -1,22 +1,179 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { cookies } from 'next/headers'
+import { notFound } from 'next/navigation'
+import type { ReactNode } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { getT } from '../../../lib/translations'
 import SimpleNav from '../../../components/SimpleNav'
 import PhotoLightbox from '../../../components/PhotoLightbox'
-import { notFound } from 'next/navigation'
 
 async function getVendor(id: string) {
   const { data } = await supabase.from('public_vendors').select('*').eq('id', id).single()
   return data
 }
 
+function getDetailCopy(locale: string) {
+  return locale === 'en'
+    ? {
+        heroEyebrow: 'Curated wedding profile',
+        trustLabelVerified: 'Partner VELO',
+        trustLabelDirect: 'Direct contact',
+        trustTitleVerified: 'Curated by the VELO team',
+        trustTitleDirect: 'Visible on VELO, handled directly',
+        verifiedDesc: 'Verified VAT number. Active on VELO chat. Profile reviewed by the VELO team.',
+        directContactDesc: 'This vendor is visible on VELO, but is not yet active in VELO chat. Reach them directly through their own channels.',
+        factsTitle: 'Profile notes',
+        factsIntro: 'A quick read on fit, coverage, and practical details.',
+        contactJumpVerified: 'View contacts',
+        contactJumpDirect: 'View direct contacts',
+        galleryTitle: 'Portfolio',
+        storyTitle: 'About this vendor',
+        servicesTitle: 'Specialties and fit',
+        awardsTitle: 'Recognition',
+        coverageTitle: 'Area covered',
+        coverageBase: 'Based in',
+        coverageExtra: 'Also works across',
+        languagesTitle: 'Languages',
+        pricingTitle: 'Pricing note',
+        capacityTitle: 'Guest capacity',
+        experienceTitle: 'Experience',
+        planningBadge: 'Plan with clarity',
+        planningTitle: 'Open your VELO couple area for the next real step',
+        planningDesc: 'Use the web couple area to review your wedding context, manage your budget, and update guest RSVPs. Vendor messaging and saved-vendor actions still happen in the VELO app.',
+        planningBtn: 'Open couple area',
+        howTitle: 'How VELO works',
+        howSteps: [
+          'Partner VELO profiles are reviewed by the VELO team before going live.',
+          'On web you can review this profile and keep it in context with your wedding plan.',
+          'Budget items and guest RSVPs are also manageable in the web couple area.',
+        ],
+        howDisclaimer: 'Verified profiles go through the VELO review process. Non-verified profiles are shown as direct contacts.',
+        openLink: 'Open',
+      }
+    : {
+        heroEyebrow: 'Profilo wedding curato',
+        trustLabelVerified: 'Partner VELO',
+        trustLabelDirect: 'Contatto diretto',
+        trustTitleVerified: 'Curato dal team VELO',
+        trustTitleDirect: 'Visibile su VELO, gestito in diretto',
+        verifiedDesc: 'P.IVA verificata. Attivo nella chat VELO. Profilo verificato dal team VELO.',
+        directContactDesc: 'Questo fornitore e visibile su VELO, ma non e ancora attivo nella chat VELO. Contattalo direttamente tramite i suoi canali.',
+        factsTitle: 'Note profilo',
+        factsIntro: 'Una lettura rapida di compatibilita, copertura e dettagli pratici.',
+        contactJumpVerified: 'Vedi contatti',
+        contactJumpDirect: 'Vedi contatti diretti',
+        galleryTitle: 'Portfolio',
+        storyTitle: 'Il loro racconto',
+        servicesTitle: 'Specialita e fit',
+        awardsTitle: 'Riconoscimenti',
+        coverageTitle: 'Zona coperta',
+        coverageBase: 'Base in',
+        coverageExtra: 'Lavora anche in',
+        languagesTitle: 'Lingue',
+        pricingTitle: 'Nota prezzi',
+        capacityTitle: 'Capienza ospiti',
+        experienceTitle: 'Esperienza',
+        planningBadge: 'Planning con chiarezza',
+        planningTitle: "Apri l'area coppia VELO per il prossimo passo reale",
+        planningDesc: "Usa l'area coppia web per rivedere il contesto del matrimonio, gestire il budget e aggiornare gli RSVP degli ospiti. Messaggi ai fornitori e gestione dei fornitori salvati restano nell'app VELO.",
+        planningBtn: 'Apri area coppia',
+        howTitle: 'Come funziona VELO',
+        howSteps: [
+          'I profili Partner VELO vengono controllati dal team VELO prima di andare live.',
+          'Sul web puoi rivedere questo profilo e tenerlo nel contesto del tuo matrimonio.',
+          "Le voci di budget e gli RSVP degli ospiti si gestiscono anche nell'area coppia web.",
+        ],
+        howDisclaimer: 'I profili verificati seguono il processo di revisione VELO. Quelli non verificati sono mostrati come contatto diretto.',
+        openLink: 'Apri',
+      }
+}
+
+type ContactLink = {
+  label: string
+  url: string
+  handle: string
+}
+
+function uniqueStrings(values: Array<string | null | undefined>) {
+  return Array.from(new Set(values.filter(Boolean).map(value => String(value))))
+}
+
+function trimText(value: string | null | undefined, max: number) {
+  if (!value) return null
+  if (value.length <= max) return value
+  return `${value.slice(0, max).trimEnd()}...`
+}
+
+function formatPriceRange(locale: string, tr: any, from?: string | null, to?: string | null) {
+  if (!from) return null
+  if (to) return `${tr.vendorDetail.priceFrom} EUR ${from} - EUR ${to}`
+  return `${tr.vendorDetail.priceFrom} EUR ${from}`
+}
+
+function SectionIntro({
+  eyebrow,
+  title,
+  body,
+}: {
+  eyebrow: string
+  title: string
+  body?: string | null
+}) {
+  return (
+    <div className="mb-5">
+      <p className="text-[11px] uppercase tracking-[0.28em] text-gold/85">{eyebrow}</p>
+      <h2 className="mt-3 text-[1.7rem] font-light leading-tight text-bg sm:text-[2rem]">{title}</h2>
+      {body && <p className="mt-3 max-w-2xl text-sm leading-7 text-bg/72 sm:text-[0.98rem]">{body}</p>}
+    </div>
+  )
+}
+
+function RailCard({
+  eyebrow,
+  title,
+  body,
+  children,
+  className = '',
+}: {
+  eyebrow: string
+  title: string
+  body?: string | null
+  children?: ReactNode
+  className?: string
+}) {
+  return (
+    <section className={`rounded-[1.8rem] border border-border/80 bg-dark/75 p-5 backdrop-blur-sm sm:p-6 ${className}`}>
+      <p className="text-[11px] uppercase tracking-[0.26em] text-gold/80">{eyebrow}</p>
+      <h3 className="mt-3 text-[1.28rem] font-light leading-snug text-cream">{title}</h3>
+      {body && <p className="mt-3 text-sm leading-7 text-muted">{body}</p>}
+      {children && <div className="mt-5">{children}</div>}
+    </section>
+  )
+}
+
+function HeroPill({ label }: { label: string }) {
+  return (
+    <span className="rounded-full border border-white/14 bg-black/20 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-cream/82 backdrop-blur-sm">
+      {label}
+    </span>
+  )
+}
+
+function FactRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-white/8 py-3 last:border-b-0 last:pb-0 first:pt-0">
+      <span className="text-[11px] uppercase tracking-[0.2em] text-muted-soft">{label}</span>
+      <span className="max-w-[62%] text-right text-sm leading-6 text-cream">{value}</span>
+    </div>
+  )
+}
+
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const vendor = await getVendor(params.id)
   if (!vendor) return {}
   const categoryClean = vendor.category.replace(/[^\w\s]/g, '').trim()
-  const title = `${vendor.name} — ${categoryClean} a ${vendor.location}`
+  const title = `${vendor.name} - ${categoryClean} a ${vendor.location}`
   const description = vendor.description
     ? vendor.description.slice(0, 155)
     : `${vendor.name}: ${categoryClean} per matrimoni a ${vendor.location}, ${vendor.region}. Scopri il profilo su VELO Wedding.`
@@ -41,17 +198,68 @@ export default async function VendorDetailPage({
   const cookieStore = cookies()
   const locale = cookieStore.get('NEXT_LOCALE')?.value || 'it'
   const tr = getT(locale)
+  const detailCopy = getDetailCopy(locale)
   const vendor = await getVendor(params.id)
   if (!vendor) notFound()
 
-  const socialLinks = [
-    vendor.instagram && { icon: '📸', label: 'Instagram', url: `https://instagram.com/${vendor.instagram.replace('@','')}`, handle: vendor.instagram },
-    vendor.facebook && { icon: '👤', label: 'Facebook', url: vendor.facebook.startsWith('http') ? vendor.facebook : `https://facebook.com/${vendor.facebook}`, handle: vendor.facebook },
-    vendor.tiktok && { icon: '🎵', label: 'TikTok', url: `https://tiktok.com/@${vendor.tiktok.replace('@','')}`, handle: vendor.tiktok },
-    vendor.website && { icon: '🌐', label: 'Website', url: vendor.website.startsWith('http') ? vendor.website : `https://${vendor.website}`, handle: vendor.website },
-  ].filter(Boolean)
+  const contactLinks = [
+    vendor.instagram && {
+      label: 'Instagram',
+      url: `https://instagram.com/${vendor.instagram.replace('@', '')}`,
+      handle: vendor.instagram,
+    },
+    vendor.facebook && {
+      label: 'Facebook',
+      url: vendor.facebook.startsWith('http') ? vendor.facebook : `https://facebook.com/${vendor.facebook.replace('@', '')}`,
+      handle: vendor.facebook,
+    },
+    vendor.tiktok && {
+      label: 'TikTok',
+      url: `https://tiktok.com/@${vendor.tiktok.replace('@', '')}`,
+      handle: vendor.tiktok,
+    },
+    vendor.website && {
+      label: locale === 'en' ? 'Website' : 'Sito web',
+      url: vendor.website.startsWith('http') ? vendor.website : `https://${vendor.website}`,
+      handle: vendor.website,
+    },
+    vendor.phone && {
+      label: locale === 'en' ? 'Phone' : 'Telefono',
+      url: `tel:${vendor.phone}`,
+      handle: vendor.phone,
+    },
+    vendor.whatsapp && {
+      label: 'WhatsApp',
+      url: `https://wa.me/${vendor.whatsapp.replace(/[^0-9]/g, '')}`,
+      handle: vendor.whatsapp,
+    },
+  ].filter(Boolean) as ContactLink[]
 
-  // JSON-LD structured data per Google rich snippets
+  const description = locale === 'en'
+    ? (vendor.description_en || vendor.bio_en || vendor.description)
+    : vendor.description
+
+  const heroDescription = trimText(description, 220)
+  const specialties = (locale === 'en' && vendor.specialties_en?.length)
+    ? vendor.specialties_en
+    : (vendor.specialties || [])
+  const specialtiesCustom = (locale === 'en' && vendor.specialties_custom_en?.length)
+    ? vendor.specialties_custom_en.filter(Boolean)
+    : (vendor.specialties_custom?.filter(Boolean) || [])
+  const allSpecialties = uniqueStrings([...specialties, ...specialtiesCustom])
+  const awards = (locale === 'en' && vendor.awards_en?.length)
+    ? vendor.awards_en
+    : (vendor.awards || [])
+  const allAwards = uniqueStrings(awards)
+  const photos = [vendor.photo1_url, vendor.photo2_url, vendor.photo3_url].filter(Boolean)
+  const coverageRegions = uniqueStrings([vendor.region, ...(vendor.work_regions || [])])
+  const locationLabel = [vendor.location, vendor.region].filter(Boolean).join(', ')
+  const priceLabel = formatPriceRange(locale, tr, vendor.price_from, vendor.price_to)
+  const contactJumpLabel = vendor.verified ? detailCopy.contactJumpVerified : detailCopy.contactJumpDirect
+  const trustEyebrow = vendor.verified ? detailCopy.trustLabelVerified : detailCopy.trustLabelDirect
+  const trustTitle = vendor.verified ? detailCopy.trustTitleVerified : detailCopy.trustTitleDirect
+  const trustBody = vendor.verified ? detailCopy.verifiedDesc : detailCopy.directContactDesc
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
@@ -76,220 +284,273 @@ export default async function VendorDetailPage({
   }
 
   return (
-    <main className="min-h-screen bg-bg text-cream">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(201,166,97,0.18),_transparent_28%),linear-gradient(180deg,#130f0c_0%,#18120f_38%,#1b1511_100%)] text-cream">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+
       <SimpleNav
         locale={locale}
         backHref="/fornitori"
         backLabel={tr.vendorDetail.back}
       />
 
-      {/* Hero
-          Source images from Supabase storage are often uploaded at ~1200px wide (OG format).
-          On desktop viewports >1200px the image upscales and looks soft — this is a source
-          asset constraint, not a rendering bug. Vendors should upload hero photos at
-          >=1600px wide for crisp display on large screens.
-          Using next/image here gives WebP delivery, responsive srcset, and an LCP priority
-          hint — the best the renderer can do with whatever source is uploaded. */}
-      <div className="relative h-[420px] mt-16 overflow-hidden">
-        {vendor.photo1_url ? (
-          <Image
-            src={vendor.photo1_url}
-            alt={vendor.name}
-            fill
-            className="object-cover object-center"
-            sizes="100vw"
-            priority
-            quality={85}
-          />
-        ) : (
-          <div className="w-full h-full bg-dark flex items-center justify-center">
-            <span className="text-8xl opacity-20">{vendor.cover_emoji || '📸'}</span>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/40 to-transparent" />
-        {vendor.logo_url && (
-          <div className="absolute bottom-8 left-8 w-20 h-20 rounded-2xl overflow-hidden border-2 border-border bg-dark shadow-xl">
-            <img src={vendor.logo_url} alt="logo" className="w-full h-full object-cover" />
-          </div>
-        )}
-      </div>
+      <section className="relative overflow-hidden pt-20">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(251,244,229,0.06),transparent_22%),radial-gradient(circle_at_82%_18%,rgba(201,166,97,0.16),transparent_24%)]" />
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 pb-24">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-10 pt-2">
-          <div className={vendor.logo_url ? 'md:ml-28' : ''}>
-            <div className="flex items-center gap-3 mb-2 flex-wrap">
-              <h1 className="text-4xl font-light">{vendor.name}</h1>
-              {vendor.verified && (
-                <span className="text-green text-sm bg-green/10 border border-green/20 px-3 py-1 rounded-full">{tr.vendorDetail.verified}</span>
-              )}
-            </div>
-            <p className="text-muted mb-3">{vendor.category} · {vendor.location}, {vendor.region}</p>
-            <div className="flex items-center gap-4 flex-wrap">
-              {(vendor.review_count ?? 0) > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-gold text-lg">★</span>
-                <span className="text-cream font-medium">{vendor.rating}</span>
-                <span className="text-muted text-sm">({vendor.review_count} {tr.vendorDetail.reviews})</span>
-              </div>
-              )}
-              {vendor.price_from && (
-                <span className="text-gold text-sm border border-gold/30 rounded-full px-4 py-1">
-                  {tr.vendorDetail.priceFrom} €{vendor.price_from}
-                  {vendor.price_to ? ` – €${vendor.price_to}` : ''}
-                </span>
-              )}
-            </div>
-          </div>
-          {vendor.whatsapp && (
-            <a href={`https://wa.me/${vendor.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-[#25D366] text-white font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-opacity shrink-0 text-sm">
-              {tr.vendorDetail.whatsapp}
-            </a>
-          )}
-        </div>
-
-        {/* CTA Download App */}
-        <div className="my-10 bg-gradient-to-r from-gold/10 to-gold/5 border border-gold/25 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6">
-          <div className="text-3xl shrink-0">💍</div>
-          <div className="flex-1 text-center sm:text-left">
-            <p className="text-gold text-xs tracking-[0.2em] uppercase mb-1">{tr.vendorDetail.appCtaBadge}</p>
-            <h3 className="text-cream text-lg font-light mb-1">{tr.vendorDetail.appCtaTitle}</h3>
-            <p className="text-muted text-sm">{tr.vendorDetail.appCtaDesc}</p>
-          </div>
-          <div className="flex gap-3 shrink-0">
-            <a href="#" className="flex items-center gap-2 bg-cream text-bg text-xs font-semibold px-4 py-2.5 rounded-full hover:opacity-90 transition-opacity whitespace-nowrap">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-              App Store
-            </a>
-            <a href="#" className="flex items-center gap-2 border border-gold/40 text-gold text-xs font-semibold px-4 py-2.5 rounded-full hover:bg-gold/10 transition-colors whitespace-nowrap">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.18 15.64a2.18 2.18 0 012.18 2.18C8.36 19 7.38 20 6.18 20C4.98 20 4 19 4 17.82a2.18 2.18 0 012.18-2.18M17.82 15.64a2.18 2.18 0 012.18 2.18C20 19 19.02 20 17.82 20c-1.2 0-2.18-1-2.18-2.18a2.18 2.18 0 012.18-2.18M17.82 8.18C18.42 8.18 19 8.64 19 9.27v6.92c0 .63-.58 1.09-1.18 1.09-.6 0-1.18-.46-1.18-1.09V9.27c0-.63.58-1.09 1.18-1.09M6.18 8.18c.6 0 1.18.46 1.18 1.09v6.92c0 .63-.58 1.09-1.18 1.09C5.58 17.28 5 16.82 5 16.19V9.27c0-.63.58-1.09 1.18-1.09M12 1l2.27 4H9.73L12 1M12 3.27L11 5h2l-1-1.73M7 6v10h10V6H7m2-1h6c.55 0 1 .45 1 1v11c0 .55-.45 1-1 1H9c-.55 0-1-.45-1-1V6c0-.55.45-1 1-1z"/></svg>
-              Google Play
-            </a>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {/* Main col */}
-          <div className="md:col-span-2 space-y-10">
-            {/* Portfolio */}
-            {(vendor.photo1_url || vendor.photo2_url || vendor.photo3_url) && (
-              <section>
-                <h2 className="text-xs text-gold tracking-[0.3em] uppercase mb-5">{tr.vendorDetail.portfolio}</h2>
-                <PhotoLightbox
-                  photos={[vendor.photo1_url, vendor.photo2_url, vendor.photo3_url].filter(Boolean)}
-                  vendorName={vendor.name}
-                />
-              </section>
-            )}
-
-            {/* About */}
-            {(locale === 'en'
-              ? (vendor.description_en || vendor.bio_en || vendor.description)
-              : vendor.description) && (
-              <section>
-                <h2 className="text-xs text-gold tracking-[0.3em] uppercase mb-4">{tr.vendorDetail.about}</h2>
-                <p className="text-muted leading-relaxed text-base">
-                  {locale === 'en'
-                    ? (vendor.description_en || vendor.bio_en || vendor.description)
-                    : vendor.description}
-                </p>
-              </section>
-            )}
-
-            {/* Specialties */}
-            {(() => {
-              const presets = (locale === 'en' && vendor.specialties_en?.length)
-                ? vendor.specialties_en
-                : (vendor.specialties || [])
-              const custom = (locale === 'en' && vendor.specialties_custom_en?.length)
-                ? vendor.specialties_custom_en.filter(Boolean)
-                : (vendor.specialties_custom?.filter(Boolean) || [])
-              const all = [...presets, ...custom]
-              if (!all.length) return null
-              return (
-                <section>
-                  <h2 className="text-xs text-gold tracking-[0.3em] uppercase mb-4">{tr.vendorDetail.specialties}</h2>
-                  <div className="flex flex-wrap gap-2">
-                    {all.map((s: string, i: number) => (
-                      <span key={i} className="border border-border rounded-full px-4 py-1.5 text-sm text-muted">{s}</span>
-                    ))}
+        <div className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-10">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_360px] lg:items-end">
+            <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-dark/60 shadow-[0_30px_120px_rgba(0,0,0,0.35)]">
+              <div className="relative min-h-[540px] sm:min-h-[620px]">
+                {vendor.photo1_url ? (
+                  <Image
+                    src={vendor.photo1_url}
+                    alt={vendor.name}
+                    fill
+                    priority
+                    quality={88}
+                    sizes="(max-width: 1024px) 100vw, 65vw"
+                    className="object-cover object-center"
+                  />
+                ) : (
+                  <div className="flex h-full min-h-[540px] items-center justify-center bg-[linear-gradient(135deg,#241b15_0%,#302218_100%)] sm:min-h-[620px]">
+                    <span className="text-[6rem] font-light tracking-[0.2em] text-cream/18">
+                      {vendor.cover_emoji || 'VELO'}
+                    </span>
                   </div>
-                </section>
-              )
-            })()}
+                )}
 
-            {/* Awards */}
-            {vendor.awards?.length > 0 && (
-              <section>
-                <h2 className="text-xs text-gold tracking-[0.3em] uppercase mb-4">{tr.vendorDetail.awards}</h2>
-                <div className="flex flex-wrap gap-2">
-                  {(locale === 'en' && vendor.awards_en?.length ? vendor.awards_en : vendor.awards).map((a: string, i: number) => (
-                    <span key={i} className="bg-gold/10 border border-gold/25 text-gold rounded-full px-4 py-1.5 text-sm">🏆 {a}</span>
-                  ))}
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,14,11,0.12)_0%,rgba(18,14,11,0.42)_35%,rgba(18,14,11,0.92)_100%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_16%,rgba(255,255,255,0.18),transparent_26%),radial-gradient(circle_at_78%_18%,rgba(201,166,97,0.18),transparent_22%)]" />
+
+                {vendor.logo_url && (
+                  <div className="absolute right-5 top-5 z-10 h-16 w-16 overflow-hidden rounded-[1.15rem] border border-white/16 bg-black/18 shadow-lg backdrop-blur-sm sm:h-20 sm:w-20 sm:rounded-[1.4rem]">
+                    <img src={vendor.logo_url} alt={`${vendor.name} logo`} className="h-full w-full object-cover" />
+                  </div>
+                )}
+
+                <div className="relative z-10 flex min-h-[540px] flex-col justify-end p-5 sm:min-h-[620px] sm:p-8 lg:p-10">
+                  <div className="max-w-3xl">
+                    <div className="mb-4 flex flex-wrap gap-2.5">
+                      <HeroPill label={detailCopy.heroEyebrow} />
+                      <HeroPill label={trustEyebrow} />
+                      {vendor.category && <HeroPill label={vendor.category} />}
+                    </div>
+
+                    <h1 className="max-w-3xl text-[2.45rem] font-light leading-[0.96] tracking-[-0.03em] text-cream sm:text-[3.6rem] lg:text-[4.25rem]">
+                      {vendor.name}
+                    </h1>
+
+                    <p className="mt-4 max-w-2xl text-base leading-7 text-cream/74 sm:text-[1.02rem]">
+                      {locationLabel}
+                      {coverageRegions.length > 1 ? ` - ${detailCopy.coverageExtra} ${coverageRegions.slice(1).join(', ')}` : ''}
+                    </p>
+
+                    {heroDescription && (
+                      <p className="mt-5 max-w-2xl text-sm leading-7 text-cream/78 sm:text-[1rem]">
+                        {heroDescription}
+                      </p>
+                    )}
+
+                    <div className="mt-6 flex flex-wrap gap-2.5">
+                      {(vendor.review_count ?? 0) > 0 && vendor.rating && (
+                        <HeroPill label={`${vendor.rating} / 5 - ${vendor.review_count} ${tr.vendorDetail.reviews}`} />
+                      )}
+                      {priceLabel && <HeroPill label={priceLabel} />}
+                      {vendor.years_experience && <HeroPill label={`${vendor.years_experience} ${tr.vendorDetail.years}`} />}
+                      {vendor.max_guests && <HeroPill label={`${vendor.max_guests} ${tr.vendorDetail.guests}`} />}
+                    </div>
+
+                    <div className="mt-8 flex flex-wrap gap-3">
+                      <Link
+                        href="/couple"
+                        className="inline-flex items-center justify-center rounded-full bg-cream px-5 py-3 text-sm font-medium text-bg transition-all hover:-translate-y-0.5 hover:bg-[#fff6ea]"
+                      >
+                        {detailCopy.planningBtn}
+                      </Link>
+                      {contactLinks.length > 0 && (
+                        <a
+                          href="#contacts"
+                          className="inline-flex items-center justify-center rounded-full border border-white/16 bg-black/16 px-5 py-3 text-sm text-cream/90 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-gold/45 hover:text-cream"
+                        >
+                          {contactJumpLabel}
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 </div>
+              </div>
+            </section>
+
+            <div className="space-y-4 lg:pb-3">
+              <RailCard
+                eyebrow={trustEyebrow}
+                title={trustTitle}
+                body={trustBody}
+                className={vendor.verified ? 'border-gold/30 bg-[linear-gradient(180deg,rgba(46,34,23,0.92)_0%,rgba(27,21,17,0.92)_100%)]' : 'border-white/12 bg-[linear-gradient(180deg,rgba(39,30,24,0.92)_0%,rgba(25,19,16,0.92)_100%)]'}
+              >
+                <div className="flex flex-wrap gap-2">
+                  {vendor.verified && <HeroPill label={detailCopy.trustLabelVerified} />}
+                  {!vendor.verified && <HeroPill label={detailCopy.trustLabelDirect} />}
+                  {vendor.languages?.length > 0 && <HeroPill label={`${detailCopy.languagesTitle}: ${vendor.languages.join(', ')}`} />}
+                </div>
+              </RailCard>
+
+              <RailCard eyebrow={detailCopy.factsTitle} title={locationLabel} body={detailCopy.factsIntro}>
+                <div>
+                  <FactRow label={detailCopy.coverageTitle} value={coverageRegions.join(', ')} />
+                  {priceLabel && <FactRow label={detailCopy.pricingTitle} value={priceLabel} />}
+                  {vendor.years_experience && <FactRow label={detailCopy.experienceTitle} value={`${vendor.years_experience} ${tr.vendorDetail.years}`} />}
+                  {vendor.max_guests && <FactRow label={detailCopy.capacityTitle} value={`${vendor.max_guests} ${tr.vendorDetail.guests}`} />}
+                </div>
+              </RailCard>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.02fr)_360px] lg:items-start">
+          <div className="space-y-8">
+            {photos.length > 0 && (
+              <section className="rounded-[2rem] border border-border/80 bg-[linear-gradient(180deg,#f8efe2_0%,#f3e6d5_100%)] p-4 shadow-[0_18px_70px_rgba(0,0,0,0.16)] sm:p-5">
+                <SectionIntro
+                  eyebrow={detailCopy.galleryTitle}
+                  title={vendor.name}
+                  body={locale === 'en' ? 'A more visual read of the profile before you decide how to proceed.' : 'Una lettura piu visiva del profilo prima di decidere come procedere.'}
+                />
+                <PhotoLightbox photos={photos} vendorName={vendor.name} />
               </section>
             )}
+
+            <section className="rounded-[2rem] border border-border/75 bg-[linear-gradient(180deg,#fbf4e8_0%,#f4e6d5_100%)] p-6 shadow-[0_18px_70px_rgba(0,0,0,0.14)] sm:p-8">
+              <div className="grid gap-8 xl:grid-cols-[minmax(0,1.08fr)_minmax(250px,0.92fr)]">
+                <div>
+                  <SectionIntro
+                    eyebrow={tr.vendorDetail.about}
+                    title={detailCopy.storyTitle}
+                    body={description || (locale === 'en' ? 'No public story is available yet for this vendor.' : 'Questo fornitore non ha ancora un racconto pubblico disponibile.')}
+                  />
+                </div>
+
+                <div className="space-y-7">
+                  {allSpecialties.length > 0 && (
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--velo-terracotta)]">{detailCopy.servicesTitle}</p>
+                      <div className="mt-4 flex flex-wrap gap-2.5">
+                        {allSpecialties.map((specialty, index) => (
+                          <span
+                            key={`${specialty}-${index}`}
+                            className="rounded-full border border-[rgba(44,34,25,0.14)] bg-white/55 px-4 py-2 text-sm text-bg/78"
+                          >
+                            {specialty}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-1">
+                    <div className="rounded-[1.4rem] border border-[rgba(44,34,25,0.12)] bg-white/45 p-4">
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--velo-terracotta)]">{detailCopy.coverageTitle}</p>
+                      <p className="mt-3 text-sm leading-7 text-bg/76">
+                        {detailCopy.coverageBase} {locationLabel}
+                        {coverageRegions.length > 1 ? `. ${detailCopy.coverageExtra} ${coverageRegions.slice(1).join(', ')}.` : '.'}
+                      </p>
+                    </div>
+
+                    {vendor.languages?.length > 0 && (
+                      <div className="rounded-[1.4rem] border border-[rgba(44,34,25,0.12)] bg-white/45 p-4">
+                        <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--velo-terracotta)]">{detailCopy.languagesTitle}</p>
+                        <p className="mt-3 text-sm leading-7 text-bg/76">{vendor.languages.join(', ')}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {allAwards.length > 0 && (
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--velo-terracotta)]">{detailCopy.awardsTitle}</p>
+                      <div className="mt-4 flex flex-wrap gap-2.5">
+                        {allAwards.map((award, index) => (
+                          <span
+                            key={`${award}-${index}`}
+                            className="rounded-full border border-gold/35 bg-gold/10 px-4 py-2 text-sm text-[var(--velo-terracotta-deep)]"
+                          >
+                            {award}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
           </div>
 
-          {/* Side col */}
-          <div className="space-y-6">
-            {/* Info box */}
-            <div className="bg-dark border border-border rounded-2xl p-6 space-y-4">
-              <h3 className="text-xs text-gold tracking-[0.3em] uppercase">{tr.vendorDetail.info}</h3>
-              {vendor.years_experience && (
-                <div><p className="text-muted text-xs mb-1">{tr.vendorDetail.experience}</p>
-                  <p className="text-cream text-sm">{vendor.years_experience} {tr.vendorDetail.years}</p></div>
-              )}
-              {vendor.languages?.length > 0 && (
-                <div><p className="text-muted text-xs mb-1">{tr.vendorDetail.languages}</p>
-                  <p className="text-cream text-sm">{vendor.languages.join(', ')}</p></div>
-              )}
-              <div><p className="text-muted text-xs mb-1">{tr.vendorDetail.area}</p>
-                <p className="text-cream text-sm">{vendor.location}, {vendor.region}</p></div>
-              {vendor.max_guests && (
-                <div><p className="text-muted text-xs mb-1">👥 {tr.vendorDetail.capacity}</p>
-                  <p className="text-cream text-sm">{vendor.max_guests} {tr.vendorDetail.guests}</p></div>
-              )}
-              {vendor.work_regions?.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {vendor.work_regions.map((r: string, i: number) => (
-                    <span key={i} className="bg-[rgba(74,122,184,0.1)] border border-[rgba(74,122,184,0.3)] text-[#4A7AB8] text-xs rounded-full px-3 py-1">+{r}</span>
+          <aside className="space-y-5 lg:sticky lg:top-24">
+            {contactLinks.length > 0 && (
+              <RailCard
+                eyebrow={vendor.verified ? detailCopy.trustLabelVerified : detailCopy.trustLabelDirect}
+                title={vendor.verified ? tr.vendorDetail.contacts : detailCopy.contactJumpDirect}
+                body={vendor.verified ? detailCopy.verifiedDesc : detailCopy.directContactDesc}
+                className="border-gold/18"
+              >
+                <div id="contacts" className="space-y-2.5">
+                  {contactLinks.map((contact, index) => (
+                    <a
+                      key={`${contact.label}-${index}`}
+                      href={contact.url}
+                      target={contact.url.startsWith('http') ? '_blank' : undefined}
+                      rel={contact.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                      className="flex items-center justify-between gap-3 rounded-[1.15rem] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm transition-colors hover:border-gold/30 hover:bg-white/[0.05]"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-[11px] uppercase tracking-[0.2em] text-muted-soft">{contact.label}</p>
+                        <p className="mt-1 truncate text-cream">{contact.handle}</p>
+                      </div>
+                      <span className="shrink-0 text-[11px] uppercase tracking-[0.18em] text-gold/88">{detailCopy.openLink}</span>
+                    </a>
                   ))}
                 </div>
-              )}
-            </div>
-
-            {/* Social */}
-            {socialLinks.length > 0 && (
-              <div className="bg-dark border border-border rounded-2xl p-6 space-y-3">
-                <h3 className="text-xs text-gold tracking-[0.3em] uppercase mb-4">{tr.vendorDetail.contacts}</h3>
-                {socialLinks.map((s: any, i: number) => (
-                  <a key={i} href={s.url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-3 text-muted hover:text-cream transition-colors text-sm">
-                    <span>{s.icon}</span><span className="truncate">{s.handle}</span>
-                  </a>
-                ))}
-                {vendor.phone && (
-                  <a href={`tel:${vendor.phone}`} className="flex items-center gap-3 text-muted hover:text-cream transition-colors text-sm">
-                    <span>📞</span><span>{vendor.phone}</span>
-                  </a>
-                )}
-              </div>
+              </RailCard>
             )}
-          </div>
+
+            <RailCard
+              eyebrow={detailCopy.planningBadge}
+              title={detailCopy.planningTitle}
+              body={detailCopy.planningDesc}
+              className="border-gold/25 bg-[linear-gradient(180deg,rgba(52,39,28,0.92)_0%,rgba(31,24,19,0.94)_100%)]"
+            >
+              <Link
+                href="/couple"
+                className="inline-flex items-center justify-center rounded-full bg-cream px-5 py-3 text-sm font-medium text-bg transition-colors hover:bg-[#fff6ea]"
+              >
+                {detailCopy.planningBtn}
+              </Link>
+            </RailCard>
+
+            <RailCard eyebrow="VELO" title={detailCopy.howTitle} body={detailCopy.howDisclaimer}>
+              <div className="space-y-3">
+                {detailCopy.howSteps.map((step, index) => (
+                  <div key={index} className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-gold/20 bg-gold/10 text-[11px] text-gold">
+                      {index + 1}
+                    </span>
+                    <p className="text-sm leading-7 text-muted">{step}</p>
+                  </div>
+                ))}
+              </div>
+            </RailCard>
+          </aside>
         </div>
 
-        {/* Back link */}
-        <div className="mt-16 pt-8 border-t border-border">
-          <Link href="/fornitori" className="text-gold text-sm hover:opacity-70 transition-opacity">{tr.vendorDetail.backToList}</Link>
+        <div className="mt-14 border-t border-white/10 pt-8">
+          <Link href="/fornitori" className="text-sm text-gold transition-opacity hover:opacity-70">
+            {tr.vendorDetail.backToList}
+          </Link>
         </div>
-      </div>
+      </section>
     </main>
   )
 }
