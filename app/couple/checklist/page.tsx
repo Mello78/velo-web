@@ -54,6 +54,10 @@ function nextPhaseForToggle(task: Task): string {
   return task.urgent ? 'urgent' : 'soon'
 }
 
+function isUserTask(task: Task): boolean {
+  return task.source === 'user' && task.system_generated !== true
+}
+
 function getChecklistCopy(locale: string) {
   const isIT = locale === 'it'
   return {
@@ -119,6 +123,8 @@ function getChecklistCopy(locale: string) {
 type ChecklistCopy = ReturnType<typeof getChecklistCopy>
 
 function taskTitle(task: Task, locale: string): string {
+  // User-created tasks always use the base title — no localized variants
+  if (task.source === 'user') return task.title
   if (locale === 'en' && task.title_en) return task.title_en
   if (task.title_it) return task.title_it
   return task.title
@@ -378,30 +384,32 @@ function TaskRow({
         {pending && <div style={{ fontSize: 11, marginTop: 6, color: 'var(--velo-muted-soft)', fontFamily: VELO_MONO_FONT }}>{copy.updating}</div>}
       </div>
 
-      <div className="flex shrink-0 items-start gap-1 pt-0.5">
-        <button
-          type="button"
-          onClick={() => onEdit(task)}
-          title={copy.editTaskSave}
-          style={{ padding: '4px 6px', borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--velo-muted-soft)', display: 'flex', alignItems: 'center' }}
-          className="hover:text-[var(--velo-terracotta)] hover:bg-[rgba(184,90,46,0.08)] transition-colors"
-        >
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M9.5 1.5L11.5 3.5L4.5 10.5L1.5 11.5L2.5 8.5L9.5 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          onClick={() => onDelete(task)}
-          title={copy.deleteTask}
-          style={{ padding: '4px 6px', borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--velo-muted-soft)', display: 'flex', alignItems: 'center' }}
-          className="hover:text-[var(--velo-danger)] hover:bg-[rgba(196,117,106,0.08)] transition-colors"
-        >
-          <svg width="12" height="13" viewBox="0 0 12 13" fill="none">
-            <path d="M1 3H11M4 3V2H8V3M2 3L3 11H9L10 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
+      {isUserTask(task) && (
+        <div className="flex shrink-0 items-start gap-1 pt-0.5">
+          <button
+            type="button"
+            onClick={() => onEdit(task)}
+            title={copy.editTaskSave}
+            style={{ padding: '4px 6px', borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--velo-muted-soft)', display: 'flex', alignItems: 'center' }}
+            className="hover:text-[var(--velo-terracotta)] hover:bg-[rgba(184,90,46,0.08)] transition-colors"
+          >
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M9.5 1.5L11.5 3.5L4.5 10.5L1.5 11.5L2.5 8.5L9.5 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => onDelete(task)}
+            title={copy.deleteTask}
+            style={{ padding: '4px 6px', borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--velo-muted-soft)', display: 'flex', alignItems: 'center' }}
+            className="hover:text-[var(--velo-danger)] hover:bg-[rgba(196,117,106,0.08)] transition-colors"
+          >
+            <svg width="12" height="13" viewBox="0 0 12 13" fill="none">
+              <path d="M1 3H11M4 3V2H8V3M2 3L3 11H9L10 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -645,6 +653,8 @@ export default function ChecklistPage() {
         phase: addPhase,
         completed: addPhase === 'done',
         urgent: addPhase === 'urgent',
+        source: 'user',
+        system_generated: false,
         draft: false,
       })
       .select('id, title, title_it, title_en, body_it, body_en, due_date, completed, urgent, phase, task_key, source, vendor_name, category, system_generated, priority, draft')
@@ -666,6 +676,7 @@ export default function ChecklistPage() {
   }
 
   const handleStartEdit = (task: Task) => {
+    if (!isUserTask(task)) return
     setEditingId(task.id)
     setEditTitle(taskTitle(task, locale))
     setEditDue(task.due_date ?? '')
@@ -674,14 +685,13 @@ export default function ChecklistPage() {
   }
 
   const handleSaveEdit = async (task: Task) => {
+    if (!isUserTask(task)) { setEditingId(null); return }
     if (!editTitle.trim()) return
     setEditSaving(true)
     setEditError(false)
 
     const patch = {
       title: editTitle.trim(),
-      title_it: null as string | null,
-      title_en: null as string | null,
       due_date: editDue || null,
       phase: editPhase,
       urgent: editPhase === 'urgent',
@@ -705,6 +715,7 @@ export default function ChecklistPage() {
   }
 
   const handleDeleteTask = async (task: Task) => {
+    if (!isUserTask(task)) return
     if (!window.confirm(copy.deleteConfirm)) return
 
     const { error } = await supabase
