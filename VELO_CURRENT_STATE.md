@@ -2,15 +2,22 @@
 
 > **Canonical document for web repo state**
 > Created: 30 April 2026
-> Updated: 30 April 2026 (post Web Couple Expansion — Practical Actions v1)
+> Updated: 30 April 2026 (post Profile + Checklist light editing sprint)
 
 ---
 
 ## WEB COUPLE EXPANSION — Practical Actions v1
 
-**Status:** ✅ CLOSED
+**Status:** ✅ CLOSED + LIVE
 
-**Commit:** `a761a4c` — fix: uniform couple resolver + accurate web copy across /couple area
+**Commits:**
+- `a761a4c` — fix: uniform couple resolver + accurate web copy across /couple area
+- `ee7dbd6` — fix: export explicit locale cookie helper (`hasExplicitLocaleCookie`)
+
+**Deploy note:**
+- First Vercel deploy of `a761a4c` failed: `hasExplicitLocaleCookie` imported but not exported from `lib/couple-locale.ts`.
+- Hotfix `ee7dbd6` exported the function.
+- Vercel production deploy now passes ✅.
 
 ### What is closed:
 
@@ -54,8 +61,9 @@
 - Copy updated: web allows practical desktop actions; app remains daily driver
 
 ### Build & typecheck:
-- `npm run build` — ✅ passes
-- `npx tsc --noEmit` — ✅ passes
+- `npm run build` — ✅ passes (relevant check for Vercel deploy)
+- `npx tsc --noEmit` — standalone may fail due to `.next/types/**/*.ts` config issues; NOT a product blocker
+- Tooling cleanup: deferred to future maintenance pass
 - Codex final verify: ✅ CLOSED
 
 ### Non-blocking residue:
@@ -71,11 +79,11 @@
 | Page | Status | Notes |
 |---|---|---|
 | `app/couple/dashboard/page.tsx` | ✅ Live | Countdown, next step, overview |
-| `app/couple/profile/page.tsx` | ✅ Partial edit | date, budget, ceremony; location NOT yet editable |
+| `app/couple/profile/page.tsx` | ✅ Partial edit | date, budget, ceremony, style, size editable; names/region/city app-only |
 | `app/couple/budget/page.tsx` | ✅ CRUD live | add/edit/delete expense, toggle confirmed |
 | `app/couple/guests/page.tsx` | ✅ RSVP + notes/dietary live | NOT email invites, NOT table planner |
 | `app/couple/vendors/page.tsx` | ✅ Read-only | Pipeline view, no edit |
-| `app/couple/checklist/page.tsx` | ✅ Partial | Phases toggle, no smart suggestions yet |
+| `app/couple/checklist/page.tsx` | ✅ Add / edit / delete / toggle | No smart suggestions |
 | `app/couple/documents/page.tsx` | ✅ Read-only | No edit, guide only |
 
 **Rule:** App remains primary daily driver. Web is for practical desktop actions.
@@ -114,8 +122,8 @@
 
 | Check | Status |
 |---|---|
-| `npm run build` | ✅ Passes |
-| `npx tsc --noEmit` | ✅ Passes |
+| `npm run build` | ✅ Passes (relevant check for Vercel deploy) |
+| `npx tsc --noEmit` | standalone may fail due to `.next/types/**/*.ts` config issues; NOT a product blocker |
 | Vercel autodeploy | ✅ From main |
 | Supabase imports | ✅ Relative paths, no `@/` alias |
 

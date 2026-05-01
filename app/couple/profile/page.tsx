@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../../../lib/couple-locale'
+import { getCoupleLocale, getPreferredSiteLocale, hasExplicitLocaleCookie, persistCoupleLocale } from '../../../lib/couple-locale'
 import { supabase } from '../../../lib/supabase'
 import { getT, type Locale } from '../../../lib/translations'
 import {
@@ -25,6 +25,13 @@ const CEREMONY_LABELS: Record<string, Record<string, string>> = {
   civil: { it: 'Civile', en: 'Civil' },
   religious: { it: 'Religioso', en: 'Religious' },
   symbolic: { it: 'Simbolico', en: 'Symbolic' },
+}
+
+const SIZE_LABELS: Record<string, Record<string, string>> = {
+  intimate: { it: 'Intimo (< 30)', en: 'Intimate (< 30)' },
+  medium: { it: 'Medio (30–100)', en: 'Medium (30–100)' },
+  grande: { it: 'Grande (100–200)', en: 'Large (100–200)' },
+  mega: { it: 'Mega (> 200)', en: 'Mega (> 200)' },
 }
 
 interface ProfileData {
@@ -85,10 +92,12 @@ export default function ProfilePage() {
   const [fetchError, setFetchError] = useState(false)
   const [missingProfile, setMissingProfile] = useState(false)
 
-  // Edit form state — only for the 3 editable fields
+  // Edit form state
   const [editDate, setEditDate] = useState('')
   const [editBudget, setEditBudget] = useState('')
   const [editCeremony, setEditCeremony] = useState('')
+  const [editStyle, setEditStyle] = useState('')
+  const [editSize, setEditSize] = useState('')
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [budgetError, setBudgetError] = useState(false)
 
@@ -119,7 +128,7 @@ export default function ProfilePage() {
         return
       }
       const fallbackLocale = getPreferredSiteLocale()
-      const nextLocale = getCoupleLocale(data, fallbackLocale)
+      const nextLocale = hasExplicitLocaleCookie() ? fallbackLocale : getCoupleLocale(data, fallbackLocale)
       persistCoupleLocale(nextLocale)
       setLocale(nextLocale)
       setProfile(data)
@@ -127,6 +136,8 @@ export default function ProfilePage() {
       setEditDate(data.wedding_date ?? '')
       setEditBudget(data.budget != null ? String(data.budget) : '')
       setEditCeremony(data.ceremony_type ?? '')
+      setEditStyle(data.wedding_style ?? '')
+      setEditSize(data.wedding_size ?? '')
       setLoading(false)
     }
     load()
@@ -156,6 +167,8 @@ export default function ProfilePage() {
       wedding_date: editDate || null,
       budget: parsedBudget,
       ceremony_type: editCeremony || null,
+      wedding_style: editStyle || null,
+      wedding_size: editSize || null,
     }
 
     const { error } = await supabase
@@ -186,6 +199,7 @@ export default function ProfilePage() {
     { label: c.profile.location, value: location || null },
     { label: c.profile.style, value: profile.wedding_style ? (STYLE_LABELS[profile.wedding_style]?.[locale] ?? profile.wedding_style) : null },
     { label: c.profile.ceremony, value: profile.ceremony_type ? (CEREMONY_LABELS[profile.ceremony_type]?.[locale] ?? profile.ceremony_type) : null },
+    { label: c.profile.editSize, value: profile.wedding_size ? (SIZE_LABELS[profile.wedding_size]?.[locale] ?? profile.wedding_size) : null },
   ].filter(r => r.value) : []
 
   const inputBase = [
@@ -305,6 +319,36 @@ export default function ProfilePage() {
                     <option value="civil">{CEREMONY_LABELS.civil[locale]}</option>
                     <option value="religious">{CEREMONY_LABELS.religious[locale]}</option>
                     <option value="symbolic">{CEREMONY_LABELS.symbolic[locale]}</option>
+                  </select>
+                </div>
+
+                {/* Wedding style */}
+                <div>
+                  <FieldLabel>{c.profile.editStyle}</FieldLabel>
+                  <select
+                    value={editStyle}
+                    onChange={e => { setEditStyle(e.target.value); setSaveState('idle') }}
+                    className={`${inputBase} cursor-pointer`}
+                  >
+                    <option value="">{c.profile.editCeremonyNone}</option>
+                    {Object.entries(STYLE_LABELS).map(([key, labels]) => (
+                      <option key={key} value={key}>{labels[locale]}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Wedding size */}
+                <div>
+                  <FieldLabel>{c.profile.editSize}</FieldLabel>
+                  <select
+                    value={editSize}
+                    onChange={e => { setEditSize(e.target.value); setSaveState('idle') }}
+                    className={`${inputBase} cursor-pointer`}
+                  >
+                    <option value="">{c.profile.editCeremonyNone}</option>
+                    {Object.entries(SIZE_LABELS).map(([key, labels]) => (
+                      <option key={key} value={key}>{labels[locale]}</option>
+                    ))}
                   </select>
                 </div>
               </div>

@@ -1,5 +1,9 @@
 # VELO — Backlog aggiornato (25 marzo 2026)
 
+> ⚠️ NON CANONICO / BACKLOG OPERATIVO STORICO
+> Fonte canonica corrente: VELO_CURRENT_STATE.md
+> WEB COUPLE EXPANSION — Practical Actions v1 = ✅ CLOSED + LIVE
+
 ---
 
 ## ✅ COMPLETATI (tutte le sessioni)
@@ -65,7 +69,7 @@
 - [ ] **Analisi AI preventivo esterno**: upload PDF → VELO AI analizza e suggerisce (struttura base già presente con QuoteAnalyzer)
 - [ ] **SEO**: gestire province/regioni/comuni come keyword; valutare tagline senza "wedding planner"
 - [ ] **Notifiche push**: nessun sistema di notifica push implementato — le coppie non ricevono notifica quando arriva un messaggio dal fornitore (solo badge all'apertura dell'app)
-- [ ] **Full invite email automation**: da verificare end-to-end (vedi TASK.md: "non invia email reali") — 🔲 Later
+- [ ] **Full invite email automation**: da verificare end-to-end — **CONFLICT**: TASK.md dice "non invia email reali", BACKLOG.md dice RESEND_API_KEY ✅ aggiunto. Segnalato come "da verificare" 🔲 Later
 
 ---
 
@@ -76,20 +80,20 @@
 
 ---
 
-## 📧 EMAIL — Setup Resend (10 minuti)
+## 📧 EMAIL — Stato Resend
 
-**Stato**: edge functions pronte, cron job attivo. Manca solo la API key.
+**Stato**: RESEND_API_KEY risulta documentata come aggiunta (27/03/2026, vedi sopra).
+Edge functions deployate. Cron job attivo.
 
-1. Crea account su resend.com (gratis fino a 3.000 email/mese)
-2. API Keys → crea chiave → copia
-3. Supabase Dashboard → Edge Functions → Secrets → aggiungi `RESEND_API_KEY`
-4. Verifica dominio velowedding.it in Resend (record TXT nel DNS)
+**Full invite email automation = NOT CLOSED** — da verificare end-to-end prima di dichiarare chiusa.
 
-**Email attive** (si attivano appena si aggiunge la key):
-- Auguri matrimonio il giorno delle nozze
-- Richiesta recensione +7 giorni dopo
-- Invito fornitore quando una coppia lo segnala
+Email che DOVREBBERO funzionare se la key è attiva e il dominio verificato:
+- Auguri matrimonio il giorno delle nozze (`velo-send-emails`)
+- Richiesta recensione +7 giorni dopo (`velo-send-emails`)
+- Invito fornitore (`send-vendor-invite`)
+
+**Non dichiarare questa sezione CLOSED senza prova end-to-end.**
 
 ---
 
-*Aggiornato: 25 marzo 2026*
+*Aggiornato: 25 marzo 2026. Banner NON CANONICO aggiunto: 30 aprile 2026.*

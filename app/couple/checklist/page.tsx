@@ -45,7 +45,7 @@ const PHASE_ORDER: PhaseKey[] = ['urgent', 'soon', 'done']
 
 function normalizePhase(p: string): PhaseKey {
   if (LEGACY_PHASE_MAP[p]) return LEGACY_PHASE_MAP[p]
-  const stripped = p.replace(/^[^A-Za-z\u00C0-\u017F]+/, '')
+  const stripped = p.replace(/^[^A-Za-zÀ-ſ]+/, '')
   return LEGACY_PHASE_MAP[stripped] || 'soon'
 }
 
@@ -65,14 +65,14 @@ function getChecklistCopy(locale: string) {
     progress: isIT ? 'Completamento' : 'Overall completion',
     tasksSuffix: isIT ? 'task' : 'tasks',
     interactionHint: isIT
-      ? "Puoi segnare i task come completati anche da web. Usa l'app VELO per creare o modificare i task."
-      : 'You can mark tasks complete on web too. Use the VELO app to create or edit tasks.',
+      ? 'Segna i task come completati, aggiungine di nuovi o modificali direttamente da web.'
+      : 'Mark tasks complete, add new ones, and edit them directly here on web.',
     synced: isIT ? 'sincronizzato' : 'synced',
     updating: isIT ? 'aggiornamento...' : 'updating...',
     emptyTitle: isIT ? 'Nessun task ancora' : 'No tasks yet',
     emptyDesc: isIT
-      ? "Apri l'app VELO per aggiungere il primo task: la checklist apparira qui."
-      : 'Open the VELO app to add your first task and the checklist will appear here.',
+      ? 'Aggiungete il primo task usando il pulsante qui sopra oppure dall\'app VELO.'
+      : 'Add your first task using the button above or from the VELO app.',
     errorTitle: isIT ? 'Impossibile caricare la checklist' : 'Unable to load checklist',
     errorDesc: isIT
       ? 'Potrebbe essere un problema temporaneo. Prova ad aggiornare la pagina.'
@@ -81,6 +81,18 @@ function getChecklistCopy(locale: string) {
     writeErrorDesc: isIT
       ? 'Lo stato non e stato salvato. Riprova.'
       : 'The task status was not saved. Please try again.',
+    addTask: isIT ? '+ Aggiungi task' : '+ Add task',
+    newTaskLabel: isIT ? 'Nuovo task' : 'New task',
+    addTaskPlaceholder: isIT ? 'Titolo del task...' : 'Task title...',
+    addTaskDue: isIT ? 'Data limite (opzionale)' : 'Due date (optional)',
+    addTaskPhase: isIT ? 'Stato' : 'Status',
+    addTaskSave: isIT ? 'Aggiungi' : 'Add',
+    editTaskSave: isIT ? 'Salva' : 'Save',
+    addTaskSaving: isIT ? 'Salvataggio...' : 'Saving...',
+    addTaskCancel: isIT ? 'Annulla' : 'Cancel',
+    deleteTask: isIT ? 'Elimina' : 'Delete',
+    deleteConfirm: isIT ? 'Eliminare questo task?' : 'Delete this task?',
+    saveError: isIT ? 'Errore nel salvataggio. Riprova.' : 'Error saving. Please try again.',
     phaseLabel: (phase: PhaseKey) => {
       const map: Record<PhaseKey, [string, string]> = {
         urgent: ['Urgente', 'Urgent'],
@@ -181,16 +193,119 @@ function ProgressBar({ done, total, copy }: { done: number; total: number; copy:
   )
 }
 
+const FORM_INPUT = [
+  'w-full rounded-xl border px-3 py-2.5 text-sm',
+  'bg-[var(--velo-paper-2)] text-[var(--velo-ink)]',
+  'border-[var(--velo-border)] focus:border-[var(--velo-terracotta)]',
+  'outline-none transition-colors',
+].join(' ')
+
+function TaskForm({
+  copy,
+  locale,
+  title,
+  due,
+  phase,
+  saving,
+  hasError,
+  saveLabel,
+  onTitleChange,
+  onDueChange,
+  onPhaseChange,
+  onSave,
+  onCancel,
+}: {
+  copy: ChecklistCopy
+  locale: string
+  title: string
+  due: string
+  phase: PhaseKey
+  saving: boolean
+  hasError: boolean
+  saveLabel: string
+  onTitleChange: (v: string) => void
+  onDueChange: (v: string) => void
+  onPhaseChange: (v: PhaseKey) => void
+  onSave: () => void
+  onCancel: () => void
+}) {
+  return (
+    <div className="space-y-3">
+      <input
+        type="text"
+        value={title}
+        onChange={e => onTitleChange(e.target.value)}
+        placeholder={copy.addTaskPlaceholder}
+        className={FORM_INPUT}
+        autoFocus
+      />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="mb-1 block text-[10px] uppercase tracking-[0.22em] text-[var(--velo-muted-soft)]" style={{ fontFamily: VELO_MONO_FONT }}>
+            {copy.addTaskDue}
+          </label>
+          <input
+            type="date"
+            value={due}
+            onChange={e => onDueChange(e.target.value)}
+            className={FORM_INPUT}
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-[10px] uppercase tracking-[0.22em] text-[var(--velo-muted-soft)]" style={{ fontFamily: VELO_MONO_FONT }}>
+            {copy.addTaskPhase}
+          </label>
+          <select
+            value={phase}
+            onChange={e => onPhaseChange(e.target.value as PhaseKey)}
+            className={`${FORM_INPUT} cursor-pointer`}
+          >
+            <option value="urgent">{copy.phaseLabel('urgent')}</option>
+            <option value="soon">{copy.phaseLabel('soon')}</option>
+            <option value="done">{copy.phaseLabel('done')}</option>
+          </select>
+        </div>
+      </div>
+      {hasError && (
+        <p className="text-[11px] text-[var(--velo-danger)]">{copy.saveError}</p>
+      )}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving || !title.trim()}
+          className="rounded-xl bg-[var(--velo-terracotta)] px-4 py-2 text-xs text-white disabled:opacity-60 hover:opacity-90"
+          style={{ fontFamily: VELO_MONO_FONT }}
+        >
+          {saving ? copy.addTaskSaving : saveLabel}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-xl border border-[var(--velo-border)] px-4 py-2 text-xs text-[var(--velo-muted)] hover:opacity-80"
+          style={{ fontFamily: VELO_MONO_FONT }}
+        >
+          {copy.addTaskCancel}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function TaskRow({
   task,
   locale,
   pending,
   onToggle,
+  onEdit,
+  onDelete,
 }: {
   task: Task
   locale: string
   pending: boolean
   onToggle: (task: Task) => void
+  onEdit: (task: Task) => void
+  onDelete: (task: Task) => void
 }) {
   const title = taskTitle(task, locale)
   const body = taskBody(task, locale)
@@ -262,6 +377,31 @@ function TaskRow({
         )}
         {pending && <div style={{ fontSize: 11, marginTop: 6, color: 'var(--velo-muted-soft)', fontFamily: VELO_MONO_FONT }}>{copy.updating}</div>}
       </div>
+
+      <div className="flex shrink-0 items-start gap-1 pt-0.5">
+        <button
+          type="button"
+          onClick={() => onEdit(task)}
+          title={copy.editTaskSave}
+          style={{ padding: '4px 6px', borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--velo-muted-soft)', display: 'flex', alignItems: 'center' }}
+          className="hover:text-[var(--velo-terracotta)] hover:bg-[rgba(184,90,46,0.08)] transition-colors"
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M9.5 1.5L11.5 3.5L4.5 10.5L1.5 11.5L2.5 8.5L9.5 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={() => onDelete(task)}
+          title={copy.deleteTask}
+          style={{ padding: '4px 6px', borderRadius: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--velo-muted-soft)', display: 'flex', alignItems: 'center' }}
+          className="hover:text-[var(--velo-danger)] hover:bg-[rgba(196,117,106,0.08)] transition-colors"
+        >
+          <svg width="12" height="13" viewBox="0 0 12 13" fill="none">
+            <path d="M1 3H11M4 3V2H8V3M2 3L3 11H9L10 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
     </div>
   )
 }
@@ -272,14 +412,41 @@ function PhaseGroup({
   locale,
   pendingIds,
   onToggle,
+  onEdit,
+  onDelete,
+  editingId,
+  editTitle,
+  editDue,
+  editPhase,
+  editSaving,
+  editError,
+  onEditTitleChange,
+  onEditDueChange,
+  onEditPhaseChange,
+  onEditSave,
+  onEditCancel,
 }: {
   phase: PhaseKey
   tasks: Task[]
   locale: string
   pendingIds: Set<string>
   onToggle: (task: Task) => void
+  onEdit: (task: Task) => void
+  onDelete: (task: Task) => void
+  editingId: string | null
+  editTitle: string
+  editDue: string
+  editPhase: PhaseKey
+  editSaving: boolean
+  editError: boolean
+  onEditTitleChange: (v: string) => void
+  onEditDueChange: (v: string) => void
+  onEditPhaseChange: (v: PhaseKey) => void
+  onEditSave: (task: Task) => void
+  onEditCancel: () => void
 }) {
   const cfg = phaseConfig(phase, locale)
+  const copy = getChecklistCopy(locale)
   const [collapsed, setCollapsed] = useState(phase === 'done')
 
   return (
@@ -314,7 +481,35 @@ function PhaseGroup({
       {!collapsed && (
         <div className="overflow-hidden rounded-b-[1rem] border border-t-0 border-[var(--velo-border)] bg-[var(--velo-card)]">
           {tasks.map((task) => (
-            <TaskRow key={task.id} task={task} locale={locale} pending={pendingIds.has(task.id)} onToggle={onToggle} />
+            editingId === task.id ? (
+              <div key={task.id} className="border-b border-[var(--velo-border)] px-4 py-4 last:border-b-0">
+                <TaskForm
+                  copy={copy}
+                  locale={locale}
+                  title={editTitle}
+                  due={editDue}
+                  phase={editPhase}
+                  saving={editSaving}
+                  hasError={editError}
+                  saveLabel={copy.editTaskSave}
+                  onTitleChange={onEditTitleChange}
+                  onDueChange={onEditDueChange}
+                  onPhaseChange={onEditPhaseChange}
+                  onSave={() => onEditSave(task)}
+                  onCancel={onEditCancel}
+                />
+              </div>
+            ) : (
+              <TaskRow
+                key={task.id}
+                task={task}
+                locale={locale}
+                pending={pendingIds.has(task.id)}
+                onToggle={onToggle}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            )
           ))}
         </div>
       )}
@@ -331,6 +526,23 @@ export default function ChecklistPage() {
   const [fetchError, setFetchError] = useState(false)
   const [writeError, setWriteError] = useState(false)
   const [pendingIds, setPendingIds] = useState<string[]>([])
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // Add task form
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [addTitle, setAddTitle] = useState('')
+  const [addDue, setAddDue] = useState('')
+  const [addPhase, setAddPhase] = useState<PhaseKey>('soon')
+  const [addSaving, setAddSaving] = useState(false)
+  const [addError, setAddError] = useState(false)
+
+  // Inline edit
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDue, setEditDue] = useState('')
+  const [editPhase, setEditPhase] = useState<PhaseKey>('soon')
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState(false)
 
   const markSyncedNow = () => {
     setLastSync(
@@ -350,7 +562,8 @@ export default function ChecklistPage() {
         return
       }
 
-      // Fetch couple first
+      setUserId(session.user.id)
+
       const coupleLocaleRes = await supabase
         .from('couples')
         .select('nationality, country_of_origin')
@@ -418,6 +631,102 @@ export default function ChecklistPage() {
     setPendingIds(prev => prev.filter(id => id !== task.id))
   }
 
+  const handleAddTask = async () => {
+    if (!addTitle.trim() || !userId) return
+    setAddSaving(true)
+    setAddError(false)
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        user_id: userId,
+        title: addTitle.trim(),
+        due_date: addDue || null,
+        phase: addPhase,
+        completed: addPhase === 'done',
+        urgent: addPhase === 'urgent',
+        draft: false,
+      })
+      .select('id, title, title_it, title_en, body_it, body_en, due_date, completed, urgent, phase, task_key, source, vendor_name, category, system_generated, priority, draft')
+      .single()
+
+    if (error || !data) {
+      setAddError(true)
+      setAddSaving(false)
+      return
+    }
+
+    setTasks(prev => [...prev, data])
+    setAddTitle('')
+    setAddDue('')
+    setAddPhase('soon')
+    setShowAddForm(false)
+    setAddSaving(false)
+    markSyncedNow()
+  }
+
+  const handleStartEdit = (task: Task) => {
+    setEditingId(task.id)
+    setEditTitle(taskTitle(task, locale))
+    setEditDue(task.due_date ?? '')
+    setEditPhase(normalizePhase(task.phase))
+    setEditError(false)
+  }
+
+  const handleSaveEdit = async (task: Task) => {
+    if (!editTitle.trim()) return
+    setEditSaving(true)
+    setEditError(false)
+
+    const patch = {
+      title: editTitle.trim(),
+      title_it: null as string | null,
+      title_en: null as string | null,
+      due_date: editDue || null,
+      phase: editPhase,
+      urgent: editPhase === 'urgent',
+    }
+
+    const { error } = await supabase
+      .from('tasks')
+      .update(patch)
+      .eq('id', task.id)
+
+    if (error) {
+      setEditError(true)
+      setEditSaving(false)
+      return
+    }
+
+    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, ...patch } : t))
+    setEditingId(null)
+    setEditSaving(false)
+    markSyncedNow()
+  }
+
+  const handleDeleteTask = async (task: Task) => {
+    if (!window.confirm(copy.deleteConfirm)) return
+
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', task.id)
+
+    if (error) {
+      setWriteError(true)
+      return
+    }
+
+    setTasks(prev => prev.filter(t => t.id !== task.id))
+    if (editingId === task.id) setEditingId(null)
+    markSyncedNow()
+  }
+
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setEditError(false)
+  }
+
   if (loading) return <CoupleLoadingBlock />
 
   if (fetchError) {
@@ -454,7 +763,7 @@ export default function ChecklistPage() {
 
       {total > 0 && <ProgressBar done={done} total={total} copy={copy} />}
 
-      <CoupleNotice title={locale === 'en' ? 'Checklist updates on web' : 'Checklist aggiornabile dal web'} className="mb-6">
+      <CoupleNotice title={locale === 'en' ? 'Checklist on web' : 'Checklist sul web'} className="mb-6">
         {copy.interactionHint}
         {lastSync && <span className="text-[var(--velo-muted-soft)]"> · {copy.synced} {lastSync}</span>}
       </CoupleNotice>
@@ -465,10 +774,71 @@ export default function ChecklistPage() {
         </div>
       )}
 
+      {/* Add task button / form */}
+      <div className="mb-6">
+        {!showAddForm ? (
+          <button
+            type="button"
+            onClick={() => setShowAddForm(true)}
+            className="rounded-xl border border-dashed border-[var(--velo-terracotta)] px-5 py-2.5 text-sm text-[var(--velo-terracotta)] hover:bg-[rgba(184,90,46,0.06)] transition-colors"
+            style={{ fontFamily: VELO_MONO_FONT }}
+          >
+            {copy.addTask}
+          </button>
+        ) : (
+          <CouplePanel>
+            <div className="mb-3 text-[10px] uppercase tracking-[0.22em] text-[var(--velo-terracotta)]" style={{ fontFamily: VELO_MONO_FONT }}>
+              {copy.newTaskLabel}
+            </div>
+            <TaskForm
+              copy={copy}
+              locale={locale}
+              title={addTitle}
+              due={addDue}
+              phase={addPhase}
+              saving={addSaving}
+              hasError={addError}
+              saveLabel={copy.addTaskSave}
+              onTitleChange={setAddTitle}
+              onDueChange={setAddDue}
+              onPhaseChange={setAddPhase}
+              onSave={handleAddTask}
+              onCancel={() => {
+                setShowAddForm(false)
+                setAddTitle('')
+                setAddDue('')
+                setAddPhase('soon')
+                setAddError(false)
+              }}
+            />
+          </CouplePanel>
+        )}
+      </div>
+
       {grouped.length === 0 && <CoupleEmptyState title={copy.emptyTitle} body={copy.emptyDesc} />}
 
       {grouped.map(({ phase, tasks: phaseTasks }) => (
-        <PhaseGroup key={phase} phase={phase} tasks={phaseTasks} locale={locale} pendingIds={pendingSet} onToggle={handleToggle} />
+        <PhaseGroup
+          key={phase}
+          phase={phase}
+          tasks={phaseTasks}
+          locale={locale}
+          pendingIds={pendingSet}
+          onToggle={handleToggle}
+          onEdit={handleStartEdit}
+          onDelete={handleDeleteTask}
+          editingId={editingId}
+          editTitle={editTitle}
+          editDue={editDue}
+          editPhase={editPhase}
+          editSaving={editSaving}
+          editError={editError}
+          onEditTitleChange={setEditTitle}
+          onEditDueChange={setEditDue}
+          onEditPhaseChange={setEditPhase}
+          onEditSave={handleSaveEdit}
+          onEditCancel={handleCancelEdit}
+        />
       ))}
 
       {grouped.length > 0 && (
