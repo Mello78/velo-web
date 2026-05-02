@@ -17,9 +17,9 @@ async function getVendor(id: string) {
 function getDetailCopy(locale: string) {
   return locale === 'en'
     ? {
-        heroEyebrow: 'Curated wedding profile',
         trustLabelVerified: 'Partner VELO',
         trustLabelDirect: 'Direct contact',
+        contactsEyebrow: 'Contact details',
         trustTitleVerified: 'Curated by the VELO team',
         trustTitleDirect: 'Visible on VELO, handled directly',
         verifiedDesc: 'Verified VAT number. Active on VELO chat. Profile reviewed by the VELO team.',
@@ -53,9 +53,9 @@ function getDetailCopy(locale: string) {
         openLink: 'Open',
       }
     : {
-        heroEyebrow: 'Profilo wedding curato',
         trustLabelVerified: 'Partner VELO',
         trustLabelDirect: 'Contatto diretto',
+        contactsEyebrow: 'Contatti',
         trustTitleVerified: 'Curato dal team VELO',
         trustTitleDirect: 'Visibile su VELO, gestito in diretto',
         verifiedDesc: 'P.IVA verificata. Attivo nella chat VELO. Profilo verificato dal team VELO.',
@@ -124,8 +124,8 @@ function SectionIntro({
   return (
     <div className="mb-5">
       <p className="text-[11px] uppercase tracking-[0.28em] text-[#b85a2e]/85">{eyebrow}</p>
-      <h2 className="mt-3 text-[1.7rem] font-light leading-tight text-bg sm:text-[2rem]">{title}</h2>
-      {body && <p className="mt-3 max-w-2xl text-sm leading-7 text-bg/72 sm:text-[0.98rem]">{body}</p>}
+      <h2 className="mt-3 text-[1.7rem] font-light leading-tight text-[#1f1812] sm:text-[2rem]">{title}</h2>
+      {body && <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5d4e40] sm:text-[0.98rem]">{body}</p>}
     </div>
   )
 }
@@ -331,12 +331,11 @@ export default async function VendorDetailPage({
 
               <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-9">
                   <div className="flex flex-wrap gap-2.5">
-                    <HeroPill label={detailCopy.heroEyebrow} />
                     <HeroPill label={trustEyebrow} />
                     {vendor.category && <HeroPill label={vendor.category} />}
                   </div>
 
-                  <h1 className="mt-5 max-w-4xl text-[2.75rem] font-light leading-[0.94] tracking-[-0.035em] text-[#1f1812] sm:text-[4.05rem] lg:text-[5.05rem]">
+                  <h1 className="mt-5 max-w-4xl text-[2.2rem] font-light leading-[0.94] tracking-[-0.03em] text-[#1f1812] sm:text-[3.35rem] lg:text-[4.2rem]">
                     {vendor.name}
                   </h1>
 
@@ -386,11 +385,11 @@ export default async function VendorDetailPage({
                 body={trustBody}
                 className={vendor.verified ? 'border-[#b85a2e]/22 bg-[linear-gradient(180deg,rgba(251,244,229,0.96)_0%,rgba(239,225,205,0.92)_100%)]' : 'border-[#e2d0bb]/80 bg-[linear-gradient(180deg,rgba(251,244,232,0.96)_0%,rgba(239,225,205,0.9)_100%)]'}
               >
-                <div className="flex flex-wrap gap-2">
-                  {vendor.verified && <HeroPill label={detailCopy.trustLabelVerified} />}
-                  {!vendor.verified && <HeroPill label={detailCopy.trustLabelDirect} />}
-                  {vendor.languages?.length > 0 && <HeroPill label={`${detailCopy.languagesTitle}: ${vendor.languages.join(', ')}`} />}
-                </div>
+                {vendor.languages?.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    <HeroPill label={`${detailCopy.languagesTitle}: ${vendor.languages.join(', ')}`} />
+                  </div>
+                )}
               </RailCard>
 
               <RailCard eyebrow={detailCopy.factsTitle} title={locationLabel} body={detailCopy.factsIntro}>
@@ -410,7 +409,7 @@ export default async function VendorDetailPage({
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.02fr)_360px] lg:items-start">
           <div className="space-y-8">
             {photos.length > 0 && (
-              <section className="rounded-[2rem] border border-border/80 bg-[linear-gradient(180deg,#f8efe2_0%,#f3e6d5_100%)] p-4 shadow-[0_18px_70px_rgba(0,0,0,0.16)] sm:p-5">
+              <section className="rounded-[2rem] border border-[#e2d0bb]/80 bg-[linear-gradient(180deg,#f8efe2_0%,#f3e6d5_100%)] p-4 shadow-[0_18px_70px_rgba(0,0,0,0.16)] sm:p-5">
                 <SectionIntro
                   eyebrow={detailCopy.galleryTitle}
                   title={vendor.name}
@@ -420,7 +419,7 @@ export default async function VendorDetailPage({
               </section>
             )}
 
-            <section className="rounded-[2rem] border border-border/75 bg-[linear-gradient(180deg,#fbf4e8_0%,#f4e6d5_100%)] p-6 shadow-[0_18px_70px_rgba(0,0,0,0.14)] sm:p-8">
+            <section className="rounded-[2rem] border border-[#e2d0bb]/75 bg-[linear-gradient(180deg,#fbf4e8_0%,#f4e6d5_100%)] p-6 shadow-[0_18px_70px_rgba(0,0,0,0.14)] sm:p-8">
               <div className="grid gap-8 xl:grid-cols-[minmax(0,1.08fr)_minmax(250px,0.92fr)]">
                 <div>
                   <SectionIntro
@@ -438,7 +437,7 @@ export default async function VendorDetailPage({
                         {allSpecialties.map((specialty, index) => (
                           <span
                             key={`${specialty}-${index}`}
-                            className="rounded-full border border-[rgba(44,34,25,0.14)] bg-white/55 px-4 py-2 text-sm text-bg/78"
+                            className="rounded-full border border-[rgba(44,34,25,0.14)] bg-white/55 px-4 py-2 text-sm text-[#1f1812]/78"
                           >
                             {specialty}
                           </span>
@@ -487,7 +486,7 @@ export default async function VendorDetailPage({
           <aside className="space-y-5 lg:sticky lg:top-24">
             {contactLinks.length > 0 && (
               <RailCard
-                eyebrow={vendor.verified ? detailCopy.trustLabelVerified : detailCopy.trustLabelDirect}
+                eyebrow={vendor.verified ? detailCopy.contactsEyebrow : detailCopy.trustLabelDirect}
                 title={vendor.verified ? tr.vendorDetail.contacts : detailCopy.contactJumpDirect}
                 body={vendor.verified ? detailCopy.verifiedDesc : detailCopy.directContactDesc}
                 className="border-[#b85a2e]/18"
