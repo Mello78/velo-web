@@ -32,7 +32,7 @@ export default function PhotoLightbox({ photos, vendorName, locale = 'it' }: Pro
               type="button"
               onClick={() => openAt(index)}
               className={[
-                'group relative overflow-hidden rounded-[1.5rem] border border-white/40 bg-[#e8d8c4] text-left shadow-[0_18px_40px_rgba(22,17,12,0.12)] focus:outline-none',
+                'group relative overflow-hidden rounded-[1.5rem] border border-white/40 bg-[#e8d8c4] text-left shadow-[0_18px_40px_rgba(22,17,12,0.12)] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#b85a2e]',
                 primary ? 'aspect-[4/5] md:col-span-7 md:row-span-2 md:aspect-auto' : 'aspect-[4/3] md:col-span-5',
               ].join(' ')}
             >
@@ -60,7 +60,7 @@ export default function PhotoLightbox({ photos, vendorName, locale = 'it' }: Pro
         })}
       </div>
 
-      {photos.length > gallery.length && (
+      {safePhotos.length > gallery.length && (
         <div className="mt-4 flex justify-end">
           <button
             type="button"
@@ -76,8 +76,8 @@ export default function PhotoLightbox({ photos, vendorName, locale = 'it' }: Pro
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={locale === 'en' ? `Photo ${activePosition} of ${photos.length} for ${vendorName}` : `Foto ${activePosition} di ${photos.length} per ${vendorName}`}
-          className="fixed inset-0 z-50 bg-[rgba(10,8,6,0.96)] px-4 py-6 backdrop-blur-sm]"
+          aria-label={locale === 'en' ? `Photo ${activePosition} of ${safePhotos.length} for ${vendorName}` : `Foto ${activePosition} di ${safePhotos.length} per ${vendorName}`}
+          className="fixed inset-0 z-50 bg-[rgba(10,8,6,0.96)] px-4 py-6 backdrop-blur-sm"
           onClick={close}
           onKeyDown={e => e.key === 'Escape' && close()}
           tabIndex={-1}
@@ -95,7 +95,7 @@ export default function PhotoLightbox({ photos, vendorName, locale = 'it' }: Pro
                 <button
                   type="button"
                   onClick={close}
-                  className="rounded-full border border-white/12 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#fbf4e8]/82 transition-colors hover:border-white/24 hover:text-[#fbf4e8]"
+                  className="rounded-full border border-white/12 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#fbf4e8]/82 transition-colors hover:border-white/24 hover:text-[#fbf4e8] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#c9a661]"
                   aria-label={locale === 'en' ? 'Close lightbox' : 'Chiudi lightbox'}
                 >
                   {locale === 'en' ? 'Close' : 'Chiudi'}

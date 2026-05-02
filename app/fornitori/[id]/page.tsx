@@ -58,14 +58,14 @@ function getDetailCopy(locale: string) {
         trustTitleVerified: 'Curato dal team VELO',
         trustTitleDirect: 'Visibile su VELO, gestito in diretto',
         verifiedDesc: 'P.IVA verificata. Attivo nella chat VELO. Profilo verificato dal team VELO.',
-        directContactDesc: 'Questo fornitore e visibile su VELO, ma non e ancora attivo nella chat VELO. Contattalo direttamente tramite i suoi canali.',
+        directContactDesc: 'Questo fornitore è visibile su VELO, ma non è ancora attivo nella chat VELO. Contattalo direttamente tramite i suoi canali.',
         factsTitle: 'Note profilo',
-        factsIntro: 'Una lettura rapida di compatibilita, copertura e dettagli pratici.',
+        factsIntro: 'Una lettura rapida di compatibilità, copertura e dettagli pratici.',
         contactJumpVerified: 'Vedi contatti',
         contactJumpDirect: 'Vedi contatti diretti',
         galleryTitle: 'Portfolio',
         storyTitle: 'Il loro racconto',
-        servicesTitle: 'Specialita e fit',
+        servicesTitle: 'Specialità e fit',
         awardsTitle: 'Riconoscimenti',
         coverageTitle: 'Zona coperta',
         coverageBase: 'Base in',
@@ -321,7 +321,7 @@ export default async function VendorDetailPage({
                   </div>
                 )}
 
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(49,35,24,0.05)_0%,rgba(49,35,24,0.25)_35%,rgba(49,35,24,0.55)_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(49,35,24,0.04)_0%,rgba(49,35,24,0.12)_45%,rgba(49,35,24,0.28)_100%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_16%,rgba(255,255,255,0.22),transparent_26%),radial-gradient(circle_at_78%_18%,rgba(201,166,97,0.22),transparent_22%)]" />
 
                 {vendor.logo_url && (
@@ -331,7 +331,7 @@ export default async function VendorDetailPage({
                 )}
 
                 <div className="relative z-10 flex min-h-[540px] flex-col justify-end p-5 sm:min-h-[620px] sm:p-8 lg:p-10">
-                  <div className="max-w-3xl">
+                  <div className="max-w-3xl rounded-[2rem] border border-[#e2d0bb]/80 bg-[rgba(251,244,229,0.88)] p-5 shadow-[0_18px_60px_rgba(49,35,24,0.16)] backdrop-blur-md sm:p-7">
                     <div className="mb-4 flex flex-wrap gap-2.5">
                       <HeroPill label={detailCopy.heroEyebrow} />
                       <HeroPill label={trustEyebrow} />
@@ -365,14 +365,14 @@ export default async function VendorDetailPage({
                     <div className="mt-8 flex flex-wrap gap-3">
                       <Link
                         href="/couple"
-                        className="inline-flex items-center justify-center rounded-full bg-[#c9a84c] px-5 py-3 text-sm font-medium text-[#f5edd6] transition-all hover:-translate-y-0.5 hover:bg-[#b5943e]"
+                        className="inline-flex items-center justify-center rounded-full bg-[#b85a2e] px-5 py-3 text-sm font-medium text-[#fbf4e5] transition-all hover:-translate-y-0.5 hover:bg-[#a54d25]"
                       >
                         {detailCopy.planningBtn}
                       </Link>
                       {contactLinks.length > 0 && (
                         <a
                           href="#contacts"
-                          className="inline-flex items-center justify-center rounded-full border border-[#e2d0bb]/16 bg-[#fbf4e5]/[0.03] px-5 py-3 text-sm text-[#1f1812]/90 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-[#c9a84c]/45 hover:text-[#1f1812]"
+                          className="inline-flex items-center justify-center rounded-full border border-[#b85a2e]/22 bg-[#fffaf4]/70 px-5 py-3 text-sm text-[#5d4e40] backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-[#b85a2e]/45 hover:text-[#8a3e1e]"
                         >
                           {contactJumpLabel}
                         </a>
@@ -388,7 +388,7 @@ export default async function VendorDetailPage({
                 eyebrow={trustEyebrow}
                 title={trustTitle}
                 body={trustBody}
-                 className={vendor.verified ? 'border-[#c9a84c]/30 bg-[linear-gradient(180deg,rgba(252,244,229,0.92)_0%,rgba(235,222,204,0.94)_100%)]' : 'border-[#e2d0bb]/12 bg-[linear-gradient(180deg,rgba(251,244,232,0.92)_0%,rgba(235,222,204,0.94)_100%)]'}
+                className={vendor.verified ? 'border-[#b85a2e]/22 bg-[linear-gradient(180deg,rgba(251,244,229,0.96)_0%,rgba(239,225,205,0.92)_100%)]' : 'border-[#e2d0bb]/80 bg-[linear-gradient(180deg,rgba(251,244,232,0.96)_0%,rgba(239,225,205,0.9)_100%)]'}
               >
                 <div className="flex flex-wrap gap-2">
                   {vendor.verified && <HeroPill label={detailCopy.trustLabelVerified} />}
@@ -418,9 +418,9 @@ export default async function VendorDetailPage({
                 <SectionIntro
                   eyebrow={detailCopy.galleryTitle}
                   title={vendor.name}
-                  body={locale === 'en' ? 'A more visual read of the profile before you decide how to proceed.' : 'Una lettura piu visiva del profilo prima di decidere come procedere.'}
+                  body={locale === 'en' ? 'A more visual read of the profile before you decide how to proceed.' : 'Una lettura più visiva del profilo prima di decidere come procedere.'}
                 />
-                <PhotoLightbox photos={photos} vendorName={vendor.name} />
+                <PhotoLightbox photos={photos} vendorName={vendor.name} locale={locale} />
               </section>
             )}
 
@@ -503,13 +503,13 @@ export default async function VendorDetailPage({
                       href={contact.url}
                       target={contact.url.startsWith('http') ? '_blank' : undefined}
                       rel={contact.url.startsWith('http') ? 'noopener noreferrer' : undefined}
-                      className="flex items-center justify-between gap-3 rounded-[1.15rem] border border-[#e2d0bb]/10 bg-[#fbf4e5]/[0.03] px-4 py-3 text-sm transition-colors hover:border-[#c9a84c]/30 hover:bg-[#fbf4e5]/[0.05]"
+                      className="flex items-center justify-between gap-3 rounded-[1.15rem] border border-[#e2d0bb]/70 bg-[#fffaf4]/62 px-4 py-3 text-sm transition-colors hover:border-[#b85a2e]/30 hover:bg-[#fffaf4]/85"
                     >
                       <div className="min-w-0">
                         <p className="text-[11px] uppercase tracking-[0.2em] text-[#8a7e6a]">{contact.label}</p>
                         <p className="mt-1 truncate text-[#1f1812]">{contact.handle}</p>
                       </div>
-                      <span className="shrink-0 text-[11px] uppercase tracking-[0.18em] text-[#c9a84c]/88">{detailCopy.openLink}</span>
+                      <span className="shrink-0 text-[11px] uppercase tracking-[0.18em] text-[#b85a2e]/88">{detailCopy.openLink}</span>
                     </a>
                   ))}
                 </div>
@@ -520,11 +520,11 @@ export default async function VendorDetailPage({
               eyebrow={detailCopy.planningBadge}
               title={detailCopy.planningTitle}
               body={detailCopy.planningDesc}
-              className="border-[#c9a84c]/25 bg-[linear-gradient(180deg,rgba(252,244,229,0.92)_0%,rgba(235,222,204,0.94)_100%)]"
+              className="border-[#b85a2e]/25 bg-[linear-gradient(180deg,rgba(251,244,229,0.96)_0%,rgba(239,225,205,0.92)_100%)]"
             >
               <Link
                 href="/couple"
-                className="inline-flex items-center justify-center rounded-full bg-[#c9a84c] px-5 py-3 text-sm font-medium text-[#f5edd6] transition-colors hover:bg-[#b5943e]"
+                className="inline-flex items-center justify-center rounded-full bg-[#b85a2e] px-5 py-3 text-sm font-medium text-[#fbf4e5] transition-colors hover:bg-[#a54d25]"
               >
                 {detailCopy.planningBtn}
               </Link>
