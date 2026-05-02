@@ -4,10 +4,10 @@ import SplashLoader from '../components/SplashLoader'
 
 export const metadata: Metadata = {
   title: {
-    default: 'VELO - Wedding Planner Italia',
+    default: 'VELO | Marry in Italy. With VELO.',
     template: '%s | VELO Wedding',
   },
-  description: 'VELO is the wedding planning platform for couples getting married in Italy, with dashboard, documents guidance, checklist, vendors, guests, and budget in one place.',
+  description: 'VELO helps couples get married in Italy with clearer next steps, document guidance, destination wedding support, and curated vendors in one calm planning platform.',
   keywords: [
     'wedding planner Italia',
     'matrimonio Italia',
@@ -43,8 +43,8 @@ export const metadata: Metadata = {
     apple: '/favicon_180.png',
   },
   openGraph: {
-    title: 'VELO - Wedding Planner Italia',
-    description: 'Plan your wedding in Italy with dashboard, documents guidance, checklist, vendors, guests, and budget in one platform.',
+    title: 'VELO | Marry in Italy. With VELO.',
+    description: 'A calmer way to plan a wedding in Italy: documents, priorities, destination support, and curated vendors in one platform.',
     url: 'https://velowedding.it',
     siteName: 'VELO Wedding',
     locale: 'it_IT',
@@ -53,8 +53,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'VELO - Wedding Planner Italia',
-    description: 'The VELO platform for planning a wedding in Italy.',
+    title: 'VELO | Marry in Italy. With VELO.',
+    description: 'Documents, planning priorities, destination wedding support, and curated vendors for couples marrying in Italy.',
     images: ['/logo_velo.png'],
   },
   robots: { index: true, follow: true },

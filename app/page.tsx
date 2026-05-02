@@ -44,20 +44,56 @@ const HERO_IMAGES: HeroImage[] = [
 type Copy = {
   nav: { couples: string; vendors: string; forVendors: string; primaryCta: string }
   hero: {
-    label: string; titleA: string; titleB: string; titleC: string; sub: string
-    coupleCta: string; vendorCta: string; destinationBadge: string; destinationNote: string
-    proofLabel: string; proofTitle: string; proofItems: string[]; regionsLine: string
+    label: string
+    titleA: string
+    titleC: string
+    sub: string
+    coupleCta: string
+    secondaryCta: string
+    browseText: string
+    browseHref: string
+    destinationBadge: string
+    destinationNote: string
+    quickPoints: string[]
+    proofLabel: string
+    proofTitle: string
+    proofItems: string[]
   }
   platform: {
-    label: string; title: string; sub: string; cta: string
-    workspaceLabel: string; workspaceTitle: string; workspaceCopy: string
-    strips: string[]; panels: { eyebrow: string; title: string; copy: string }[]
+    label: string
+    title: string
+    sub: string
+    cta: string
+    workspaceLabel: string
+    workspaceTitle: string
+    strips: string[]
+    panels: { eyebrow: string; title: string; copy: string }[]
   }
   italy: {
-    label: string; title: string; sub: string; callout: string
+    label: string
+    title: string
+    sub: string
+    callout: string
     pillars: { number: string; title: string; copy: string }[]
   }
-  vendors: { label: string; title: string; sub: string; curatedLine: string; browseCta: string; vendorCta: string }
+  nextStep: {
+    label: string
+    title: string
+    sub: string
+    cta: string
+    cards: { eyebrow: string; title: string; copy: string }[]
+  }
+  vendors: {
+    label: string
+    title: string
+    sub: string
+    curatedLine: string
+    browseCta: string
+    vendorCta: string
+    cardKicker: string
+    cardTitle: string
+    cardCopy: string
+  }
   close: { label: string; title: string; sub: string; coupleCta: string; vendorCta: string; note: string }
   footer: { couples: string; vendors: string; vendorArea: string; admin: string; copy: string }
 }
@@ -65,132 +101,253 @@ type Copy = {
 function getCopy(locale: string): Copy {
   if (locale === 'en') {
     return {
-      nav: { couples: 'Couple Area', vendors: 'Professionals', forVendors: 'For vendors', primaryCta: 'ENTER COUPLE AREA' },
+      nav: {
+        couples: 'Couple Area',
+        vendors: 'Professionals',
+        forVendors: 'For vendors',
+        primaryCta: 'START PLANNING',
+      },
       hero: {
         label: 'for weddings in Italy',
         titleA: 'Marry in Italy.',
-        titleB: '',
         titleC: 'With VELO.',
-        sub: 'The planning platform for couples bringing an Italian wedding together from abroad.',
-        coupleCta: 'Enter couple area',
-        vendorCta: 'Explore professionals',
-        destinationBadge: 'Destination couples',
-        destinationNote: 'For couples planning from abroad — balancing place, paperwork, people, and time across borders.',
+        sub: 'VELO guides couples through documents, priorities, vendors, guests and budget: one clear path instead of scattered decisions.',
+        coupleCta: 'Start planning',
+        secondaryCta: 'See how it works',
+        browseText: 'Browse curated professionals',
+        browseHref: '/fornitori',
+        destinationBadge: 'Destination wedding support',
+        destinationNote: 'Especially useful for couples planning from abroad or organizing Italy from a distance.',
+        quickPoints: ['Documents made clearer', 'Your next action, not guesswork', 'Curated vendors in context'],
         proofLabel: 'Inside the couple platform',
-        proofTitle: 'The wedding, kept in one calm room.',
-        proofItems: ['Dashboard', 'Documents', 'Checklist', 'Guests', 'Budget', 'Vendors'],
-        regionsLine: 'Across Tuscany, Amalfi, Como, Puglia, Rome, Venice, and beyond.',
+        proofTitle: 'The wedding, guided in one calm room.',
+        proofItems: ['Documents', 'Checklist', 'Guests', 'Budget', 'Vendors'],
       },
       platform: {
-        label: 'Platform proof',
-        title: 'Not a dashboard. A planning room.',
-        sub: 'VELO unifies documents, guests, budget, and curated Italian professionals in one quiet workspace — so the wedding stays whole instead of scattered.',
-        cta: 'Open VELO',
+        label: 'Not just vendors',
+        title: 'VELO builds the planning path, not just the shortlist.',
+        sub: 'It turns an Italian wedding into a clearer sequence: what to prepare first, what matters now, and when curated vendors should enter the picture.',
+        cta: 'Start planning',
         workspaceLabel: 'The couple workspace',
-        workspaceTitle: 'Planning, documents, guests, and vendors held in one calm room.',
-        workspaceCopy: 'Instead of splitting the wedding across spreadsheets, chats, and generic tools, VELO keeps the real planning flow together from first decisions to final confirmations.',
-        strips: ['Dashboard', 'Document path', 'Checklist', 'Guest list', 'Budget', 'Vendors'],
+        workspaceTitle: 'Planning, documents, guests, and vendors held in one clear flow.',
+        strips: ['Dashboard', 'Documents', 'Next steps', 'Guests', 'Budget', 'Vendors'],
         panels: [
-          { eyebrow: 'Documents', title: 'Know what Italy requires, before it becomes stressful.', copy: 'Nationality, ceremony type, and timing inform the path so international couples are not left translating the process alone.' },
-          { eyebrow: 'Guests & budget', title: 'Every decision visible, in one place.', copy: 'RSVPs, spend, and vendor choices stay close to the rest of the plan instead of becoming separate admin.' },
-          { eyebrow: 'Curated vendors', title: 'The right professionals, in context.', copy: 'Browse professionals for your wedding in Italy from the same platform where the rest of the wedding already lives.' },
+          {
+            eyebrow: 'Documents',
+            title: 'Understand what Italy requires before it becomes stressful.',
+            copy: 'Nationality, ceremony type, and timing shape the route, so couples are not left decoding the process alone.',
+          },
+          {
+            eyebrow: 'Priorities',
+            title: 'See the next practical move, not a giant to-do list.',
+            copy: 'VELO helps couples move step by step instead of losing momentum across too many tabs, notes, and chats.',
+          },
+          {
+            eyebrow: 'Vendors',
+            title: 'Meet professionals only when the context is ready.',
+            copy: 'Vendor discovery becomes more useful once location, timing, and ceremony reality are already clearer.',
+          },
         ],
       },
       italy: {
-        label: 'Italy as method',
-        title: 'Italy is not a backdrop. It is the method.',
-        sub: 'Documents, ceremony logic, regional sourcing, and long-distance decisions change the planning job. VELO is built around that reality from the start.',
-        callout: 'Especially for couples planning from abroad, where certainty matters as much as beauty.',
+        label: 'Destination wedding support',
+        title: 'Italy changes the planning job.',
+        sub: 'Documents, municipality timing, ceremony logic, language, and regional sourcing all matter more when the wedding happens in Italy.',
+        callout: 'VELO is designed for that reality, especially when the couple is planning from abroad and needs clarity before beauty turns into admin.',
         pillars: [
-          { number: '01', title: 'Documents first', copy: 'Comune declarations, apostilles, translations, ceremony requirements, and timing are treated as part of the plan rather than an afterthought.' },
-          { number: '02', title: 'Destination logic', copy: 'The platform is shaped around weddings planned from another country, where confidence and clarity matter more than endless browsing.' },
-          { number: '03', title: 'Regional curation', copy: 'VELO connects couples with selected professionals across Italy so vendor discovery feels aligned with the place, not like a generic directory.' },
+          {
+            number: '01',
+            title: 'Documents first',
+            copy: 'Comune declarations, apostilles, translations, ceremony requirements, and timing become part of the plan instead of a separate panic later on.',
+          },
+          {
+            number: '02',
+            title: 'Ceremony and timing',
+            copy: 'Civil, religious, and symbolic weddings create different practical paths. VELO helps couples understand those differences earlier.',
+          },
+          {
+            number: '03',
+            title: 'Regional support',
+            copy: 'Selected professionals in key Italian regions become more meaningful once the place, guest flow, and planning sequence are already clear.',
+          },
+        ],
+      },
+      nextStep: {
+        label: 'Your next action',
+        title: 'The next step should feel obvious.',
+        sub: 'VELO does not throw the whole wedding at you at once. It helps couples understand what matters now, what can wait, and what to do next.',
+        cta: 'See the couple platform',
+        cards: [
+          {
+            eyebrow: 'Step 01',
+            title: 'Start from the essentials',
+            copy: 'Date, place, ceremony, and couple context shape the path before vendor browsing becomes useful.',
+          },
+          {
+            eyebrow: 'Step 02',
+            title: 'Handle the Italian reality',
+            copy: 'Documents, timing, and ceremony requirements become easier when they are explained in plain language.',
+          },
+          {
+            eyebrow: 'Step 03',
+            title: 'Choose vendors with context',
+            copy: 'Once the foundations are clear, curated professionals fit naturally into the plan instead of replacing it.',
+          },
         ],
       },
       vendors: {
         label: 'Curated professionals',
-        title: 'Introduced with care, not thrown into a directory.',
-        sub: 'Selected photographers, floral designers, venues, caterers, planners, and more, across Italy and inside the same world as your planning.',
-        curatedLine: 'A quieter kind of vendor access, shaped around place, fit, and timing in Italy.',
+        title: 'Curated vendors, at the right moment.',
+        sub: 'Photographers, floral designers, venues, caterers, planners, and more, introduced as part of the planning journey, not as the entire promise.',
+        curatedLine: 'A quieter kind of vendor access, shaped around place, fit, timing, and the reality of getting married in Italy.',
         browseCta: 'Browse professionals',
-        vendorCta: 'Join as a vendor',
+        vendorCta: 'VELO Partner Program',
+        cardKicker: 'In several regions',
+        cardTitle: 'Vendor introductions stay inside the planning context.',
+        cardCopy: 'Professionals are introduced with context and operational support as part of a clear planning sequence.',
       },
       close: {
-        label: 'Begin beautifully',
-        title: 'Bring the whole wedding into one Italian room.',
-        sub: 'Open VELO and begin with clarity — from the first document to the final table plan.',
-        coupleCta: 'Enter couple area',
+        label: 'Begin with clarity',
+        title: 'Bring the wedding into one clear Italian plan.',
+        sub: 'Start with the next right action, understand the Italian path, and keep documents, guests, budget, and vendors in one place.',
+        coupleCta: 'Start planning',
         vendorCta: 'Vendor area',
         note: 'Wedding professionals have their own entry in the vendor area.',
       },
-      footer: { couples: 'Couple Area', vendors: 'Professionals', vendorArea: 'Vendor Area', admin: 'Admin', copy: '© 2026 VELO · velowedding.it' },
+      footer: {
+        couples: 'Couple Area',
+        vendors: 'Professionals',
+        vendorArea: 'Vendor Area',
+        admin: 'Admin',
+        copy: '© 2026 VELO · velowedding.it',
+      },
     }
   }
 
   return {
-    nav: { couples: 'Area Coppie', vendors: 'Professionisti', forVendors: 'Per fornitori', primaryCta: "ENTRA NELL'AREA COPPIA" },
+    nav: {
+      couples: 'Area Coppie',
+      vendors: 'Professionisti',
+      forVendors: 'Per fornitori',
+      primaryCta: 'INIZIA A PIANIFICARE',
+    },
     hero: {
       label: 'per matrimoni in Italia',
       titleA: 'Sposatevi in Italia.',
-      titleB: '',
       titleC: 'Con VELO.',
-      sub: "La piattaforma di planning per coppie che costruiscono il loro matrimonio in Italia dall'estero.",
-      coupleCta: "Entra nell'area coppia",
-      vendorCta: 'Esplora i professionisti',
-      destinationBadge: "Per coppie dall'estero",
-      destinationNote: "Per coppie che organizzano dall'estero — tenendo insieme luogo, documenti, persone e tempo tra due paesi.",
+      sub: 'VELO accompagna la coppia tra documenti, priorità, fornitori, ospiti e budget: tutto in ordine, con meno confusione e più chiarezza.',
+      coupleCta: 'Inizia a pianificare',
+      secondaryCta: 'Scopri come funziona',
+      browseText: 'Esplora i professionisti curati',
+      browseHref: '/fornitori',
+      destinationBadge: 'Supporto destination wedding',
+      destinationNote: 'Particolarmente utile per coppie straniere o per chi sta organizzando l Italia da lontano.',
+        quickPoints: ['Documenti resi più chiari', 'La prossima azione, non solo ispirazione', 'Fornitori curati nel momento giusto'],
       proofLabel: 'Dentro la piattaforma coppia',
-      proofTitle: 'Il matrimonio, tenuto in una sola stanza calma.',
-      proofItems: ['Dashboard', 'Documenti', 'Checklist', 'Ospiti', 'Budget', 'Fornitori'],
-      regionsLine: 'Tra Toscana, Amalfi, Como, Puglia, Roma, Venezia e oltre.',
+      proofTitle: 'Il matrimonio, guidato in una sola stanza calma.',
+      proofItems: ['Documenti', 'Checklist', 'Ospiti', 'Budget', 'Fornitori'],
     },
     platform: {
-      label: 'Piattaforma',
-      title: 'Non una dashboard. Una regia del matrimonio.',
-      sub: 'VELO riunisce documenti, ospiti, budget e professionisti italiani selezionati in uno spazio calmo — così il matrimonio resta intero invece di perdersi.',
-      cta: 'Apri VELO',
+      label: 'Non solo fornitori',
+        title: 'VELO costruisce il percorso operativo, non solo la shortlist.',
+        sub: 'Trasforma il matrimonio in Italia in una sequenza più chiara: cosa preparare prima, cosa conta adesso, e quando ha senso far entrare i fornitori giusti.',
+      cta: 'Inizia a pianificare',
       workspaceLabel: 'Lo spazio coppia',
-      workspaceTitle: 'Planning, documenti, ospiti e fornitori tenuti in una sola regia calma.',
-      workspaceCopy: 'Invece di dividere il matrimonio tra fogli, chat e strumenti generici, VELO tiene collegato il flusso reale del planning, dalle prime decisioni fino alle conferme finali.',
-      strips: ['Dashboard', 'Guida documenti', 'Checklist', 'Lista ospiti', 'Budget', 'Fornitori'],
+        workspaceTitle: 'Planning, documenti, ospiti e fornitori tenuti in un flusso più chiaro.',
+      strips: ['Dashboard', 'Documenti', 'Prossimi passi', 'Ospiti', 'Budget', 'Fornitori'],
       panels: [
-        { eyebrow: 'Documenti', title: "Sapere cosa richiede l'Italia, prima che diventi stress.", copy: 'Nazionalita, tipo di cerimonia e tempistiche guidano il percorso, cosi le coppie straniere non restano sole a interpretare il processo.' },
-        { eyebrow: 'Ospiti e budget', title: 'Ogni decisione visibile, in un solo posto.', copy: 'RSVP, spese e scelte sui fornitori restano vicini al resto del planning invece di diventare amministrazione separata.' },
-        { eyebrow: 'Fornitori selezionati', title: 'I professionisti giusti, nel contesto giusto.', copy: 'Esplorate professionisti per il vostro matrimonio in Italia dallo stesso spazio in cui vive gia il resto del progetto.' },
+          {
+            eyebrow: 'Documenti',
+            title: "Capire cosa richiede l'Italia prima che diventi stress.",
+            copy: 'Nazionalità, rito e tempistiche guidano il percorso, così la coppia non resta sola a interpretare il processo.',
+          },
+          {
+            eyebrow: 'Priorità',
+            title: 'Vedere il prossimo passo, non una lista infinita.',
+            copy: 'VELO aiuta la coppia a muoversi per ordine invece di perdere energia tra chat, note sparse e decisioni sovrapposte.',
+          },
+          {
+            eyebrow: 'Fornitori',
+            title: 'I professionisti entrano quando il contesto è pronto.',
+            copy: 'La scelta vendor diventa molto più utile quando luogo, tempi e realtà del rito sono già più chiari.',
+          },
       ],
     },
     italy: {
-      label: "L'Italia come metodo",
-      title: "L'Italia non è uno sfondo. È il metodo.",
-      sub: "Documenti, logica della cerimonia, sourcing regionale e decisioni da lontano cambiano il lavoro del planning. VELO nasce da questa realtà.",
-      callout: "Soprattutto per coppie che organizzano dall'estero, dove la certezza conta quanto la bellezza.",
+      label: 'Supporto destination wedding',
+      title: "Sposarsi in Italia cambia davvero il planning.",
+        sub: 'Documenti, logica del rito, tempi del Comune, lingua e sourcing regionale contano molto di più quando il matrimonio si svolge in Italia.',
+      callout: 'VELO nasce per questa realta, soprattutto quando la coppia organizza da lontano e ha bisogno di chiarezza prima ancora che di ispirazione.',
       pillars: [
-        { number: '01', title: 'Documenti per primi', copy: "Dichiarazioni al comune, apostille, traduzioni, requisiti per la cerimonia e tempistiche entrano nel piano invece di restare un pensiero separato." },
-        { number: '02', title: 'Logica destination', copy: "La piattaforma nasce per matrimoni organizzati da lontano, dove chiarezza e fiducia contano più di un browsing infinito." },
-        { number: '03', title: 'Curation regionale', copy: "VELO connette le coppie con professionisti selezionati in tutta Italia, così la scelta sembra coerente con il luogo e non con un marketplace generico." },
+        {
+          number: '01',
+          title: 'Documenti per primi',
+          copy: 'Dichiarazioni al Comune, apostille, traduzioni, requisiti del rito e tempistiche entrano nel piano invece di restare una preoccupazione separata.',
+        },
+        {
+          number: '02',
+          title: 'Rito e tempi',
+          copy: 'Cerimonia civile, religiosa o simbolica cambiano il percorso pratico. VELO aiuta a capire queste differenze prima.',
+        },
+        {
+          number: '03',
+          title: 'Supporto regionale',
+            copy: 'I professionisti selezionati in tutta Italia diventano più utili quando luogo, numero ospiti e sequenza del planning sono già più chiari.',
+        },
       ],
     },
-    vendors: {
-      label: 'Professionisti selezionati',
-      title: 'Introdotti con cura, non gettati in una directory.',
-      sub: "Fotografi, floral designer, location, catering, planner e altri professionisti scelti in tutta Italia, dentro lo stesso mondo del vostro planning.",
-      curatedLine: "Un accesso ai fornitori più silenzioso, pensato intorno a luogo, coerenza e tempi in Italia.",
-      browseCta: 'Esplora i professionisti',
-      vendorCta: 'Diventa fornitore',
+    nextStep: {
+      label: 'La tua prossima azione',
+      title: 'Il prossimo passo dovrebbe sembrare evidente.',
+        sub: 'VELO non scarica addosso tutto il matrimonio in una volta. Aiuta la coppia a capire cosa conta ora, cosa può aspettare, e cosa fare dopo.',
+      cta: 'Scopri la piattaforma coppia',
+      cards: [
+        {
+          eyebrow: 'Step 01',
+          title: 'Parti dalle basi vere',
+          copy: 'Data, luogo, rito e contesto della coppia cambiano il percorso prima ancora che la ricerca fornitori diventi utile.',
+        },
+        {
+          eyebrow: 'Step 02',
+          title: 'Affronta la realta italiana',
+            copy: 'Documenti, tempistiche e requisiti del rito diventano più semplici quando qualcuno li traduce in modo comprensibile.',
+        },
+        {
+          eyebrow: 'Step 03',
+            title: 'Scegli i fornitori con più contesto',
+            copy: 'Quando le fondamenta sono chiare, i professionisti giusti entrano nel piano con più coerenza e meno rumore.',
+        },
+      ],
     },
+vendors: {
+        label: 'Professionisti curati',
+        title: 'Fornitori curati, al momento giusto.',
+        sub: 'Fotografi, fioristi, location, catering, planner e altro, introdotti come parte del percorso di pianificazione, non come promessa intera.',
+        curatedLine: "Un accesso ai fornitori più tranquillo, basato su luogo, fit, timing e realtà di sposarsi in Italia.",
+        browseCta: 'Esplora professionisti',
+        vendorCta: 'Programma Partner VELO',
+        cardKicker: 'In diverse regioni',
+        cardTitle: "Le presentazioni dei fornitori restano dentro il contesto della pianificazione.",
+        cardCopy: 'I professionisti accompagnano la coppia con supporto operativo, dal primo contatto fino alla conferma, quando il resto del matrimonio è già organizzato.',
+      },
     close: {
-      label: 'Inizia bene',
-      title: "Portate l'intero matrimonio in una sola stanza italiana.",
-      sub: 'Apri VELO e comincia con chiarezza — dal primo documento fino al tavolo finale.',
-      coupleCta: "Entra nell'area coppia",
+      label: 'Inizia con chiarezza',
+        title: 'Portate il matrimonio in un piano italiano più chiaro.',
+      sub: 'Partite dalla prossima azione giusta, capite meglio il percorso italiano, e tenete documenti, ospiti, budget e fornitori nello stesso spazio.',
+      coupleCta: 'Inizia a pianificare',
       vendorCta: 'Area fornitori',
-      note: "I professionisti del wedding hanno il loro ingresso nell'area fornitori.",
+      note: 'I professionisti del wedding hanno il loro ingresso nell area fornitori.',
     },
-    footer: { couples: 'Area Coppie', vendors: 'Professionisti', vendorArea: 'Area Fornitori', admin: 'Admin', copy: '© 2026 VELO · velowedding.it' },
+    footer: {
+      couples: 'Area Coppie',
+      vendors: 'Professionisti',
+      vendorArea: 'Area Fornitori',
+      admin: 'Admin',
+      copy: '© 2026 VELO · velowedding.it',
+    },
   }
 }
 
-// Planning room — light stone composition, scannable
 function DashboardSurface({
   heroCopy,
   platformCopy,
@@ -200,21 +357,20 @@ function DashboardSurface({
   platformCopy: Copy['platform']
   locale: string
 }) {
-  const isIT = locale === 'it'
-  const stamp = isIT ? 'Area coppia' : 'Couple area'
+  const stamp = locale === 'it' ? 'Area coppia' : 'Couple area'
 
   return (
     <div className="rounded-[2.2rem] bg-[#e6dac4] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] sm:p-5">
-      {/* Floating planning page */}
       <div className="rounded-[1.7rem] bg-[#fbf4e5] p-5 shadow-[0_14px_44px_rgba(31,24,18,0.11)] sm:p-6">
         <div className="flex items-center justify-between border-b border-[#e4d4be] pb-3.5">
-          <p className="text-[10px] uppercase tracking-[0.34em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>{heroCopy.proofLabel}</p>
-          <span className="rounded-full border border-[#d8c7b0] bg-white/60 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[#7a6554]" style={{ fontFamily: MONO_FONT }}>{stamp}</span>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>{heroCopy.proofLabel}</p>
+          <span className="rounded-full border border-[#d8c7b0] bg-white/60 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#7a6554]" style={{ fontFamily: MONO_FONT }}>{stamp}</span>
         </div>
 
-        <h3 className="mt-3.5 text-[1.2rem] leading-snug text-[#1f1812] sm:text-[1.38rem]" style={{ fontFamily: DISPLAY_FONT }}>{heroCopy.proofTitle}</h3>
+        <h3 className="mt-3.5 text-[1.2rem] leading-snug text-[#1f1812] sm:text-[1.38rem]" style={{ fontFamily: DISPLAY_FONT }}>
+          {heroCopy.proofTitle}
+        </h3>
 
-        {/* Three planning areas — scannable, eyebrow + title only */}
         <div className="mt-4 space-y-3.5">
           {platformCopy.panels.map((panel, i) => {
             const roman = ['i.', 'ii.', 'iii.'][i]
@@ -222,7 +378,7 @@ function DashboardSurface({
               <div key={panel.eyebrow} className="flex gap-3.5 border-b border-[#ead9c8] pb-3.5 last:border-0 last:pb-0">
                 <span className="mt-0.5 w-5 shrink-0 text-[0.8rem] italic text-[#b85a2e]" style={{ fontFamily: ITALIC_FONT }}>{roman}</span>
                 <div>
-                  <p className="text-[9.5px] uppercase tracking-[0.28em] text-[#8a3e1e]">{panel.eyebrow}</p>
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#8a3e1e]">{panel.eyebrow}</p>
                   <p className="mt-1 text-[0.97rem] leading-snug text-[#1f1812]" style={{ fontFamily: DISPLAY_FONT }}>{panel.title}</p>
                 </div>
               </div>
@@ -236,21 +392,18 @@ function DashboardSurface({
 
 function ItalyPlate({ copy, locale, heroImage }: { copy: Copy['hero']; locale: string; heroImage: HeroImage }) {
   const isIT = locale === 'it'
-  const plateCta = isIT ? 'Toscana · Amalfi · Como · Langhe' : 'Tuscany · Amalfi · Como · Langhe'
   const plate = {
     kicker: isIT ? 'La promessa italiana' : 'The Italian promise',
     note: isIT ? 'Il matrimonio in Italia, con luogo, luce e misura.' : 'Destination weddings, with place, light, and restraint.',
-    caption: isIT ? "Per coppie che scelgono l'Italia non come sfondo, ma come modo di sposarsi." : 'For couples choosing Italy not as a backdrop, but as a way of getting married.',
-    cta: isIT ? 'Toscana · Amalfi · Como · Langhe' : 'Tuscany · Amalfi · Como · Langhe',
+    caption: isIT
+      ? "Per coppie che scelgono l'Italia non come sfondo, ma come modo di sposarsi."
+      : 'For couples choosing Italy not as a backdrop, but as a way of getting married.',
   }
 
   return (
     <div className="relative h-[400px] sm:h-[500px] lg:h-[600px]">
-      {/* Shadow backing card */}
       <div className="absolute right-[5%] top-[5%] hidden h-[84%] w-[84%] rounded-[3.1rem] border border-[#dcc8b0] bg-[linear-gradient(145deg,#f7efe2_0%,#efe0cd_100%)] shadow-[0_40px_110px_rgba(30,18,10,0.18)] lg:block" />
-      {/* Dark accent strip */}
       <div className="absolute right-0 top-[11%] hidden h-[66%] w-[13%] rounded-[2rem] bg-[#2a1f17] lg:block" />
-      {/* Main image */}
       <div className="absolute right-[7%] top-0 h-[78%] w-[76%] overflow-hidden rounded-[2.8rem] border border-[#e4cdb4]/70 shadow-[0_36px_100px_rgba(18,10,5,0.32),inset_0_1px_0_rgba(255,255,255,0.05)]">
         <Image
           src={heroImage.src}
@@ -264,28 +417,30 @@ function ItalyPlate({ copy, locale, heroImage }: { copy: Copy['hero']; locale: s
         <div className="absolute inset-0" style={{ background: heroImage.overlay }} />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0)_22%,rgba(32,24,18,0.08)_100%)]" />
       </div>
-      {/* Cinematic label bar */}
       <div className="absolute right-[7%] top-0 z-10 flex h-9 w-[76%] items-center justify-between rounded-t-[2.8rem] px-5">
         <span className="text-[8.5px] uppercase tracking-[0.32em] text-[#f0e4d2]/65" style={{ fontFamily: MONO_FONT }}>{isIT ? 'Italia' : 'Italy'}</span>
         <span className="text-[8.5px] uppercase tracking-[0.32em] text-[#f0e4d2]/65" style={{ fontFamily: MONO_FONT }}>VELO</span>
         <span className="text-[8.5px] uppercase tracking-[0.32em] text-[#f0e4d2]/65" style={{ fontFamily: MONO_FONT }}>{heroImage.plateLabel[isIT ? 'it' : 'en']}</span>
       </div>
-      {/* Inner framing ring */}
       <div className="absolute right-[11%] top-[6%] h-[66%] w-[68%] rounded-[2.35rem] border border-[#e8d4bc]/18" />
-      {/* Top-left info card */}
       <div className="absolute left-0 top-[8%] z-10 w-[46%] max-w-[260px] rounded-[2rem] border border-[#c8b09a]/28 bg-[rgba(252,246,238,0.94)] p-5 shadow-[0_24px_64px_rgba(30,18,10,0.18),0_2px_8px_rgba(30,18,10,0.07)] backdrop-blur-xl">
         <p className="text-[10px] uppercase tracking-[0.32em] text-[#8a3e1e]">{plate.kicker}</p>
         <p className="mt-3 text-lg leading-snug text-[#1f1812]" style={{ fontFamily: DISPLAY_FONT }}>{plate.note}</p>
       </div>
-      {/* Bottom caption card */}
       <div className="absolute bottom-[2%] left-[8%] z-10 w-[78%] rounded-[2rem] border border-[#decbb4] bg-[rgba(251,244,229,0.97)] p-5 shadow-[0_24px_64px_rgba(30,18,10,0.18)] backdrop-blur-xl sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e2d1bc] pb-3">
           <p className="text-[10px] uppercase tracking-[0.32em] text-[#8a3e1e]">{copy.label}</p>
-          <span className="rounded-full border border-[#ddc9b1] bg-white/55 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[#6c5b4b]">{copy.destinationBadge}</span>
+          <span className="rounded-full border border-[#ddc9b1] bg-white/55 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[#6c5b4b]">
+            {copy.destinationBadge}
+          </span>
         </div>
-        <p className="mt-4 max-w-[33rem] text-[1.05rem] leading-relaxed text-[#5d4e40] sm:text-[1.1rem]" style={{ fontFamily: DISPLAY_FONT }}>{plate.caption}</p>
+        <p className="mt-4 max-w-[33rem] text-[1.05rem] leading-relaxed text-[#5d4e40] sm:text-[1.1rem]" style={{ fontFamily: DISPLAY_FONT }}>
+          {plate.caption}
+        </p>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>{plateCta}</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>
+            {isIT ? 'Toscana · Amalfi · Como · Langhe' : 'Tuscany · Amalfi · Como · Langhe'}
+          </p>
           <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>
             <span>{heroImage.footLeft[isIT ? 'it' : 'en']}</span>
             <span className="h-px w-6 bg-[#c97a52]/55" />
@@ -313,7 +468,6 @@ export default function Home() {
         primaryCtaLabel={c.nav.primaryCta}
       />
 
-      {/* ── HERO ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-[#ddc9b2] bg-[linear-gradient(180deg,#f5edde_0%,#f0e2cf_58%,#f7efe4_100%)]">
         <div
           className="absolute inset-0"
@@ -326,27 +480,21 @@ export default function Home() {
         <div className="absolute left-[18%] top-[22rem] h-[18rem] w-[18rem] rounded-full bg-[#d8b79a]/16 blur-[100px]" />
         <div className="absolute right-[-8rem] top-[7rem] hidden h-[34rem] w-[44rem] rounded-[4rem] border border-[#3a2b20]/8 bg-[linear-gradient(160deg,rgba(43,32,24,0.12),rgba(43,32,24,0.02)_48%,rgba(255,255,255,0)_100%)] lg:block" />
 
-        <div className="relative mx-auto flex min-h-[90vh] w-full max-w-[1440px] flex-col px-6 pb-20 pt-28 sm:px-10 lg:px-16 lg:pb-24 lg:pt-32">
+        <div className="relative mx-auto flex min-h-[92vh] w-full max-w-[1440px] flex-col px-6 pb-20 pt-28 sm:px-10 lg:px-16 lg:pb-24 lg:pt-32">
           <div className="my-auto grid items-end gap-14 lg:grid-cols-[minmax(0,0.92fr)_minmax(500px,1.08fr)] lg:gap-8">
-
-            {/* Left — headline + copy + CTAs */}
             <div className="relative z-10 max-w-[660px]">
-              {/* Eyebrow */}
               <div className="mb-6 flex items-center gap-4">
                 <div className="h-px w-12 bg-[#c97a52]" />
-                <p className="text-[10px] uppercase tracking-[0.44em] text-[#8a3e1e] sm:text-[11px]">{c.hero.label}</p>
+                <p className="text-[11px] uppercase tracking-[0.36em] text-[#8a3e1e] sm:text-[12px]">{c.hero.label}</p>
               </div>
 
-              {/* Headline */}
               <h1 className="max-w-[720px] font-light leading-[0.88]" style={{ fontSize: 'clamp(3.8rem, 8.8vw, 8.2rem)' }}>
                 <span className="block text-[#1f1812]" style={{ fontFamily: DISPLAY_FONT }}>{c.hero.titleA}</span>
                 <span className="block italic text-[#d38c67]" style={{ fontFamily: ITALIC_FONT }}>{c.hero.titleC}</span>
               </h1>
 
-              {/* Sub */}
-              <p className="mt-6 max-w-[460px] text-[1rem] leading-relaxed text-[#5f5144] sm:text-[1.05rem]">{c.hero.sub}</p>
+              <p className="mt-6 max-w-[520px] text-[1rem] leading-relaxed text-[#5f5144] sm:text-[1.08rem]">{c.hero.sub}</p>
 
-              {/* CTAs */}
               <div className="mt-8 flex flex-col gap-3.5 sm:flex-row">
                 <Link
                   href="/couple"
@@ -354,21 +502,37 @@ export default function Home() {
                 >
                   {c.hero.coupleCta}
                 </Link>
-                <Link
-                  href="/fornitori"
+                <a
+                  href="#how-it-works"
                   className="inline-flex items-center justify-center rounded-full border border-[#cab59d] bg-[rgba(255,250,244,0.62)] px-7 py-[0.95rem] text-sm tracking-[0.12em] text-[#2c2219] transition-colors hover:border-[#b85a2e] hover:text-[#8a3e1e]"
                 >
-                  {c.hero.vendorCta}
-                </Link>
+                  {c.hero.secondaryCta}
+                </a>
               </div>
 
-              {/* Destination note — support line, not a third CTA */}
-              <p className="mt-8 max-w-[400px] border-l border-[#c97a52]/50 pl-4 text-sm leading-relaxed text-[#6a5a4c]">
-                {c.hero.destinationNote}
-              </p>
+              <div className="mt-6 flex flex-wrap gap-2.5">
+                {c.hero.quickPoints.map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full border border-[#d9c6b0] bg-[rgba(255,250,244,0.62)] px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-[#6c5b4b]"
+                    style={{ fontFamily: MONO_FONT }}
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-8 max-w-[470px] rounded-[1.6rem] border border-[#d8c4ad] bg-[rgba(255,249,241,0.7)] p-5 shadow-[0_10px_30px_rgba(49,35,24,0.06)]">
+                <div className="flex items-center justify-between gap-3 border-b border-[#e5d7c3] pb-3">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#8a3e1e]">{c.hero.destinationBadge}</p>
+                  <Link href={c.hero.browseHref} className="text-[11px] uppercase tracking-[0.16em] text-[#8a3e1e] hover:text-[#b85a2e]">
+                    {c.hero.browseText}
+                  </Link>
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-[#675847]">{c.hero.destinationNote}</p>
+              </div>
             </div>
 
-            {/* Right — Italy plate */}
             <div className="relative lg:-ml-10 lg:mt-4">
               <ItalyPlate copy={c.hero} locale={locale} heroImage={heroImage} />
             </div>
@@ -376,19 +540,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── PLANNING ROOM ───────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-[#fbf4e5] px-6 py-24 text-[#1f1812] sm:px-10 sm:py-32 lg:px-16">
+      <section id="how-it-works" className="relative overflow-hidden bg-[#fbf4e5] px-6 py-24 text-[#1f1812] sm:px-10 sm:py-32 lg:px-16">
         <div className="absolute left-0 right-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(184,90,46,0.08),transparent)]" />
         <div className="relative mx-auto max-w-[1360px]">
           <div className="grid gap-14 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
-
-            {/* Left — headline + value prop + CTA */}
             <div className="max-w-[520px]">
               <div className="mb-5 flex items-center gap-3">
                 <span className="text-[9px] text-[#b89a5b]" style={{ fontFamily: MONO_FONT }}>No. 02</span>
                 <div className="h-px w-8 bg-[#c97a52]/50" />
               </div>
-              <p className="text-[11px] uppercase tracking-[0.38em] text-[#8a3e1e]">{c.platform.label}</p>
+              <p className="text-[12px] uppercase tracking-[0.3em] text-[#8a3e1e]">{c.platform.label}</p>
               <h2 className="mt-5 font-light leading-[0.98]" style={{ fontFamily: DISPLAY_FONT, fontSize: 'clamp(2.6rem, 5vw, 4.7rem)' }}>
                 {c.platform.title}
               </h2>
@@ -401,20 +562,21 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Right — stone card with floating planning page */}
             <div className="rounded-[2.8rem] border border-[#d5c4ae] bg-[#e8dece] p-4 shadow-[0_28px_80px_rgba(45,31,22,0.09)] sm:p-5">
-              {/* Minimal card header */}
               <div className="mb-4 flex items-center justify-between px-1 pt-1">
-                <p className="text-[10px] uppercase tracking-[0.34em] text-[#8a3e1e]">{c.platform.workspaceLabel}</p>
-                <span className="rounded-full border border-[#d0bfa8] bg-[rgba(255,250,244,0.7)] px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[#7a6554]">{locale === 'it' ? 'Area coppia' : 'Couple area'}</span>
+                <p className="text-[11px] uppercase tracking-[0.26em] text-[#8a3e1e]">{c.platform.workspaceLabel}</p>
+                <span className="rounded-full border border-[#d0bfa8] bg-[rgba(255,250,244,0.7)] px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#7a6554]">
+                  {locale === 'it' ? 'Area coppia' : 'Couple area'}
+                </span>
               </div>
 
               <DashboardSurface heroCopy={c.hero} platformCopy={c.platform} locale={locale} />
 
-              {/* Feature strip */}
               <div className="mt-4 flex flex-wrap gap-2 px-1">
                 {c.platform.strips.map((item) => (
-                  <span key={item} className="rounded-full border border-[#cdb9a2] bg-[rgba(255,250,244,0.68)] px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-[#7a6554]" style={{ fontFamily: MONO_FONT }}>{item}</span>
+                  <span key={item} className="rounded-full border border-[#cdb9a2] bg-[rgba(255,250,244,0.68)] px-3 py-1.5 text-[11px] uppercase tracking-[0.14em] text-[#7a6554]" style={{ fontFamily: MONO_FONT }}>
+                    {item}
+                  </span>
                 ))}
               </div>
             </div>
@@ -422,26 +584,24 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── ITALY AS METHOD ─────────────────────────────────── */}
       <section className="relative overflow-hidden border-y border-[#3e2f23] bg-[#201813] px-6 py-24 text-[#fbf4e5] sm:px-10 sm:py-32 lg:px-16">
         <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(184,90,46,0.48),transparent)]" />
         <div className="mx-auto grid max-w-[1360px] gap-14 lg:grid-cols-[0.82fr_1.18fr] lg:gap-20">
-
-          {/* Left — sticky heading */}
           <div className="max-w-[560px] lg:sticky lg:top-28 lg:self-start">
             <div className="mb-5 flex items-center gap-3">
               <span className="text-[9px] text-[#b89a5b]" style={{ fontFamily: MONO_FONT }}>No. 03</span>
               <div className="h-px w-8 bg-[#d38c67]/40" />
             </div>
-            <p className="text-[11px] uppercase tracking-[0.38em] text-[#d38c67]">{c.italy.label}</p>
+            <p className="text-[12px] uppercase tracking-[0.3em] text-[#d38c67]">{c.italy.label}</p>
             <h2 className="mt-5 font-light leading-[0.96]" style={{ fontFamily: DISPLAY_FONT, fontSize: 'clamp(2.7rem, 5vw, 5rem)' }}>
               {c.italy.title}
             </h2>
             <p className="mt-5 text-base leading-relaxed text-[#d2c3b0] sm:text-[1.05rem]">{c.italy.sub}</p>
-            <div className="mt-7 rounded-[1.7rem] border border-[#b85a2e]/22 bg-[linear-gradient(180deg,rgba(184,90,46,0.12),rgba(255,255,255,0.02))] p-5 text-sm leading-relaxed text-[#f1e6d7]">{c.italy.callout}</div>
+            <div className="mt-7 rounded-[1.7rem] border border-[#b85a2e]/22 bg-[linear-gradient(180deg,rgba(184,90,46,0.12),rgba(255,255,255,0.02))] p-5 text-sm leading-relaxed text-[#f1e6d7]">
+              {c.italy.callout}
+            </div>
           </div>
 
-          {/* Right — pillars as literary index */}
           <div className="divide-y divide-white/10 border-t border-white/10">
             {c.italy.pillars.map((pillar, i) => {
               const roman = ['i.', 'ii.', 'iii.'][i]
@@ -459,22 +619,54 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CURATED PROFESSIONALS ───────────────────────────── */}
-      <section className="bg-[#efe1cd] px-6 py-28 text-[#1f1812] sm:px-10 sm:py-36 lg:px-16">
-        <div className="mx-auto grid max-w-[1360px] gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-
-          {/* Left — section copy + CTAs */}
-          <div className="max-w-[560px]">
+      <section className="bg-[#f7efe4] px-6 py-24 text-[#1f1812] sm:px-10 sm:py-32 lg:px-16">
+        <div className="mx-auto max-w-[1360px]">
+          <div className="max-w-[680px]">
             <div className="mb-5 flex items-center gap-3">
               <span className="text-[9px] text-[#b89a5b]" style={{ fontFamily: MONO_FONT }}>No. 04</span>
               <div className="h-px w-8 bg-[#c97a52]/50" />
             </div>
-            <p className="text-[11px] uppercase tracking-[0.38em] text-[#8a3e1e]">{c.vendors.label}</p>
-            <h2 className="mt-5 font-light leading-[0.98]" style={{ fontFamily: DISPLAY_FONT, fontSize: 'clamp(2.5rem, 5vw, 4.6rem)' }}>
+            <p className="text-[12px] uppercase tracking-[0.3em] text-[#8a3e1e]">{c.nextStep.label}</p>
+            <h2 className="mt-5 font-light leading-[0.98]" style={{ fontFamily: DISPLAY_FONT, fontSize: 'clamp(2.4rem, 4.8vw, 4.3rem)' }}>
+              {c.nextStep.title}
+            </h2>
+            <p className="mt-5 max-w-[620px] text-base leading-relaxed text-[#5d4e40] sm:text-[1.05rem]">{c.nextStep.sub}</p>
+          </div>
+
+          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+            {c.nextStep.cards.map((card) => (
+              <div key={card.eyebrow} className="rounded-[2rem] border border-[#dcc8b0] bg-[rgba(255,250,244,0.8)] p-6 shadow-[0_18px_44px_rgba(45,31,22,0.08)]">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>{card.eyebrow}</p>
+                <h3 className="mt-4 text-[1.35rem] leading-snug text-[#1f1812]" style={{ fontFamily: DISPLAY_FONT }}>{card.title}</h3>
+                <p className="mt-4 text-sm leading-relaxed text-[#675847]">{card.copy}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10">
+            <Link
+              href="/couple"
+              className="inline-flex items-center justify-center rounded-full border border-[#c97a52]/35 bg-white/40 px-7 py-[0.95rem] text-sm tracking-[0.14em] text-[#8a3e1e] transition-colors hover:border-[#b85a2e] hover:text-[#b85a2e]"
+            >
+              {c.nextStep.cta}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#efe1cd] px-6 py-24 text-[#1f1812] sm:px-10 sm:py-30 lg:px-16">
+        <div className="mx-auto grid max-w-[1360px] gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
+          <div className="max-w-[560px]">
+            <div className="mb-5 flex items-center gap-3">
+              <span className="text-[9px] text-[#b89a5b]" style={{ fontFamily: MONO_FONT }}>No. 05</span>
+              <div className="h-px w-8 bg-[#c97a52]/50" />
+            </div>
+            <p className="text-[12px] uppercase tracking-[0.3em] text-[#8a3e1e]">{c.vendors.label}</p>
+            <h2 className="mt-5 font-light leading-[0.98]" style={{ fontFamily: DISPLAY_FONT, fontSize: 'clamp(2.3rem, 4.5vw, 4.1rem)' }}>
               {c.vendors.title}
             </h2>
             <p className="mt-5 text-base leading-relaxed text-[#5d4e40] sm:text-[1.05rem]">{c.vendors.sub}</p>
-            <p className="mt-7 max-w-[420px] border-l-2 border-[#b85a2e]/60 pl-5 text-sm leading-relaxed text-[#5c5144]">{c.vendors.curatedLine}</p>
+            <p className="mt-7 max-w-[430px] border-l-2 border-[#b85a2e]/60 pl-5 text-sm leading-relaxed text-[#5c5144]">{c.vendors.curatedLine}</p>
             <div className="mt-9 flex flex-col gap-3.5 sm:flex-row">
               <Link
                 href="/fornitori"
@@ -484,34 +676,25 @@ export default function Home() {
               </Link>
               <Link
                 href="/vendor"
-                className="inline-flex items-center justify-center rounded-full border border-[#1f1812]/14 bg-transparent px-7 py-[0.95rem] text-sm tracking-[0.12em] text-[#1f1812] transition-colors hover:border-[#b85a2e] hover:text-[#8a3e1e]"
+                className="inline-flex items-center justify-center rounded-full border border-[#1f1812]/10 bg-transparent px-6 py-[0.9rem] text-[0.82rem] tracking-[0.1em] text-[#5d4e40] transition-colors hover:border-[#b85a2e] hover:text-[#8a3e1e]"
               >
                 {c.vendors.vendorCta}
               </Link>
             </div>
           </div>
 
-          {/* Right — editorial card */}
           <div className="rounded-[2.8rem] border border-[#dcc8b0] bg-[linear-gradient(160deg,#f7efe4_0%,#efe1cd_58%,#ead8c2_100%)] p-6 text-[#1f1812] shadow-[0_28px_80px_rgba(31,24,18,0.10)] sm:p-8">
-            <div className="grid gap-5 border-b border-[#dcc8b0] pb-6 lg:grid-cols-[1.12fr_0.88fr] lg:items-start">
+            <div className="grid gap-5 border-b border-[#dcc8b0] pb-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-start">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.32em] text-[#8a3e1e]">{locale === 'it' ? 'In tutta Italia' : 'Across Italy'}</p>
-                <p className="mt-4 max-w-[26rem] text-base leading-relaxed text-[#5f5144]">
-                  {locale === 'it'
-                    ? 'Professionisti introdotti quando il luogo, il tono e il formato del matrimonio sono già chiari.'
-                    : 'Professionals introduced once the place, tone, and format of the wedding are already clear.'}
-                </p>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#8a3e1e]">{c.vendors.cardKicker}</p>
+                <p className="mt-4 max-w-[28rem] text-base leading-relaxed text-[#5f5144]">{c.vendors.cardCopy}</p>
               </div>
               <div className="rounded-[1.7rem] border border-[#2d2118]/10 bg-[rgba(255,250,244,0.74)] p-5">
-                <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a3e1e]">{locale === 'it' ? 'Dentro VELO' : 'Inside VELO'}</p>
-                <p className="mt-3 text-[1.2rem] leading-snug text-[#1f1812]" style={{ fontFamily: DISPLAY_FONT }}>
-                  {locale === 'it' ? 'Le introduzioni restano nel contesto del planning.' : 'Introductions stay inside the context of planning.'}
-                </p>
-                <p className="mt-3 text-sm leading-relaxed text-[#675847]">{locale === 'it' ? 'Dal primo contatto alla conferma, tutto avviene nello stesso spazio.' : 'From first contact to confirmation, everything stays in one space.'}</p>
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[#8a3e1e]">{locale === 'it' ? 'Dentro VELO' : 'Inside VELO'}</p>
+                <p className="mt-3 text-[1.2rem] leading-snug text-[#1f1812]" style={{ fontFamily: DISPLAY_FONT }}>{c.vendors.cardTitle}</p>
               </div>
             </div>
 
-            {/* Region links */}
             <div className="mt-6 flex flex-wrap gap-2">
               {REGIONS.map((region) => (
                 <Link
@@ -524,22 +707,21 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Editorial plates — discipline × region */}
             <div className="mt-7 divide-y divide-[#cdb9a2]">
               {[
                 {
                   label: locale === 'it' ? 'Fotografia · Floral' : 'Photography · Floral',
-                  title: locale === 'it' ? 'La memoria visiva e il paesaggio botanico del giorno.' : 'The visual memory and botanical landscape of the day.',
+                  title: locale === 'it' ? 'Memoria visiva e paesaggio botanico del giorno.' : 'Visual memory and botanical atmosphere for the day.',
                   region: 'Toscana · Amalfi · Como',
                 },
                 {
                   label: locale === 'it' ? 'Location · Catering' : 'Venues · Catering',
-                  title: locale === 'it' ? 'Luoghi e tavole scelti per ogni stile e misura.' : 'Places and tables chosen for every style and scale.',
+                  title: locale === 'it' ? 'Luoghi e tavole scelti per stile, misura e ospitalita.' : 'Places and tables chosen for style, scale, and hospitality.',
                   region: 'Langhe · Venezia · Puglia',
                 },
                 {
                   label: locale === 'it' ? 'Planning · Musica' : 'Planning · Music',
-                  title: locale === 'it' ? 'La regia del giorno e la sua colonna sonora.' : 'The direction of the day and its score.',
+                  title: locale === 'it' ? 'Regia del giorno e ritmo dell esperienza.' : 'Direction of the day and rhythm of the experience.',
                   region: 'Roma · Umbria · Sicilia',
                 },
               ].map((plate) => (
@@ -548,7 +730,7 @@ export default function Home() {
                     <p className="text-[9px] uppercase tracking-[0.34em] text-[#8a3e1e]" style={{ fontFamily: MONO_FONT }}>{plate.label}</p>
                     <p className="mt-2 text-[1.05rem] leading-snug text-[#1f1812] sm:text-lg" style={{ fontFamily: DISPLAY_FONT }}>{plate.title}</p>
                   </div>
-                  <span className="shrink-0 rounded-full border border-[#c9b49c] bg-[rgba(255,250,244,0.65)] px-4 py-1.5 text-[10px] tracking-[0.18em] text-[#7a6554]" style={{ fontFamily: MONO_FONT }}>{plate.region}</span>
+                  <span className="shrink-0 rounded-full border border-[#c9b49c] bg-[rgba(255,250,244,0.65)] px-4 py-1.5 text-[11px] tracking-[0.12em] text-[#7a6554]" style={{ fontFamily: MONO_FONT }}>{plate.region}</span>
                 </div>
               ))}
             </div>
@@ -556,18 +738,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── FINAL CTA ────────────────────────────────────────── */}
       <section className="bg-[#f3eadb] px-6 py-24 sm:px-10 sm:py-32 lg:px-16">
         <div className="mx-auto max-w-[1180px]">
           <div className="rounded-[3rem] border border-[#dcc8b0] bg-[linear-gradient(148deg,#fbf4e5_0%,#f1e5d3_52%,#ead8c2_100%)] p-8 text-[#1f1812] shadow-[0_30px_80px_rgba(45,31,22,0.13)] sm:p-14 lg:p-20">
-
             <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div>
-                {/* Tagline as section anchor */}
                 <p className="mb-6 text-[0.9rem] italic text-[#b89a5b]" style={{ fontFamily: ITALIC_FONT }}>
                   {locale === 'it' ? 'Dal sì, per sempre.' : 'From yes, to forever.'}
                 </p>
-                <h2 className="max-w-[760px] font-light leading-[0.94]" style={{ fontFamily: DISPLAY_FONT, fontSize: 'clamp(2.7rem, 5vw, 5.1rem)' }}>
+                <p className="text-[12px] uppercase tracking-[0.28em] text-[#8a3e1e]">{c.close.label}</p>
+                <h2 className="mt-5 max-w-[760px] font-light leading-[0.94]" style={{ fontFamily: DISPLAY_FONT, fontSize: 'clamp(2.7rem, 5vw, 5.1rem)' }}>
                   {c.close.title}
                 </h2>
                 <p className="mt-5 max-w-[520px] text-base leading-relaxed text-[#5d4e40] sm:text-[1.05rem]">{c.close.sub}</p>
@@ -583,9 +763,9 @@ export default function Home() {
                   </Link>
                   <Link
                     href="/vendor"
-                    className="inline-flex items-center justify-center px-1 py-3 text-sm tracking-[0.14em] text-[#6b5947] transition-colors hover:text-[#8a3e1e]"
+                    className="inline-flex items-center justify-center px-1 py-2.5 text-[0.8rem] tracking-[0.08em] text-[#7a6a5a] transition-colors hover:text-[#8a3e1e]"
                   >
-                    {c.close.vendorCta} &rarr;
+                    {c.close.vendorCta} <span aria-hidden="true">{'->'}</span>
                   </Link>
                 </div>
                 <p className="mt-7 max-w-[320px] text-sm leading-relaxed text-[#7a6a5a]">{c.close.note}</p>
@@ -595,7 +775,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── FOOTER ───────────────────────────────────────────── */}
       <footer className="bg-[#2c2219] px-6 py-14 text-[#f3eadb] sm:px-10 sm:py-16 lg:px-16 lg:py-20">
         <div className="mx-auto flex max-w-[1360px] flex-col items-center justify-between gap-8 text-center md:flex-row md:text-left">
           <div className="flex items-center gap-4">
@@ -607,13 +786,13 @@ export default function Home() {
           </div>
 
           <div className="flex flex-wrap justify-center gap-8 sm:gap-10">
-            <Link href="/couple" className="text-[11px] tracking-[0.12em] text-[#b0a090] transition-colors hover:text-[#f3eadb]" style={{ fontFamily: MONO_FONT }}>{c.footer.couples}</Link>
-            <Link href="/fornitori" className="text-[11px] tracking-[0.12em] text-[#b0a090] transition-colors hover:text-[#f3eadb]" style={{ fontFamily: MONO_FONT }}>{c.footer.vendors}</Link>
-            <Link href="/vendor" className="text-[11px] tracking-[0.12em] text-[#b0a090] transition-colors hover:text-[#f3eadb]" style={{ fontFamily: MONO_FONT }}>{c.footer.vendorArea}</Link>
-            <Link href="/admin" className="text-[11px] tracking-[0.12em] text-[#b0a090] transition-colors hover:text-[#f3eadb]" style={{ fontFamily: MONO_FONT }}>{c.footer.admin}</Link>
+            <Link href="/couple" className="text-[12px] tracking-[0.09em] text-[#b0a090] transition-colors hover:text-[#f3eadb]" style={{ fontFamily: MONO_FONT }}>{c.footer.couples}</Link>
+            <Link href="/fornitori" className="text-[12px] tracking-[0.09em] text-[#b0a090] transition-colors hover:text-[#f3eadb]" style={{ fontFamily: MONO_FONT }}>{c.footer.vendors}</Link>
+            <Link href="/vendor" className="text-[12px] tracking-[0.09em] text-[#b0a090] transition-colors hover:text-[#f3eadb]" style={{ fontFamily: MONO_FONT }}>{c.footer.vendorArea}</Link>
+            <Link href="/admin" className="text-[12px] tracking-[0.09em] text-[#b0a090] transition-colors hover:text-[#f3eadb]" style={{ fontFamily: MONO_FONT }}>{c.footer.admin}</Link>
           </div>
 
-          <p className="text-[10px] tracking-[0.06em] text-[#7a6e64]" style={{ fontFamily: MONO_FONT }}>{c.footer.copy} — A wedding, in Italian.</p>
+          <p className="text-[11px] tracking-[0.05em] text-[#7a6e64]" style={{ fontFamily: MONO_FONT }}>{c.footer.copy} - A wedding, in Italian.</p>
         </div>
       </footer>
     </main>
