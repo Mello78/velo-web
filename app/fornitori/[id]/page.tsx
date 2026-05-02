@@ -143,10 +143,10 @@ function RailCard({
   className?: string
 }) {
   return (
-    <section className={`rounded-[1.8rem] border border-border/80 bg-dark/75 p-5 backdrop-blur-sm sm:p-6 ${className}`}>
-      <p className="text-[11px] uppercase tracking-[0.26em] text-gold/80">{eyebrow}</p>
-      <h3 className="mt-3 text-[1.28rem] font-light leading-snug text-cream">{title}</h3>
-      {body && <p className="mt-3 text-sm leading-7 text-muted">{body}</p>}
+    <section className={`rounded-[1.8rem] border border-[#e2d0bb]/80 bg-[#fbf4e5] p-5 backdrop-blur-sm sm:p-6 ${className}`}>
+      <p className="text-[11px] uppercase tracking-[0.26em] text-[#c9a84c]/80">{eyebrow}</p>
+      <h3 className="mt-3 text-[1.28rem] font-light leading-snug text-[#1f1812]">{title}</h3>
+      {body && <p className="mt-3 text-sm leading-7 text-[#5d4e40]">{body}</p>}
       {children && <div className="mt-5">{children}</div>}
     </section>
   )
@@ -154,7 +154,7 @@ function RailCard({
 
 function HeroPill({ label }: { label: string }) {
   return (
-    <span className="rounded-full border border-white/14 bg-black/20 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-cream/82 backdrop-blur-sm">
+    <span className="rounded-full border border-[#c9a84c]/20 bg-[#c9a84c]/10 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-[#c9a84c]/82 backdrop-blur-sm">
       {label}
     </span>
   )
@@ -162,9 +162,9 @@ function HeroPill({ label }: { label: string }) {
 
 function FactRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-white/8 py-3 last:border-b-0 last:pb-0 first:pt-0">
-      <span className="text-[11px] uppercase tracking-[0.2em] text-muted-soft">{label}</span>
-      <span className="max-w-[62%] text-right text-sm leading-6 text-cream">{value}</span>
+    <div className="flex items-start justify-between gap-4 border-b border-[#e2d0bb]/80 py-3 last:border-b-0 last:pb-0 first:pt-0">
+      <span className="text-[11px] uppercase tracking-[0.2em] text-[#8a7e6a]">{label}</span>
+      <span className="max-w-[62%] text-right text-sm leading-6 text-[#1f1812]">{value}</span>
     </div>
   )
 }
@@ -284,7 +284,7 @@ export default async function VendorDetailPage({
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(201,166,97,0.18),_transparent_28%),linear-gradient(180deg,#130f0c_0%,#18120f_38%,#1b1511_100%)] text-cream">
+    <main className="min-h-screen bg-[#f3eadb] text-[#1f1812]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -297,11 +297,11 @@ export default async function VendorDetailPage({
       />
 
       <section className="relative overflow-hidden pt-20">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(251,244,229,0.06),transparent_22%),radial-gradient(circle_at_82%_18%,rgba(201,166,97,0.16),transparent_24%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(201,166,97,0.12),transparent_22%),radial-gradient(circle_at_82%_18%,rgba(201,166,97,0.18),transparent_24%)]" />
 
         <div className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-10">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_360px] lg:items-end">
-            <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-dark/60 shadow-[0_30px_120px_rgba(0,0,0,0.35)]">
+            <section className="relative overflow-hidden rounded-[2rem] border border-[#e2d0bb] bg-[#fbf4e5] shadow-[0_30px_120px_rgba(49,35,24,0.12)]">
               <div className="relative min-h-[540px] sm:min-h-[620px]">
                 {vendor.photo1_url ? (
                   <Image
@@ -314,18 +314,18 @@ export default async function VendorDetailPage({
                     className="object-cover object-center"
                   />
                 ) : (
-                  <div className="flex h-full min-h-[540px] items-center justify-center bg-[linear-gradient(135deg,#241b15_0%,#302218_100%)] sm:min-h-[620px]">
-                    <span className="text-[6rem] font-light tracking-[0.2em] text-cream/18">
+                  <div className="flex h-full min-h-[540px] items-center justify-center bg-[linear-gradient(135deg,#f5eddc_0%,#e8d8c4_100%)] sm:min-h-[620px]">
+                    <span className="text-[6rem] font-light tracking-[0.2em] text-[#1f1812]/18">
                       {vendor.cover_emoji || 'VELO'}
                     </span>
                   </div>
                 )}
 
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,14,11,0.12)_0%,rgba(18,14,11,0.42)_35%,rgba(18,14,11,0.92)_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(49,35,24,0.08)_0%,rgba(49,35,24,0.28)_35%,rgba(49,35,24,0.62)_100%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_16%,rgba(255,255,255,0.18),transparent_26%),radial-gradient(circle_at_78%_18%,rgba(201,166,97,0.18),transparent_22%)]" />
 
                 {vendor.logo_url && (
-                  <div className="absolute right-5 top-5 z-10 h-16 w-16 overflow-hidden rounded-[1.15rem] border border-white/16 bg-black/18 shadow-lg backdrop-blur-sm sm:h-20 sm:w-20 sm:rounded-[1.4rem]">
+                  <div className="absolute right-5 top-5 z-10 h-16 w-16 overflow-hidden rounded-[1.15rem] border border-[#e2d0bb]/16 bg-[#fbf4e5]/18 shadow-lg backdrop-blur-sm sm:h-20 sm:w-20 sm:rounded-[1.4rem]">
                     <img src={vendor.logo_url} alt={`${vendor.name} logo`} className="h-full w-full object-cover" />
                   </div>
                 )}
@@ -338,19 +338,19 @@ export default async function VendorDetailPage({
                       {vendor.category && <HeroPill label={vendor.category} />}
                     </div>
 
-                    <h1 className="max-w-3xl text-[2.45rem] font-light leading-[0.96] tracking-[-0.03em] text-cream sm:text-[3.6rem] lg:text-[4.25rem]">
+                    <h1 className="max-w-3xl text-[2.45rem] font-light leading-[0.96] tracking-[-0.03em] text-[#1f1812] sm:text-[3.6rem] lg:text-[4.25rem]">
                       {vendor.name}
                     </h1>
 
-                    <p className="mt-4 max-w-2xl text-base leading-7 text-cream/74 sm:text-[1.02rem]">
+                    <p className="mt-4 max-w-2xl text-base leading-7 text-[#1f1812]/74 sm:text-[1.02rem]">
                       {locationLabel}
                       {coverageRegions.length > 1 ? ` - ${detailCopy.coverageExtra} ${coverageRegions.slice(1).join(', ')}` : ''}
                     </p>
 
                     {heroDescription && (
-                      <p className="mt-5 max-w-2xl text-sm leading-7 text-cream/78 sm:text-[1rem]">
-                        {heroDescription}
-                      </p>
+                    <p className="mt-5 max-w-2xl text-sm leading-7 text-[#1f1812]/78 sm:text-[1rem]">
+                      {heroDescription}
+                    </p>
                     )}
 
                     <div className="mt-6 flex flex-wrap gap-2.5">
@@ -365,14 +365,14 @@ export default async function VendorDetailPage({
                     <div className="mt-8 flex flex-wrap gap-3">
                       <Link
                         href="/couple"
-                        className="inline-flex items-center justify-center rounded-full bg-cream px-5 py-3 text-sm font-medium text-bg transition-all hover:-translate-y-0.5 hover:bg-[#fff6ea]"
+                        className="inline-flex items-center justify-center rounded-full bg-[#c9a84c] px-5 py-3 text-sm font-medium text-[#f5edd6] transition-all hover:-translate-y-0.5 hover:bg-[#b5943e]"
                       >
                         {detailCopy.planningBtn}
                       </Link>
                       {contactLinks.length > 0 && (
                         <a
                           href="#contacts"
-                          className="inline-flex items-center justify-center rounded-full border border-white/16 bg-black/16 px-5 py-3 text-sm text-cream/90 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-gold/45 hover:text-cream"
+                          className="inline-flex items-center justify-center rounded-full border border-[#e2d0bb]/16 bg-[#fbf4e5]/[0.03] px-5 py-3 text-sm text-[#1f1812]/90 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-[#c9a84c]/45 hover:text-[#1f1812]"
                         >
                           {contactJumpLabel}
                         </a>
@@ -388,7 +388,7 @@ export default async function VendorDetailPage({
                 eyebrow={trustEyebrow}
                 title={trustTitle}
                 body={trustBody}
-                className={vendor.verified ? 'border-gold/30 bg-[linear-gradient(180deg,rgba(46,34,23,0.92)_0%,rgba(27,21,17,0.92)_100%)]' : 'border-white/12 bg-[linear-gradient(180deg,rgba(39,30,24,0.92)_0%,rgba(25,19,16,0.92)_100%)]'}
+                className={vendor.verified ? 'border-[#c9a84c]/30 bg-[linear-gradient(180deg,rgba(52,39,28,0.92)_0%,rgba(31,24,19,0.94)_100%)]' : 'border-[#e2d0bb]/12 bg-[linear-gradient(180deg,rgba(49,35,24,0.92)_0%,rgba(31,24,19,0.94)_100%)]'}
               >
                 <div className="flex flex-wrap gap-2">
                   {vendor.verified && <HeroPill label={detailCopy.trustLabelVerified} />}
@@ -452,18 +452,18 @@ export default async function VendorDetailPage({
                   )}
 
                   <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-1">
-                    <div className="rounded-[1.4rem] border border-[rgba(44,34,25,0.12)] bg-white/45 p-4">
-                      <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--velo-terracotta)]">{detailCopy.coverageTitle}</p>
-                      <p className="mt-3 text-sm leading-7 text-bg/76">
-                        {detailCopy.coverageBase} {locationLabel}
-                        {coverageRegions.length > 1 ? `. ${detailCopy.coverageExtra} ${coverageRegions.slice(1).join(', ')}.` : '.'}
-                      </p>
-                    </div>
+                      <div className="rounded-[1.4rem] border border-[#e2d0bb]/12 bg-[#fbf4e5]/45 p-4">
+                        <p className="text-[11px] uppercase tracking-[0.24em] text-[#c9a84c]">{detailCopy.coverageTitle}</p>
+                        <p className="mt-3 text-sm leading-7 text-[#1f1812]/76">
+                          {detailCopy.coverageBase} {locationLabel}
+                          {coverageRegions.length > 1 ? `. ${detailCopy.coverageExtra} ${coverageRegions.slice(1).join(', ')}.` : '.'}
+                        </p>
+                      </div>
 
                     {vendor.languages?.length > 0 && (
-                      <div className="rounded-[1.4rem] border border-[rgba(44,34,25,0.12)] bg-white/45 p-4">
-                        <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--velo-terracotta)]">{detailCopy.languagesTitle}</p>
-                        <p className="mt-3 text-sm leading-7 text-bg/76">{vendor.languages.join(', ')}</p>
+                      <div className="rounded-[1.4rem] border border-[#e2d0bb]/12 bg-[#fbf4e5]/45 p-4">
+                        <p className="text-[11px] uppercase tracking-[0.24em] text-[#c9a84c]">{detailCopy.languagesTitle}</p>
+                        <p className="mt-3 text-sm leading-7 text-[#1f1812]/76">{vendor.languages.join(', ')}</p>
                       </div>
                     )}
                   </div>
@@ -475,7 +475,7 @@ export default async function VendorDetailPage({
                         {allAwards.map((award, index) => (
                           <span
                             key={`${award}-${index}`}
-                            className="rounded-full border border-gold/35 bg-gold/10 px-4 py-2 text-sm text-[var(--velo-terracotta-deep)]"
+                            className="rounded-full border border-[#c9a84c]/35 bg-[#c9a84c]/10 px-4 py-2 text-sm text-[#c9a84c]"
                           >
                             {award}
                           </span>
@@ -494,7 +494,7 @@ export default async function VendorDetailPage({
                 eyebrow={vendor.verified ? detailCopy.trustLabelVerified : detailCopy.trustLabelDirect}
                 title={vendor.verified ? tr.vendorDetail.contacts : detailCopy.contactJumpDirect}
                 body={vendor.verified ? detailCopy.verifiedDesc : detailCopy.directContactDesc}
-                className="border-gold/18"
+                className="border-[#c9a84c]/18"
               >
                 <div id="contacts" className="space-y-2.5">
                   {contactLinks.map((contact, index) => (
@@ -503,13 +503,13 @@ export default async function VendorDetailPage({
                       href={contact.url}
                       target={contact.url.startsWith('http') ? '_blank' : undefined}
                       rel={contact.url.startsWith('http') ? 'noopener noreferrer' : undefined}
-                      className="flex items-center justify-between gap-3 rounded-[1.15rem] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm transition-colors hover:border-gold/30 hover:bg-white/[0.05]"
+                      className="flex items-center justify-between gap-3 rounded-[1.15rem] border border-[#e2d0bb]/10 bg-[#fbf4e5]/[0.03] px-4 py-3 text-sm transition-colors hover:border-[#c9a84c]/30 hover:bg-[#fbf4e5]/[0.05]"
                     >
                       <div className="min-w-0">
-                        <p className="text-[11px] uppercase tracking-[0.2em] text-muted-soft">{contact.label}</p>
-                        <p className="mt-1 truncate text-cream">{contact.handle}</p>
+                        <p className="text-[11px] uppercase tracking-[0.2em] text-[#8a7e6a]">{contact.label}</p>
+                        <p className="mt-1 truncate text-[#1f1812]">{contact.handle}</p>
                       </div>
-                      <span className="shrink-0 text-[11px] uppercase tracking-[0.18em] text-gold/88">{detailCopy.openLink}</span>
+                      <span className="shrink-0 text-[11px] uppercase tracking-[0.18em] text-[#c9a84c]/88">{detailCopy.openLink}</span>
                     </a>
                   ))}
                 </div>
@@ -520,11 +520,11 @@ export default async function VendorDetailPage({
               eyebrow={detailCopy.planningBadge}
               title={detailCopy.planningTitle}
               body={detailCopy.planningDesc}
-              className="border-gold/25 bg-[linear-gradient(180deg,rgba(52,39,28,0.92)_0%,rgba(31,24,19,0.94)_100%)]"
+              className="border-[#c9a84c]/25 bg-[linear-gradient(180deg,rgba(52,39,28,0.92)_0%,rgba(31,24,19,0.94)_100%)]"
             >
               <Link
                 href="/couple"
-                className="inline-flex items-center justify-center rounded-full bg-cream px-5 py-3 text-sm font-medium text-bg transition-colors hover:bg-[#fff6ea]"
+                className="inline-flex items-center justify-center rounded-full bg-[#c9a84c] px-5 py-3 text-sm font-medium text-[#f5edd6] transition-colors hover:bg-[#b5943e]"
               >
                 {detailCopy.planningBtn}
               </Link>
@@ -534,10 +534,10 @@ export default async function VendorDetailPage({
               <div className="space-y-3">
                 {detailCopy.howSteps.map((step, index) => (
                   <div key={index} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-gold/20 bg-gold/10 text-[11px] text-gold">
+                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#c9a84c]/20 bg-[#c9a84c]/10 text-[11px] text-[#c9a84c]">
                       {index + 1}
                     </span>
-                    <p className="text-sm leading-7 text-muted">{step}</p>
+                    <p className="text-sm leading-7 text-[#5d4e40]">{step}</p>
                   </div>
                 ))}
               </div>
@@ -545,8 +545,8 @@ export default async function VendorDetailPage({
           </aside>
         </div>
 
-        <div className="mt-14 border-t border-white/10 pt-8">
-          <Link href="/fornitori" className="text-sm text-gold transition-opacity hover:opacity-70">
+        <div className="mt-14 border-t border-[#e2d0bb]/10 pt-8">
+          <Link href="/fornitori" className="text-sm text-[#c9a84c] transition-opacity hover:opacity-70">
             {tr.vendorDetail.backToList}
           </Link>
         </div>
