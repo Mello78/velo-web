@@ -2,7 +2,7 @@
 
 > **Canonical document for web repo state**
 > Created: 30 April 2026
-> Updated: 30 April 2026 (post Profile + Checklist light editing sprint)
+> Updated: 2 May 2026 (post Profile + Checklist Light sprint closed)
 
 ---
 
@@ -74,6 +74,55 @@
 
 ---
 
+## WEB COUPLE COMPLETION — Profile + Checklist Light
+
+**Status:** ✅ CLOSED + LIVE
+**Commit:** `2053ab7` — final checklist microfix / profile + checklist light sprint
+**Live check:** ✅ Verified on velowedding.it
+
+### Profile (`app/couple/profile/page.tsx`)
+- Pre-existing edit retained for:
+  - `wedding_date`
+  - `budget`
+  - `ceremony_type`
+- Light edit added for:
+  - `wedding_style`
+  - `wedding_size`
+- Partner names remain read-only
+- city/region remain app-only (ambiguous location schema: `wedding_city`, `wedding_region`, `wedding_regione`, `wedding_province`)
+- `nationality`, `country_of_origin`, foreign status NOT touched
+- `NEXT_LOCALE` explicit wins NOT touched
+- Profile update via `couple.id`
+
+### Checklist (`app/couple/checklist/page.tsx`)
+- Light editing now supported:
+  - Add base task
+  - Edit base task
+  - Delete task with confirmation
+  - Toggle complete/incomplete preserved
+- New web-created tasks:
+  - `source = 'user'`
+  - `system_generated = false`
+  - `completed = false`
+- Edit/delete allowed only for user-created tasks:
+  - `source === 'user'`
+  - `system_generated !== true`
+- Edit uses minimal patch:
+  - Updates only changed fields
+  - Does NOT send `title_it`/`title_en`
+  - Does NOT overwrite `source`/`system_generated`/`priority`/`task_key`/`vendor_name`/`category`/`draft`/`completed`
+- Toggle completed/incomplete NOT broken
+- Dashboard data shape NOT broken
+
+### QA
+- `npm run build` — ✅ PASS
+- Code verdict — ✅ CLOSED
+- Codex verdict — ✅ CLOSED
+- Vercel/live check — ✅ PASS
+- `npx tsc --noEmit` standalone may still fail due to `.next/types/**/*.ts` config fragility; NOT a stable check until tooling cleanup
+
+---
+
 ## Web Couple Area — Current Ownership
 
 | Page | Status | Notes |
@@ -83,10 +132,25 @@
 | `app/couple/budget/page.tsx` | ✅ CRUD live | add/edit/delete expense, toggle confirmed |
 | `app/couple/guests/page.tsx` | ✅ RSVP + notes/dietary live | NOT email invites, NOT table planner |
 | `app/couple/vendors/page.tsx` | ✅ Read-only | Pipeline view, no edit |
-| `app/couple/checklist/page.tsx` | ✅ Add / edit / delete / toggle | No smart suggestions |
+| `app/couple/checklist/page.tsx` | ✅ Add / edit / delete / toggle | user-created tasks only; no smart suggestions |
 | `app/couple/documents/page.tsx` | ✅ Read-only | No edit, guide only |
 
 **Rule:** App remains primary daily driver. Web is for practical desktop actions.
+
+### What is editable from web:
+- Budget CRUD
+- Guests RSVP/notes/dietary
+- Profile: date/budget/ceremony/style/size
+- Checklist: add/edit/delete/toggle task user-created
+
+### What remains app-primary/app-only:
+- city/region
+- partner names
+- documents edit
+- vendors full management
+- chat complete
+- notifications
+- smart checklist AI
 
 ---
 
@@ -155,4 +219,4 @@ Encoding cleanup is deferred to a future maintenance pass.
 
 ---
 
-*Last updated: 30 April 2026*
+*Last updated: 2 May 2026*
