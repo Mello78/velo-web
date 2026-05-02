@@ -1,6 +1,12 @@
 # VELO — Handoff per Claude Code
 
-## Stato sessione: 22 marzo 2026
+## ⚠️ STORICO / SUPERSEDED
+
+Questo file descrive lo stato pre-30 aprile 2026.
+Lo stato canonico corrente è in `VELO_CURRENT_STATE.md`.
+WEB COUPLE EXPANSION — Practical Actions v1 = ✅ CLOSED + LIVE.
+
+## Stato sessione: 30 aprile 2026 — post-web-expansion LIVE
 
 ---
 
@@ -31,6 +37,9 @@ Causa: Webpack non risolveva gli import `@/lib/supabase` in alcuni file.
 - `next.config.js` → rimossa opzione `turbopack` non supportata ✅
 
 **Build attuale:** `npm run build` ✅ passa — sprint Web Couple Expansion closed.
+
+**Hotfix live:** commit `ee7dbd6` ha esportato `hasExplicitLocaleCookie` da `lib/couple-locale.ts`.
+Vercel production deploy ora funziona ✅.
 
 ---
 

@@ -1,5 +1,8 @@
 # VELO — Contesto progetto per Cowork / Claude
 
+> ⚠️ NON CANONICO / CONTEXT STORICO
+> Fonte canonica corrente: VELO_CURRENT_STATE.md
+
 > Leggi questo file intero prima di fare qualsiasi modifica al progetto.
 
 ---

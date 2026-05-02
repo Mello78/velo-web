@@ -1,6 +1,10 @@
 # TASK — Funzionalità da completare
 
-> Prima leggi CONTEXT.md. Esegui i task nell'ordine indicato.
+> ⚠️ NON CANONICO / OPERATIVO STORICO
+> Fonte canonica corrente: VELO_CURRENT_STATE.md
+> WEB COUPLE EXPANSION — Practical Actions v1 = ✅ CLOSED + LIVE
+
+> Prima leggi CONTEXT.md. Esegui i tasks nell'ordine indicato.
 
 ---
 
@@ -34,13 +38,16 @@ Costo stimato: ~$0.001 per conversazione con Claude Haiku.
 
 ## TASK 3 — Email invito vendor
 
-La Edge Function send-vendor-invite esiste ma non invia email reali.
+La Edge Function send-vendor-invite è deployata e RESEND_API_KEY è ✅ aggiunta (vedi BACKLOG.md).
+Può inviare email reali via Resend.
 
-**Cosa fare:**
-1. Creare account su resend.com (gratuito fino a 3.000 email/mese)
-2. Ottenere API key Resend
-3. Supabase → Edge Functions → send-vendor-invite → aggiornare il codice
-   per chiamare l'API Resend con template email VELO
+**Stato:** full invite email automation = LATER / da verificare end-to-end.
+Founding/manual invite consentito (Admin panel).
+
+**Cosa fare (se servisse ampliare):**
+1. Verificare invio end-to-end
+2. Template email: "Sei stato invitato su VELO — la piattaforma per i matrimoni in Italia"
+   Body: nome del vendor che invita + link a velowedding.it/vendor
 
 **Template email da creare:**
 - Oggetto: "Sei stato invitato su VELO — la piattaforma per i matrimoni in Italia"
