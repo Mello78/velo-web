@@ -2,7 +2,7 @@
 
 > **Canonical document for web repo state**
 > Created: 30 April 2026
-> Updated: 2 May 2026 (post Smart Checklist Suggestions CLOSED + LIVE)
+> Updated: 2 May 2026 (post Public Vendor Experience CLOSED + LIVE)
 
 ---
 
@@ -44,6 +44,80 @@
 - `npm run build` — ✅ PASS
 - `npx tsc --noEmit` — ✅ PASS (both sprints)
 - Vercel/live check — ✅ PASS
+
+---
+
+## PUBLIC VENDOR EXPERIENCE — Light/Editorial Theme
+
+**Status:** ✅ CLOSED + LIVE
+
+**Commits:**
+- `50e32d6` — feat(vendors): align public listing with VELO editorial style
+- `1463426` — feat(vendors): align public vendor detail with light theme
+- `a0209ab` — fix(vendors): polish public vendor detail light theme
+- `1d8c1d0` — fix(vendors): finalize public vendor detail light theme
+- `5429129` — final listing copy + PhotoLightbox polish
+
+**Live response checks:**
+- `/` returned 200
+- `/fornitori` returned 200
+- `/fornitori/[id]` sample public vendor detail returned 200
+
+**What was closed:**
+
+### Public Vendor Listing (`app/fornitori/page.tsx`)
+- Visual refinements ONLY (no data logic changes)
+- Background: dark → warm paper/cream (`bg-[#f3eadb] text-[#1f1812]`)
+- Hero section: editorial serif title, cohesive with homepage
+- Filters: elegant pills, warm borders (`border-[#c9a84c]/...`), less "marketplace dark"
+- Vendor cards: light warm (`bg-[#fbf4e5]`), taller images (`h-56`), warm overlays
+- Copy claims softened:
+  - "in tutta Italia" → "in diverse regioni italiane"
+  - "tutti i fornitori" → "fornitori"
+  - "VEDO Partner program" → "VEDO Partners" (EN)
+- No geocoding automatico, no ranking, no availability filtering added
+
+### Public Vendor Detail (`app/fornitori/[id]/page.tsx`)
+- Full conversion from dark/admin to light editorial theme
+- Background: `bg-[#f3eadb] text-[#1f1812]` (cohesive with homepage)
+- Hero: image-first card, light overlays for text readability
+- Sidebar cards: light cream (`bg-[#fbf4e5]`), warm borders, ink text (`text-[#1f1812]`)
+- RailCard components: converted from dark gradients to light cream/paper
+- HeroPill/FactRow: light theme, warm accents (`text-[#c9a84c]`)
+- CTA buttons: cohesive with homepage (primary terracotta, secondary light outline)
+- No data queries changed, no contact logic changed, no PhotoLightbox refactor
+
+### PhotoLightbox (`components/PhotoLightbox.tsx`)
+- Localized labels: IT/EN (Featured/In evidenza, Portfolio/Portfolio, Open/Apri, Close/Chiudi, Prev/Prec, Next/Succ)
+- Accessibility: `role="dialog"`, `aria-modal="true"`, `aria-label` on buttons, `onKeyDown` for Escape
+- Robustness: `safePhotos` filter, early return for empty gallery, handles 0/1/2/3+ photos
+- No new features, no geocoding, no AI
+
+**Residual Visual Issues:**
+None blocking found.
+
+**File/Line Problems:**
+- Header/logo readable: `components/NavBar.tsx`, `components/SimpleNav.tsx` ✅
+- Footer coherent: `components/PublicFooter.tsx` ✅
+- Listing remains warm/editorial: `app/fornitori/page.tsx` ✅
+- Vendor detail hero readable, image-first, no text over dark photo ✅
+- Right rail no duplicated trust badge ✅
+- PhotoLightbox controls readable ✅
+
+**Build/Typecheck:**
+- `npm run build` ✅ PASS
+- `npx tsc --noEmit` ✅ PASS
+
+**Safety:**
+- No Supabase query changes
+- No RLS changes
+- No automatic geocoding
+- No couple-profile ranking
+- No availability/blocked-date filtering
+
+**Product rule:**
+- Public surfaces = light editorial
+- Dark = vendor admin/private area only
 
 ---
 
@@ -370,6 +444,57 @@ The following historical files may contain mojibake/encoding issues (es. `ð·ï
 
 These are marked as **STORICO / SUPERSEDED**. The canonical current state is this file (`VELO_CURRENT_STATE.md`).
 Encoding cleanup is deferred to a future maintenance pass.
+
+---
+
+## Working Tree Hygiene Report
+
+**Git status (as of last update):**
+```
+## main...origin/main [ahead 1]
+?? .superpowers/
+?? "VELO Homepage Directions - Standalone.html"
+?? "VELO Homepage.html"
+?? public/images/home/hero-langhe-01.png
+?? tsconfig.tsbuildinfo
+```
+
+**A. Tracked docs:**
+- `VELO_CURRENT_STATE.md` — canonical state document (actively updated)
+- `BACKLOG.md`, `TASK.md`, `CONTEXT.md` — **HISTORICAL / SUPERSEDED** (do NOT update unless minimal note needed)
+- `HANDOFF_CLAUDE_CODE.md` — **HISTORICAL** (pre-web-expansion state)
+
+**B. Tracked product code:**
+- `app/page.tsx` — homepage (light editorial, updated)
+- `app/fornitori/page.tsx` — vendor listing (light editorial, updated)
+- `app/fornitori/[id]/page.tsx` — vendor detail (light editorial, updated)
+- `components/PhotoLightbox.tsx` — photo gallery (locale prop added, updated)
+- `components/NavBar.tsx`, `components/SimpleNav.tsx` — navigation (coherent with public site)
+- `lib/translations.ts` — copy fixes (updated)
+- `app/couple/*` — couple area (NOT touched in recent sprints)
+- `app/vendor/*` — vendor admin (NOT touched)
+
+**C. Untracked temporary/artifact:**
+- `.superpowers/` — documentation artifacts (do NOT commit)
+- `VELO Homepage Directions - Standalone.html` — standalone HTML (do NOT commit)
+- `VELO Homepage.html` — standalone HTML (do NOT commit)
+- `public/images/home/hero-langhe-01.png` — asset (decide before committing)
+- `tsconfig.tsbuildinfo` — TypeScript cache (do NOT commit)
+
+**D. Safe to delete later (not now):**
+- `.superpowers/` (after verification)
+- `VELO Homepage*.html` (after verification)
+- `tsconfig.tsbuildinfo` (safe to delete anytime)
+
+**E. Needs decision:**
+- `public/images/home/hero-langhe-01.png` — verify if used before deciding
+
+**Rules:**
+- Do NOT commit `.superpowers/` or standalone HTML files
+- Do NOT commit `tsconfig.tsbuildinfo`
+- Do NOT commit `hero-langhe-01.png` unless confirmed used
+- Do NOT use `git add -A`
+- Homepage/layout/couple dashboard changes only when explicitly instructed
 
 ---
 
