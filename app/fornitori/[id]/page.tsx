@@ -302,26 +302,52 @@ export default async function VendorDetailPage({
 
         <div className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-10">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_360px] lg:items-end">
-            <section className="relative overflow-hidden rounded-[2rem] border border-[#e2d0bb] bg-[#efe1ce] p-3 shadow-[0_30px_120px_rgba(49,35,24,0.12)] sm:p-4">
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,0.94fr)_minmax(360px,1.06fr)] lg:items-stretch">
-                <div className="order-2 flex min-h-[420px] flex-col justify-center rounded-[1.7rem] border border-[#e2d0bb] bg-[#fbf4e5] p-5 shadow-[0_18px_60px_rgba(49,35,24,0.08)] sm:p-7 lg:order-1 lg:min-h-[560px] lg:p-9">
-                  <div className="mb-4 flex flex-wrap gap-2.5">
+            <section className="relative overflow-hidden rounded-[2rem] border border-[#e2d0bb] bg-[#fbf4e5] shadow-[0_30px_120px_rgba(49,35,24,0.12)]">
+              <div className="p-3 sm:p-4">
+                <div className="relative aspect-[16/10] min-h-[260px] overflow-hidden rounded-[1.7rem] border border-[#fbf4e5]/80 bg-[linear-gradient(135deg,#f5eddc_0%,#e8d8c4_100%)] shadow-[0_22px_70px_rgba(49,35,24,0.14)] sm:aspect-[16/9] sm:min-h-[360px]">
+                  {vendor.photo1_url ? (
+                    <Image
+                      src={vendor.photo1_url}
+                      alt={vendor.name}
+                      fill
+                      priority
+                      quality={88}
+                      sizes="(max-width: 1024px) 100vw, 65vw"
+                      className="object-cover object-center"
+                    />
+                  ) : (
+                    <div className="flex h-full min-h-[260px] items-center justify-center sm:min-h-[360px]">
+                      <span className="text-[5rem] font-light tracking-[0.2em] text-[#1f1812]/18">
+                        {vendor.cover_emoji || 'VELO'}
+                      </span>
+                    </div>
+                  )}
+
+                  {vendor.logo_url && (
+                    <div className="absolute right-5 top-5 z-10 h-16 w-16 overflow-hidden rounded-[1.15rem] border border-[#fbf4e5]/85 bg-[#fbf4e5] shadow-[0_16px_46px_rgba(49,35,24,0.22)] sm:h-20 sm:w-20 sm:rounded-[1.4rem]">
+                      <img src={vendor.logo_url} alt={`${vendor.name} logo`} className="h-full w-full object-cover" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="px-2 py-7 sm:px-5 sm:py-9 lg:px-7">
+                  <div className="flex flex-wrap gap-2.5">
                     <HeroPill label={detailCopy.heroEyebrow} />
                     <HeroPill label={trustEyebrow} />
                     {vendor.category && <HeroPill label={vendor.category} />}
                   </div>
 
-                  <h1 className="max-w-3xl text-[2.65rem] font-light leading-[0.94] tracking-[-0.035em] text-[#1f1812] sm:text-[3.85rem] lg:text-[4.35rem]">
+                  <h1 className="mt-5 max-w-4xl text-[2.75rem] font-light leading-[0.94] tracking-[-0.035em] text-[#1f1812] sm:text-[4.05rem] lg:text-[5.05rem]">
                     {vendor.name}
                   </h1>
 
-                  <p className="mt-4 max-w-2xl text-base leading-7 text-[#1f1812]/74 sm:text-[1.02rem]">
+                  <p className="mt-5 max-w-3xl text-base leading-7 text-[#1f1812]/74 sm:text-[1.05rem]">
                     {locationLabel}
                     {coverageRegions.length > 1 ? ` - ${detailCopy.coverageExtra} ${coverageRegions.slice(1).join(', ')}` : ''}
                   </p>
 
                   {heroDescription && (
-                    <p className="mt-5 max-w-2xl text-sm leading-7 text-[#1f1812]/78 sm:text-[1rem]">
+                    <p className="mt-5 max-w-3xl text-sm leading-7 text-[#1f1812]/78 sm:text-[1rem]">
                       {heroDescription}
                     </p>
                   )}
@@ -351,32 +377,6 @@ export default async function VendorDetailPage({
                       </a>
                     )}
                   </div>
-                </div>
-
-                <div className="relative order-1 min-h-[330px] overflow-hidden rounded-[1.7rem] border border-[#fbf4e5]/80 bg-[linear-gradient(135deg,#f5eddc_0%,#e8d8c4_100%)] shadow-[0_22px_70px_rgba(49,35,24,0.16)] sm:min-h-[440px] lg:order-2 lg:min-h-[560px]">
-                  {vendor.photo1_url ? (
-                    <Image
-                      src={vendor.photo1_url}
-                      alt={vendor.name}
-                      fill
-                      priority
-                      quality={88}
-                      sizes="(max-width: 1024px) 100vw, 38vw"
-                      className="object-cover object-center"
-                    />
-                  ) : (
-                    <div className="flex h-full min-h-[330px] items-center justify-center sm:min-h-[440px] lg:min-h-[560px]">
-                      <span className="text-[5rem] font-light tracking-[0.2em] text-[#1f1812]/18">
-                        {vendor.cover_emoji || 'VELO'}
-                      </span>
-                    </div>
-                  )}
-
-                  {vendor.logo_url && (
-                    <div className="absolute right-5 top-5 z-10 h-16 w-16 overflow-hidden rounded-[1.15rem] border border-[#fbf4e5]/85 bg-[#fbf4e5] shadow-[0_16px_46px_rgba(49,35,24,0.22)] sm:h-20 sm:w-20 sm:rounded-[1.4rem]">
-                      <img src={vendor.logo_url} alt={`${vendor.name} logo`} className="h-full w-full object-cover" />
-                    </div>
-                  )}
                 </div>
               </div>
             </section>
