@@ -2,16 +2,17 @@
 
 > **Canonical document for web repo state**
 > Created: 30 April 2026
-> Updated: 2 May 2026 (post Smart Checklist Suggestions hardening)
+> Updated: 2 May 2026 (post Smart Checklist Suggestions CLOSED + LIVE)
 
 ---
 
 ## SMART CHECKLIST SUGGESTIONS — Deterministic MVP
 
-**Status:** ✅ CLOSED — live check pending
+**Status:** ✅ CLOSED + LIVE
 **Commits:**
 - `d68d616` — feat: add deterministic checklist suggestions MVP
-- `<hardening>` — fix: harden checklist suggestion dedupe
+- `4bcb8d4` — fix: harden checklist suggestion dedupe
+**Live check:** ✅ Verified on velowedding.it
 
 ### What is closed:
 
@@ -36,10 +37,13 @@
 - No vendor count check (no extra query for MVP)
 - No AI, no notifications, no automations
 
+### Git note:
+- `8f432c5` — fix: remove stale Claude Code worktree gitlinks from index (git status now works)
+
 ### QA:
 - `npm run build` — ✅ PASS
 - `npx tsc --noEmit` — ✅ PASS (both sprints)
-- Live check: pending (Vercel autodeploy from main)
+- Vercel/live check — ✅ PASS
 
 ---
 
@@ -291,6 +295,7 @@
 - Guests RSVP/notes/dietary
 - Profile: date/budget/ceremony/style/size
 - Checklist: add/edit/delete/toggle task user-created
+- Checklist: deterministic suggestions (click-to-add, no AI)
 
 ### What remains app-primary/app-only:
 - city/region
@@ -299,7 +304,7 @@
 - vendors full management
 - chat complete
 - notifications
-- smart checklist AI
+- smart checklist AI (LLM-based)
 
 ---
 
