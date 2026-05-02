@@ -388,7 +388,7 @@ export default async function VendorDetailPage({
                 eyebrow={trustEyebrow}
                 title={trustTitle}
                 body={trustBody}
-                className={vendor.verified ? 'border-[#c9a84c]/30 bg-[linear-gradient(180deg,rgba(52,39,28,0.92)_0%,rgba(31,24,19,0.94)_100%)]' : 'border-[#e2d0bb]/12 bg-[linear-gradient(180deg,rgba(49,35,24,0.92)_0%,rgba(31,24,19,0.94)_100%)]'}
+                 className={vendor.verified ? 'border-[#c9a84c]/30 bg-[linear-gradient(180deg,rgba(252,244,229,0.92)_0%,rgba(235,222,204,0.94)_100%)]' : 'border-[#e2d0bb]/12 bg-[linear-gradient(180deg,rgba(251,244,232,0.92)_0%,rgba(235,222,204,0.94)_100%)]'}
               >
                 <div className="flex flex-wrap gap-2">
                   {vendor.verified && <HeroPill label={detailCopy.trustLabelVerified} />}
@@ -520,7 +520,7 @@ export default async function VendorDetailPage({
               eyebrow={detailCopy.planningBadge}
               title={detailCopy.planningTitle}
               body={detailCopy.planningDesc}
-              className="border-[#c9a84c]/25 bg-[linear-gradient(180deg,rgba(52,39,28,0.92)_0%,rgba(31,24,19,0.94)_100%)]"
+              className="border-[#c9a84c]/25 bg-[linear-gradient(180deg,rgba(252,244,229,0.92)_0%,rgba(235,222,204,0.94)_100%)]"
             >
               <Link
                 href="/couple"
