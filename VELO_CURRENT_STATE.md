@@ -2,7 +2,7 @@
 
 > **Canonical document for web repo state**
 > Created: 30 April 2026
-> Updated: 2 May 2026 (post Web Write Hardening sprint closed)
+> Updated: 2 May 2026 (post Web Write Hardening sprint CLOSED + LIVE)
 
 ---
 
@@ -72,30 +72,62 @@
 
 ---
 
-## WEB WRITE HARDENING — Couple Area
+## WEB WRITE HARDENING / RLS GUARD PASS
 
-**Status:** ✅ CLOSED
-**Commit:** `d160c0a`
+**Status:** ✅ CLOSED + LIVE
+**Commits:**
+- `d160c0a` — fix: harden web couple write guards
+- `2414e01` — docs
+**Live check:** ✅ Verified on velowedding.it
 
-### What was hardened:
-- `expenses` UPDATE toggle/edit + DELETE: aggiunto `.eq('user_id', userId)` + null guard su userId
-- `guests` UPDATE rsvp/notes/dietary: aggiunto `.eq('user_id', userId)` + null guard su userId
-- `tasks` toggle/edit/delete: aggiunto `.eq('user_id', userId ?? '')`
-- `couples` UPDATE: aggiunto `.eq('user_id', session.user.id)` (session già disponibile nel handler)
+### What was closed:
 
-### Pattern applicato:
-- Tutte le write ora filtrano per **id + user_id** (doppio filtro)
-- Insert già corretti (user_id esplicito fin dal v1)
-- Tasks edit/delete già gated da `isUserTask()` a livello UI — la query ora lo ribadisce anche a DB level
+#### Budget (`app/couple/budget/page.tsx`)
+- Insert uses current `user_id`
+- UPDATE (toggle confirmed/edit) filters: `id + user_id`
+- DELETE filters: `id + user_id`
+- No `paid` field introduced
+- Write fields remain: `title`, `amount`, `category`, `confirmed`
 
-### Residui:
-- RLS Supabase non verificabile da repo (nessun file .sql) — da verificare in dashboard per `expenses`, `guests`, `tasks`, `couples`
-- `.eq('user_id', userId ?? '')` in tasks usa fallback stringa vuota (userId non dovrebbe mai essere null a render time, ma è difensivo)
+#### Guests (`app/couple/guests/page.tsx`)
+- UPDATE RSVP patches only `rsvp`
+- UPDATE notes patches only `notes`
+- UPDATE dietary patches only `dietary`
+- Each update filters: `id + user_id`
+- Does NOT touch: `plus_one`, `group_name`, `side`, `email`, `phone`
 
-### QA:
-- `npx tsc --noEmit` — ✅ PASS
-- `npm run build` — ✅ PASS (17/17 pagine generate)
-- `git push origin main` — ✅ LIVE su Vercel
+#### Checklist (`app/couple/checklist/page.tsx`)
+- Insert uses `user_id`
+- New web tasks: `source='user'`, `system_generated=false`, `completed=false`
+- Toggle/edit/delete filter: `id + user_id`
+- Edit/delete limited to user-created tasks
+- Edit remains minimal patch
+- Does NOT overwrite: `source`/`system_generated`/`priority`/`task_key`/`vendor_name`/`category`/`draft`/`title_it`/`title_en`/`completed`
+
+#### Profile (`app/couple/profile/page.tsx`)
+- Current couple resolver remains deterministic
+- UPDATE couples uses `couple.id + user_id`
+- `nationality`/`country_of_origin`/foreign status NOT touched
+- `NEXT_LOCALE` explicit wins NOT touched
+
+#### Dashboard & Vendors
+- No pending writes found
+
+### QA
+- `npm run build` — ✅ PASS
+- `npx tsc --noEmit` — ✅ PASS (in verified sprint environment)
+- Codex 5.5 elevated final verify — ✅ CLOSED
+- Vercel/live check — ✅ PASS
+
+### Non-blocking residue:
+- No SQL/migration/policy files in repo
+- RLS NOT verifiable from codebase
+- To verify in Supabase dashboard for:
+  - `expenses`
+  - `guests`
+  - `tasks`
+  - `couples`
+- This does NOT block client-side hardening sprint, but remains future DB security task
 
 ---
 
