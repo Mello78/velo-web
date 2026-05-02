@@ -58,6 +58,76 @@ function isUserTask(task: Task): boolean {
   return task.source === 'user' && task.system_generated !== true
 }
 
+interface CoupleCtx {
+  wedding_date: string | null
+  budget: number | null
+  ceremony_type: string | null
+  nationality: string | null
+  country_of_origin: string | null
+}
+
+interface Suggestion {
+  key: string
+  title: string
+  desc: string
+  phase: PhaseKey
+}
+
+function buildChecklistSuggestions(
+  ctx: CoupleCtx | null,
+  guestsCount: number,
+  tasks: Task[],
+  locale: string,
+): Suggestion[] {
+  if (!ctx) return []
+  const isIT = locale === 'it'
+  const existingKeys = new Set(tasks.map(t => t.task_key))
+  const isForeign = ctx.nationality === 'foreign' || (ctx.country_of_origin != null && ctx.country_of_origin !== 'IT')
+  const candidates: Suggestion[] = []
+
+  if (!ctx.wedding_date && !existingKeys.has('setup_wedding_date'))
+    candidates.push({
+      key: 'setup_wedding_date',
+      title: isIT ? 'Imposta la data del matrimonio' : 'Define your wedding date',
+      desc: isIT ? 'La data è il punto di partenza per il planning.' : 'The date is the starting point for all your planning.',
+      phase: 'urgent',
+    })
+
+  if (isForeign && !existingKeys.has('documents_review'))
+    candidates.push({
+      key: 'documents_review',
+      title: isIT ? 'Rivedi i documenti per la cerimonia' : 'Review the documents required for your ceremony',
+      desc: isIT ? 'Guida personalizzata in base alla nazionalità e al rito.' : 'Personalised guide based on your nationality and ceremony type.',
+      phase: 'urgent',
+    })
+
+  if (!ctx.ceremony_type && !existingKeys.has('setup_ceremony_type'))
+    candidates.push({
+      key: 'setup_ceremony_type',
+      title: isIT ? 'Scegli il tipo di cerimonia' : 'Choose your ceremony type',
+      desc: isIT ? 'Civile, religioso o simbolico — influenza documenti e fornitori.' : 'Civil, religious or symbolic — this affects documents and vendors.',
+      phase: 'soon',
+    })
+
+  if (!ctx.budget && !existingKeys.has('setup_budget'))
+    candidates.push({
+      key: 'setup_budget',
+      title: isIT ? 'Imposta il budget indicativo' : 'Set an estimated wedding budget',
+      desc: isIT ? 'Un budget orientativo aiuta a valutare le opzioni.' : 'An indicative budget helps you evaluate your options.',
+      phase: 'soon',
+    })
+
+  if (guestsCount === 0 && !existingKeys.has('guests_start'))
+    candidates.push({
+      key: 'guests_start',
+      title: isIT ? 'Inizia la lista degli ospiti' : 'Start your guest list',
+      desc: isIT ? 'Anche una lista parziale aiuta con la scelta della location.' : 'Even a partial list helps with venue selection.',
+      phase: 'soon',
+    })
+
+  return candidates.slice(0, 3)
+}
+
 function getChecklistCopy(locale: string) {
   const isIT = locale === 'it'
   return {
@@ -525,6 +595,54 @@ function PhaseGroup({
   )
 }
 
+function SuggestionsSection({
+  suggestions,
+  locale,
+  addingSuggestion,
+  onAdd,
+}: {
+  suggestions: Suggestion[]
+  locale: string
+  addingSuggestion: string | null
+  onAdd: (s: Suggestion) => void
+}) {
+  const isIT = locale === 'it'
+  return (
+    <div className="mb-8">
+      <div className="mb-3">
+        <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--velo-muted-soft)]" style={{ fontFamily: VELO_MONO_FONT }}>
+          {isIT ? 'Suggerimenti' : 'Suggested tasks'}
+        </p>
+        <p className="mt-1 text-xs text-[var(--velo-muted)]">
+          {isIT ? 'Basati sul vostro profilo — aggiungete quelli che vi servono.' : 'Based on your profile — add the ones that apply.'}
+        </p>
+      </div>
+      <div className="space-y-2">
+        {suggestions.map((s) => (
+          <div
+            key={s.key}
+            className="flex items-center gap-4 rounded-xl border border-dashed border-[var(--velo-border)] bg-[var(--velo-paper-2)] px-4 py-3"
+          >
+            <div className="min-w-0 flex-1">
+              <p className="text-sm leading-snug text-[var(--velo-ink)]">{s.title}</p>
+              {s.desc && <p className="mt-1 text-[11px] text-[var(--velo-muted)]">{s.desc}</p>}
+            </div>
+            <button
+              type="button"
+              onClick={() => onAdd(s)}
+              disabled={addingSuggestion === s.key}
+              className="shrink-0 rounded-lg bg-[rgba(184,90,46,0.10)] px-3 py-1.5 text-[11px] text-[var(--velo-terracotta)] transition-colors hover:bg-[rgba(184,90,46,0.18)] disabled:opacity-60"
+              style={{ fontFamily: VELO_MONO_FONT }}
+            >
+              {addingSuggestion === s.key ? '...' : (isIT ? 'Aggiungi' : 'Add')}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function ChecklistPage() {
   const [locale, setLocale] = useState<Locale>('en')
   const copy = getChecklistCopy(locale)
@@ -535,6 +653,9 @@ export default function ChecklistPage() {
   const [writeError, setWriteError] = useState(false)
   const [pendingIds, setPendingIds] = useState<string[]>([])
   const [userId, setUserId] = useState<string | null>(null)
+  const [coupleCtx, setCoupleCtx] = useState<CoupleCtx | null>(null)
+  const [guestsCount, setGuestsCount] = useState(0)
+  const [addingSuggestion, setAddingSuggestion] = useState<string | null>(null)
 
   // Add task form
   const [showAddForm, setShowAddForm] = useState(false)
@@ -574,7 +695,7 @@ export default function ChecklistPage() {
 
       const coupleLocaleRes = await supabase
         .from('couples')
-        .select('nationality, country_of_origin')
+        .select('nationality, country_of_origin, wedding_date, budget, ceremony_type')
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false })
         .order('id', { ascending: false })
@@ -587,6 +708,13 @@ export default function ChecklistPage() {
         const nextLocale = hasExplicitLocaleCookie() ? fallbackLocale : getCoupleLocale(coupleLocaleData, fallbackLocale)
         persistCoupleLocale(nextLocale)
         setLocale(nextLocale)
+        setCoupleCtx({
+          wedding_date: coupleLocaleData.wedding_date ?? null,
+          budget: coupleLocaleData.budget ?? null,
+          ceremony_type: coupleLocaleData.ceremony_type ?? null,
+          nationality: coupleLocaleData.nationality ?? null,
+          country_of_origin: coupleLocaleData.country_of_origin ?? null,
+        })
       }
 
       const { data, error } = await supabase
@@ -604,6 +732,13 @@ export default function ChecklistPage() {
       }
 
       setTasks(data ?? [])
+
+      const { count: gc } = await supabase
+        .from('guests')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', session.user.id)
+      setGuestsCount(gc ?? 0)
+
       markSyncedNow()
       setLoading(false)
     }
@@ -744,6 +879,37 @@ export default function ChecklistPage() {
     markSyncedNow()
   }
 
+  const handleAddSuggestion = async (suggestion: Suggestion) => {
+    if (!userId || addingSuggestion) return
+    setAddingSuggestion(suggestion.key)
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        user_id: userId,
+        title: suggestion.title,
+        due_date: null,
+        phase: suggestion.phase,
+        completed: false,
+        urgent: suggestion.phase === 'urgent',
+        source: 'user',
+        system_generated: false,
+        draft: false,
+        task_key: suggestion.key,
+      })
+      .select('id, title, title_it, title_en, body_it, body_en, due_date, completed, urgent, phase, task_key, source, vendor_name, category, system_generated, priority, draft')
+      .single()
+
+    if (error || !data) {
+      setAddingSuggestion(null)
+      return
+    }
+
+    setTasks(prev => [...prev, data])
+    setAddingSuggestion(null)
+    markSyncedNow()
+  }
+
   const handleCancelEdit = () => {
     setEditingId(null)
     setEditError(false)
@@ -778,6 +944,7 @@ export default function ChecklistPage() {
   const total = tasks.length
   const done = tasks.filter(t => t.completed).length
   const pendingSet = new Set(pendingIds)
+  const suggestions = buildChecklistSuggestions(coupleCtx, guestsCount, tasks, locale)
 
   return (
     <div>
@@ -789,6 +956,15 @@ export default function ChecklistPage() {
         {copy.interactionHint}
         {lastSync && <span className="text-[var(--velo-muted-soft)]"> · {copy.synced} {lastSync}</span>}
       </CoupleNotice>
+
+      {suggestions.length > 0 && (
+        <SuggestionsSection
+          suggestions={suggestions}
+          locale={locale}
+          addingSuggestion={addingSuggestion}
+          onAdd={handleAddSuggestion}
+        />
+      )}
 
       {writeError && (
         <div className="mb-4">
