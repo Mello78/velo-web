@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 
-export default function LangToggle({ locale }: { locale?: string }) {
+export default function LangToggle({ locale, variant = 'dark' }: { locale?: string; variant?: 'dark' | 'light' }) {
   const [current, setCurrent] = useState(locale || 'it')
 
   useEffect(() => {
@@ -26,7 +26,9 @@ export default function LangToggle({ locale }: { locale?: string }) {
   return (
     <button
       onClick={toggle}
-      className="text-muted hover:text-cream text-sm transition-colors border border-border rounded-full px-3 py-1 hover:border-gold"
+      className={variant === 'light'
+        ? "rounded-full border border-[#dcc8b0] bg-[#fffaf4]/70 px-3 py-1 text-sm text-[#5d4e40] transition-colors hover:border-[#b85a2e]/45 hover:text-[#8a3e1e]"
+        : "text-muted hover:text-cream text-sm transition-colors border border-border rounded-full px-3 py-1 hover:border-gold"}
       title={current === 'it' ? 'Switch to English' : 'Passa all\'italiano'}
     >
       {current === 'it' ? 'EN' : 'IT'}

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Fornitori Matrimonio Italia — Fotografi, Location, Catering',
-  description: 'Trova i migliori fotografi, location, fioristi e catering per il tuo matrimonio in Italia. Ricerca per zona: Toscana, Amalfi Coast, Lago di Como, Roma, Puglia, Venezia e molto altro.',
+  title: 'Partner VELO - Professionisti selezionati per matrimoni in Italia',
+  description: 'Scopri professionisti selezionati per matrimoni in diverse regioni italiane. Cerca per zona e categoria dentro il contesto VELO.',
   keywords: [
     'fornitori matrimonio Italia', 'fotografi matrimonio', 'location matrimonio',
     'catering matrimonio', 'fioristi matrimonio', 'wedding photographer Italy',
@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: '/fornitori' },
   openGraph: {
-    title: 'Fornitori Matrimonio in Italia | VELO Wedding',
-    description: 'Scopri fotografi, location, catering e fioristi per matrimoni in tutta Italia. Cerca per zona, categoria e budget.',
+    title: 'Partner VELO | Professionisti selezionati',
+    description: 'Professionisti selezionati per matrimoni in diverse regioni italiane, dentro il contesto operativo VELO.',
     url: 'https://velowedding.it/fornitori',
   },
 }

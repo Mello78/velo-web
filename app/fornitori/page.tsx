@@ -1,27 +1,14 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import { getT } from '../../lib/translations'
 import SimpleNav from '../../components/SimpleNav'
+import PublicFooter from '../../components/PublicFooter'
 
-const CATEGORIES_IT = ['Tutti', '📷 Fotografia', '🌸 Floral Design', '🍽️ Catering', '🎵 Musica', '🏛️ Location', '💌 Partecipazioni', '🎂 Torta']
-const CATEGORIES_EN = ['All', '📷 Photography', '🌸 Floral Design', '🍽️ Catering', '🎵 Music', '🏛️ Venue', '💌 Stationery', '🎂 Cake']
+const CATEGORIES_IT = ['Tutti', 'Fotografia', 'Floral Design', 'Catering', 'Musica', 'Location', 'Partecipazioni', 'Torta']
+const CATEGORIES_EN = ['All', 'Photography', 'Floral Design', 'Catering', 'Music', 'Venue', 'Stationery', 'Cake']
 
-// Canonical map to match both emoji-prefixed chip labels and plain DB values
-const CATEGORY_CANONICAL: Record<string, string> = {
-  '📷 Fotografia': 'photo', 'Fotografo': 'photo', 'Fotografa': 'photo', '📷 Photography': 'photo',
-  '🌸 Floral Design': 'flowers', 'Fiorista': 'flowers', 'Floral Design': 'flowers',
-  '🍽️ Catering': 'catering', 'Catering': 'catering',
-  '🎵 Musica': 'music', 'Musica': 'music', '🎵 Music': 'music', 'DJ': 'music',
-  '🏛️ Location': 'venue', 'Location': 'venue', '🏛️ Venue': 'venue',
-  '💌 Partecipazioni': 'stationery', '💌 Stationery': 'stationery',
-  '🎂 Torta': 'cake', '🎂 Cake': 'cake', 'Pasticceria': 'cake', 'Torta Nuziale': 'cake',
-  '📋 Wedding Planner': 'planner', 'Wedding Planner': 'planner',
-  '💄 Trucco & Parrucco': 'beauty', 'Hair & Beauty': 'beauty',
-  '🎬 Video': 'video', 'Videografo': 'video', 'Videografa': 'video',
-}
-// VELO Zones — corrispondono a public_vendors.region e work_regions nel DB
 const REGIONS = [
   'Tutte / All',
   'Langhe & Piemonte', 'Lago di Como', 'Lago di Garda',
@@ -29,13 +16,28 @@ const REGIONS = [
   'Roma & Lazio', 'Amalfi Coast', 'Puglia', 'Sicilia', 'Liguria',
 ]
 
+function categoryKey(value?: string | null) {
+  const text = (value || '').toLowerCase()
+  if (text.includes('foto') || text.includes('photo')) return 'photo'
+  if (text.includes('floral') || text.includes('fior')) return 'flowers'
+  if (text.includes('catering')) return 'catering'
+  if (text.includes('music') || text.includes('musica') || text.includes('dj')) return 'music'
+  if (text.includes('venue') || text.includes('location')) return 'venue'
+  if (text.includes('stationery') || text.includes('partecip')) return 'stationery'
+  if (text.includes('cake') || text.includes('torta') || text.includes('pastic')) return 'cake'
+  if (text.includes('planner')) return 'planner'
+  if (text.includes('beauty') || text.includes('trucco')) return 'beauty'
+  if (text.includes('video')) return 'video'
+  return text.trim()
+}
+
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371
   const dLat = (lat2 - lat1) * Math.PI / 180
   const dLng = (lng2 - lng1) * Math.PI / 180
-  const a = Math.sin(dLat/2) ** 2 +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng/2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
 async function geocodeCity(city: string): Promise<{ lat: number; lng: number } | null> {
@@ -64,7 +66,7 @@ export default function FornitoriPage() {
   const [citySearch, setCitySearch] = useState('')
   const [cityCoords, setCityCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [searchCity, setSearchCity] = useState('')
-  const [guestCount, setGuestCount] = useState<number | null>(null)
+  const [guestCount] = useState<number | null>(null)
 
   useEffect(() => {
     const match = document.cookie.match(/NEXT_LOCALE=([^;]+)/)
@@ -99,7 +101,6 @@ export default function FornitoriPage() {
     const coords = await geocodeCity(citySearch.trim())
     setCityCoords(coords)
     setSearchCity(citySearch.trim())
-    // Resetta il filtro zona quando si cerca per città
     setActiveRegion(allLabel)
   }
 
@@ -116,7 +117,7 @@ export default function FornitoriPage() {
         ...v,
         _distKm: (v.lat && v.lng)
           ? haversineKm(cityCoords.lat, cityCoords.lng, v.lat, v.lng)
-          : 9999
+          : 9999,
       }))
       .sort((a, b) => a._distKm - b._distKm)
   }
@@ -126,21 +127,23 @@ export default function FornitoriPage() {
       v.region === activeRegion ||
       v.work_regions?.includes(activeRegion) ||
       v.serves_regioni?.includes(activeRegion)
-    const chipKey = CATEGORY_CANONICAL[activeCategory] ?? activeCategory
-    const vendorKey = CATEGORY_CANONICAL[v.category] ?? v.category
-    const matchC = activeCategory === allCatLabel || chipKey === vendorKey
-    // Filtra location per capienza ospiti
+
+    const matchC = activeCategory === allCatLabel || categoryKey(activeCategory) === categoryKey(v.category)
     const matchGuests = !guestCount ||
       (!v.category?.toLowerCase().includes('location') && !v.category?.toLowerCase().includes('catering')) ||
       !v.max_guests || v.max_guests >= guestCount
+
     return matchR && matchC && matchGuests
   })
 
   const displayed = withDistance(filtered)
 
   if (loading) return (
-    <main className="min-h-screen bg-[#f3eadb] text-[#1f1812] flex items-center justify-center">
-      <div className="text-[#c9a84c] text-sm">{tr.fornitori.loading}</div>
+    <main className="min-h-screen bg-[#f3eadb] text-[#1f1812]">
+      <SimpleNav locale={locale} backHref="/" backLabel={locale === 'en' ? 'Home' : 'Home'} rightLabel={tr.nav.forVendors} rightHref="/vendor" />
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-sm tracking-[0.18em] text-[#b85a2e]">{tr.fornitori.loading}</div>
+      </div>
     </main>
   )
 
@@ -149,26 +152,28 @@ export default function FornitoriPage() {
       <SimpleNav
         locale={locale}
         backHref="/"
-        backLabel="← VELO"
+        backLabel={locale === 'en' ? 'Home' : 'Home'}
         rightLabel={tr.nav.forVendors}
         rightHref="/vendor"
       />
 
-        <div className="pt-24 pb-16 px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="mb-12">
-              <div className="mb-6 flex items-center gap-4">
-                <div className="h-px w-12 bg-[#c9a84c]" />
-                <p className="text-[11px] uppercase tracking-[0.36em] text-[#8a3e1e] sm:text-[12px]">{tr.fornitori.label}</p>
-              </div>
-              <h1 className="text-4xl font-light mb-4" style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(2.4rem, 5vw, 3.8rem)' }}>
-                {tr.fornitori.title}
-              </h1>
-              <p className="text-[#5d4e40] max-w-[520px] leading-relaxed">{displayed.length} {tr.fornitori.countSuffix}</p>
+      <section className="relative overflow-hidden px-6 pb-16 pt-28 sm:px-10 lg:px-16">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_20%_20%,rgba(184,90,46,0.16),transparent_28%),radial-gradient(circle_at_82%_16%,rgba(255,255,255,0.35),transparent_24%)]" />
+        <div className="relative mx-auto max-w-6xl">
+          <div className="mb-12 max-w-[760px]">
+            <div className="mb-6 flex items-center gap-4">
+              <div className="h-px w-12 bg-[#b85a2e]" />
+              <p className="text-[11px] uppercase tracking-[0.36em] text-[#8a3e1e] sm:text-[12px]">{tr.fornitori.label}</p>
             </div>
+            <h1 className="font-light leading-[0.98]" style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(2.6rem, 5.2vw, 4.4rem)' }}>
+              {tr.fornitori.title}
+            </h1>
+            <p className="mt-5 max-w-[560px] text-base leading-relaxed text-[#5d4e40]">
+              {displayed.length} {tr.fornitori.countSuffix}
+            </p>
+          </div>
 
-          {/* City search */}
-          <div className="mb-8">
+          <div className="mb-8 rounded-[2rem] border border-[#dcc8b0] bg-[rgba(251,244,229,0.72)] p-4 shadow-[0_18px_50px_rgba(49,35,24,0.08)] backdrop-blur-sm sm:p-5">
             <div className="relative">
               <input
                 type="text"
@@ -176,127 +181,135 @@ export default function FornitoriPage() {
                 onChange={e => setCitySearch(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleCitySearch()}
                 placeholder={tr.fornitori.searchPlaceholder}
-                className="w-full bg-[#ede1cd] border border-[#dcc8b0] rounded-2xl px-5 py-4 text-[#1f1812] placeholder-[#8a7e6a] focus:outline-none focus:border-[#c9a84c] transition-colors pr-32"
+                className="w-full rounded-[1.35rem] border border-[#dcc8b0] bg-[#fffaf4]/82 px-5 py-4 pr-32 text-[#1f1812] placeholder-[#8a7e6a] transition-colors focus:border-[#b85a2e] focus:outline-none"
               />
               <button
                 onClick={handleCitySearch}
-                className="absolute right-2 top-2 bg-[#c9a84c] text-[#f5edd6] text-xs font-semibold px-4 py-2 rounded-xl hover:bg-[#b5943e] transition-colors"
+                className="absolute right-2 top-2 rounded-[1rem] bg-[#b85a2e] px-4 py-2 text-xs font-semibold tracking-[0.12em] text-[#fbf4e5] transition-colors hover:bg-[#a54d25]"
               >
                 {tr.fornitori.searchBtn}
               </button>
             </div>
             {searchCity && (
-              <p className="text-[#5d4e40] text-xs mt-2 px-1">
+              <p className="mt-3 px-1 text-xs text-[#5d4e40]">
                 {tr.fornitori.nearCity} {searchCity}
-                <button onClick={clearCitySearch} className="text-[#c9a84c] ml-2 hover:opacity-70">✕</button>
+                <button onClick={clearCitySearch} className="ml-2 text-[#b85a2e] hover:opacity-70">×</button>
               </p>
             )}
           </div>
 
-          {/* Region filters */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {REGIONS.map(r => (
-              <button key={r}
+          <div className="mb-6 flex flex-wrap gap-2">
+            {REGIONS.map(region => (
+              <button
+                key={region}
                 onClick={() => {
-                  setActiveRegion(r === 'Tutte / All' ? allLabel : r)
-                  // Resetta ricerca città quando si seleziona una zona
-                  if (r !== 'Tutte / All') clearCitySearch()
+                  setActiveRegion(region === 'Tutte / All' ? allLabel : region)
+                  if (region !== 'Tutte / All') clearCitySearch()
                 }}
-                className={`px-4 py-2 rounded-full text-xs uppercase tracking-[0.16em] border transition-colors ${
-                  (activeRegion === r || (r === 'Tutte / All' && (activeRegion === 'Tutte' || activeRegion === 'All')))
-                    ? 'border-[#c9a84c] bg-[#c9a84c]/10 text-[#c9a84c]' : 'border-[#dcc8b0] text-[#5d4e40] hover:border-[#c9a84c]/50 hover:text-[#1f1812]'
-                }`}>
-                {r}
+                className={`rounded-full border px-4 py-2 text-xs uppercase tracking-[0.14em] transition-colors ${
+                  (activeRegion === region || (region === 'Tutte / All' && (activeRegion === 'Tutte' || activeRegion === 'All')))
+                    ? 'border-[#b85a2e] bg-[#b85a2e]/10 text-[#8a3e1e]'
+                    : 'border-[#dcc8b0] text-[#5d4e40] hover:border-[#b85a2e]/50 hover:text-[#1f1812]'
+                }`}
+              >
+                {region}
               </button>
             ))}
           </div>
 
-          {/* Category filters */}
-          <div className="flex flex-wrap gap-2 mb-10">
-            {categories.map((c) => (
-              <button key={c}
-                onClick={() => setActiveCategory(c)}
-                className={`px-4 py-2 rounded-full text-xs uppercase tracking-[0.16em] border transition-colors ${
-                  activeCategory === c ? 'border-[#c9a84c] bg-[#c9a84c]/10 text-[#c9a84c]' : 'border-[#dcc8b0] text-[#5d4e40] hover:border-[#c9a84c]/50 hover:text-[#1f1812]'
-                }`}>
-                {c}
+          <div className="mb-10 flex flex-wrap gap-2">
+            {categories.map(category => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={`rounded-full border px-4 py-2 text-xs uppercase tracking-[0.14em] transition-colors ${
+                  activeCategory === category
+                    ? 'border-[#b85a2e] bg-[#b85a2e]/10 text-[#8a3e1e]'
+                    : 'border-[#dcc8b0] text-[#5d4e40] hover:border-[#b85a2e]/50 hover:text-[#1f1812]'
+                }`}
+              >
+                {category}
               </button>
             ))}
           </div>
 
-          {/* Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayed.map((v: any) => (
-              <Link key={v.id} href={`/fornitori/${v.id}`}
-                className={`group bg-[#fbf4e5] border rounded-[2rem] overflow-hidden hover:border-[#c9a84c]/40 transition-all hover:-translate-y-0.5 ${v.featured ? 'border-[#c9a84c]/30' : 'border-[#e2d0bb]'}`}>
-                <div className="h-56 bg-[#e8d8c4] flex items-center justify-center relative overflow-hidden">
-                  {v.photo1_url ? (
-                    <img src={v.photo1_url} alt={v.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {displayed.map((vendor: any) => (
+              <Link
+                key={vendor.id}
+                href={`/fornitori/${vendor.id}`}
+                className={`group overflow-hidden rounded-[2.2rem] border bg-[#fbf4e5] shadow-[0_20px_60px_rgba(49,35,24,0.08)] transition-all hover:-translate-y-0.5 hover:border-[#b85a2e]/35 ${vendor.featured ? 'border-[#b85a2e]/26' : 'border-[#e2d0bb]'}`}
+              >
+                <div className="relative flex h-60 items-center justify-center overflow-hidden bg-[#e8d8c4]">
+                  {vendor.photo1_url ? (
+                    <img src={vendor.photo1_url} alt={vendor.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
                   ) : (
-                    <span className="text-6xl opacity-30">{v.cover_emoji || '📷'}</span>
+                    <span className="text-3xl font-light tracking-[0.24em] text-[#1f1812]/24" style={{ fontFamily: 'DM Serif Display, Georgia, serif' }}>VELO</span>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#2c2219]/40 to-transparent" />
-                  {v.logo_url && (
-                     <div className="absolute bottom-3 right-3 w-10 h-10 rounded-lg overflow-hidden border-2 border-[#e2d0bb] bg-[#fbf4e5]">
-                      <img src={v.logo_url} alt="logo" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(44,34,25,0.02)_0%,rgba(44,34,25,0.34)_100%)]" />
+                  {vendor.logo_url && (
+                    <div className="absolute bottom-4 right-4 h-11 w-11 overflow-hidden rounded-[0.9rem] border border-[#fbf4e5]/75 bg-[#fbf4e5] shadow-lg">
+                      <img src={vendor.logo_url} alt={`${vendor.name} logo`} className="h-full w-full object-cover" />
                     </div>
                   )}
-                  {v.featured && (
-                     <span className="absolute top-3 left-3 bg-[#c9a84c]/20 border border-[#c9a84c]/40 text-[#c9a84c] text-xs px-3 py-1 rounded-full">
+                  {vendor.featured && (
+                    <span className="absolute left-4 top-4 rounded-full border border-[#fbf4e5]/70 bg-[#fbf4e5]/78 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-[#8a3e1e] backdrop-blur-sm">
                       {tr.fornitori.inEvidence}
                     </span>
                   )}
                 </div>
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="text-[#1f1812] font-medium group-hover:text-[#c9a84c] transition-colors">{v.name}</h3>
-                      <p className="text-[#5d4e40] text-xs mt-1">{v.category} · {v.location}, {v.region}</p>
-                    </div>
-                    {v.verified && (
-                      <span className="text-[#7a9e7e] text-xs bg-[#7a9e7e]/10 border border-[#7a9e7e]/20 px-2 py-1 rounded-full shrink-0">
-                        {tr.vendorDetail.verified}
+
+                <div className="p-5 sm:p-6">
+                  <div className="mb-4">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-[#8a3e1e]">{vendor.category}</p>
+                    <h3 className="mt-2 text-[1.35rem] font-light leading-snug text-[#1f1812] group-hover:text-[#8a3e1e]" style={{ fontFamily: 'DM Serif Display, Georgia, serif' }}>
+                      {vendor.name}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-[#5d4e40]">{vendor.location}, {vendor.region}</p>
+                  </div>
+
+                  <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-[#5d4e40]">
+                    {(vendor.review_count ?? 0) > 0 && (
+                      <span className="rounded-full border border-[#e2d0bb] bg-[#fffaf4]/70 px-3 py-1">
+                        {vendor.rating} / 5 · {vendor.review_count} {tr.vendorDetail.reviews}
+                      </span>
+                    )}
+                    {vendor.price_from && (
+                      <span className="rounded-full border border-[#e2d0bb] bg-[#fffaf4]/70 px-3 py-1">
+                        {tr.vendorDetail.priceFrom} €{vendor.price_from}
+                      </span>
+                    )}
+                    {(vendor as any)._distKm != null && (vendor as any)._distKm < 9999 && (
+                      <span className="rounded-full border border-[#e2d0bb] bg-[#fffaf4]/70 px-3 py-1">
+                        {Math.round((vendor as any)._distKm)} km
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 mb-3 flex-wrap">
-                    {(v.review_count ?? 0) > 0 && (
-                      <>
-                        <span className="text-[#c9a84c] text-sm">⭐ {v.rating}</span>
-                        <span className="text-[#5d4e40] text-xs">({v.review_count} {tr.vendorDetail.reviews})</span>
-                      </>
-                    )}
-                    {v.price_from && (
-                      <span className="text-[#c9a84c] text-xs ml-auto">{tr.vendorDetail.priceFrom} €{v.price_from}</span>
-                    )}
-                    {(v as any)._distKm != null && (v as any)._distKm < 9999 && (
-                      <span className="text-xs text-[#5d4e40] border border-[#dcc8b0] rounded-full px-3 py-1">
-                        📍 {Math.round((v as any)._distKm)} km
-                      </span>
-                    )}
-                  </div>
-                  {(locale === 'en' ? (v.description_en || v.bio_en || v.description) : v.description) && (
-                    <p className="text-[#5d4e40] text-sm line-clamp-2 mb-4 leading-relaxed">
-                      {locale === 'en' ? (v.description_en || v.bio_en || v.description) : v.description}
+
+                  {(locale === 'en' ? (vendor.description_en || vendor.bio_en || vendor.description) : vendor.description) && (
+                    <p className="mb-5 line-clamp-2 text-sm leading-relaxed text-[#5d4e40]">
+                      {locale === 'en' ? (vendor.description_en || vendor.bio_en || vendor.description) : vendor.description}
                     </p>
                   )}
-                  <div className="flex items-center justify-between pt-2 border-t border-[#e2d0bb]">
-                    <span className="text-[#5d4e40] text-xs">{tr.fornitori.viewProfile}</span>
-                    <span className="text-[#c9a84c] text-sm">→</span>
+
+                  <div className="flex items-center justify-between border-t border-[#e2d0bb] pt-4">
+                    <span className="text-xs uppercase tracking-[0.16em] text-[#8a3e1e]">{tr.fornitori.viewProfile}</span>
+                    <span aria-hidden="true" className="text-sm text-[#b85a2e]">-&gt;</span>
                   </div>
                 </div>
-               </Link>
+              </Link>
             ))}
           </div>
 
           {displayed.length === 0 && (
-            <div className="text-center py-24">
-              <p className="text-4xl mb-4">🔍</p>
-              <p className="text-muted">{tr.fornitori.noResults}</p>
+            <div className="rounded-[2rem] border border-[#dcc8b0] bg-[#fbf4e5]/75 py-20 text-center">
+              <p className="text-[#5d4e40]">{tr.fornitori.noResults}</p>
             </div>
           )}
         </div>
-      </div>
+      </section>
+
+      <PublicFooter locale={locale} />
     </main>
   )
 }

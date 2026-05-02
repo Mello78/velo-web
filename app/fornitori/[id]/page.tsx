@@ -7,6 +7,7 @@ import { supabase } from '../../../lib/supabase'
 import { getT } from '../../../lib/translations'
 import SimpleNav from '../../../components/SimpleNav'
 import PhotoLightbox from '../../../components/PhotoLightbox'
+import PublicFooter from '../../../components/PublicFooter'
 
 async function getVendor(id: string) {
   const { data } = await supabase.from('public_vendors').select('*').eq('id', id).single()
@@ -122,7 +123,7 @@ function SectionIntro({
 }) {
   return (
     <div className="mb-5">
-      <p className="text-[11px] uppercase tracking-[0.28em] text-gold/85">{eyebrow}</p>
+      <p className="text-[11px] uppercase tracking-[0.28em] text-[#b85a2e]/85">{eyebrow}</p>
       <h2 className="mt-3 text-[1.7rem] font-light leading-tight text-bg sm:text-[2rem]">{title}</h2>
       {body && <p className="mt-3 max-w-2xl text-sm leading-7 text-bg/72 sm:text-[0.98rem]">{body}</p>}
     </div>
@@ -144,7 +145,7 @@ function RailCard({
 }) {
   return (
     <section className={`rounded-[1.8rem] border border-[#e2d0bb]/80 bg-[#fbf4e5] p-5 backdrop-blur-sm sm:p-6 ${className}`}>
-      <p className="text-[11px] uppercase tracking-[0.26em] text-[#c9a84c]/80">{eyebrow}</p>
+      <p className="text-[11px] uppercase tracking-[0.26em] text-[#b85a2e]/80">{eyebrow}</p>
       <h3 className="mt-3 text-[1.28rem] font-light leading-snug text-[#1f1812]">{title}</h3>
       {body && <p className="mt-3 text-sm leading-7 text-[#5d4e40]">{body}</p>}
       {children && <div className="mt-5">{children}</div>}
@@ -154,7 +155,7 @@ function RailCard({
 
 function HeroPill({ label }: { label: string }) {
   return (
-    <span className="rounded-full border border-[#c9a84c]/20 bg-[#c9a84c]/10 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-[#c9a84c]/82 backdrop-blur-sm">
+    <span className="rounded-full border border-[#b85a2e]/20 bg-[#b85a2e]/10 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-[#8a3e1e] backdrop-blur-sm">
       {label}
     </span>
   )
@@ -453,7 +454,7 @@ export default async function VendorDetailPage({
 
                   <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-1">
                       <div className="rounded-[1.4rem] border border-[#e2d0bb]/12 bg-[#fbf4e5]/45 p-4">
-                        <p className="text-[11px] uppercase tracking-[0.24em] text-[#c9a84c]">{detailCopy.coverageTitle}</p>
+                        <p className="text-[11px] uppercase tracking-[0.24em] text-[#b85a2e]">{detailCopy.coverageTitle}</p>
                         <p className="mt-3 text-sm leading-7 text-[#1f1812]/76">
                           {detailCopy.coverageBase} {locationLabel}
                           {coverageRegions.length > 1 ? `. ${detailCopy.coverageExtra} ${coverageRegions.slice(1).join(', ')}.` : '.'}
@@ -462,7 +463,7 @@ export default async function VendorDetailPage({
 
                     {vendor.languages?.length > 0 && (
                       <div className="rounded-[1.4rem] border border-[#e2d0bb]/12 bg-[#fbf4e5]/45 p-4">
-                        <p className="text-[11px] uppercase tracking-[0.24em] text-[#c9a84c]">{detailCopy.languagesTitle}</p>
+                        <p className="text-[11px] uppercase tracking-[0.24em] text-[#b85a2e]">{detailCopy.languagesTitle}</p>
                         <p className="mt-3 text-sm leading-7 text-[#1f1812]/76">{vendor.languages.join(', ')}</p>
                       </div>
                     )}
@@ -475,7 +476,7 @@ export default async function VendorDetailPage({
                         {allAwards.map((award, index) => (
                           <span
                             key={`${award}-${index}`}
-                            className="rounded-full border border-[#c9a84c]/35 bg-[#c9a84c]/10 px-4 py-2 text-sm text-[#c9a84c]"
+                            className="rounded-full border border-[#b85a2e]/28 bg-[#b85a2e]/10 px-4 py-2 text-sm text-[#8a3e1e]"
                           >
                             {award}
                           </span>
@@ -494,7 +495,7 @@ export default async function VendorDetailPage({
                 eyebrow={vendor.verified ? detailCopy.trustLabelVerified : detailCopy.trustLabelDirect}
                 title={vendor.verified ? tr.vendorDetail.contacts : detailCopy.contactJumpDirect}
                 body={vendor.verified ? detailCopy.verifiedDesc : detailCopy.directContactDesc}
-                className="border-[#c9a84c]/18"
+                className="border-[#b85a2e]/18"
               >
                 <div id="contacts" className="space-y-2.5">
                   {contactLinks.map((contact, index) => (
@@ -534,7 +535,7 @@ export default async function VendorDetailPage({
               <div className="space-y-3">
                 {detailCopy.howSteps.map((step, index) => (
                   <div key={index} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#c9a84c]/20 bg-[#c9a84c]/10 text-[11px] text-[#c9a84c]">
+                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#b85a2e]/20 bg-[#b85a2e]/10 text-[11px] text-[#8a3e1e]">
                       {index + 1}
                     </span>
                     <p className="text-sm leading-7 text-[#5d4e40]">{step}</p>
@@ -545,12 +546,14 @@ export default async function VendorDetailPage({
           </aside>
         </div>
 
-        <div className="mt-14 border-t border-[#e2d0bb]/10 pt-8">
-          <Link href="/fornitori" className="text-sm text-[#c9a84c] transition-opacity hover:opacity-70">
+        <div className="mt-14 border-t border-[#e2d0bb]/70 pt-8">
+          <Link href="/fornitori" className="text-sm text-[#b85a2e] transition-opacity hover:opacity-70">
             {tr.vendorDetail.backToList}
           </Link>
         </div>
       </section>
+
+      <PublicFooter locale={locale} />
     </main>
   )
 }

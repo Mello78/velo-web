@@ -46,7 +46,7 @@ export default function PhotoLightbox({ photos, vendorName, locale = 'it' }: Pro
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.24em] text-[#f8efe2]/72">
                     {primary
-                      ? (locale === 'en' ? 'Featured' : 'In evidenza')
+                      ? (locale === 'en' ? 'Cover' : 'Copertina')
                       : (locale === 'en' ? 'Portfolio' : 'Portfolio')}
                   </p>
                   <p className="mt-2 text-sm text-[#fbf4e8]">{vendorName}</p>
@@ -77,7 +77,7 @@ export default function PhotoLightbox({ photos, vendorName, locale = 'it' }: Pro
           role="dialog"
           aria-modal="true"
           aria-label={locale === 'en' ? `Photo ${activePosition} of ${safePhotos.length} for ${vendorName}` : `Foto ${activePosition} di ${safePhotos.length} per ${vendorName}`}
-          className="fixed inset-0 z-50 bg-[rgba(10,8,6,0.96)] px-4 py-6 backdrop-blur-sm"
+          className="fixed inset-0 z-50 bg-[rgba(18,14,11,0.92)] px-4 py-6 backdrop-blur-sm"
           onClick={close}
           onKeyDown={e => e.key === 'Escape' && close()}
           tabIndex={-1}
@@ -85,7 +85,7 @@ export default function PhotoLightbox({ photos, vendorName, locale = 'it' }: Pro
           <div className="mx-auto flex h-full max-w-6xl flex-col">
             <div className="flex items-center justify-between gap-4 pb-4">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.24em] text-[#c9a661]">
+                <p className="text-[10px] uppercase tracking-[0.24em] text-[#e6c784]">
                   {locale === 'en' ? 'Portfolio' : 'Portfolio'}
                 </p>
                 <p className="mt-2 text-sm text-[#fbf4e8]">
@@ -95,14 +95,14 @@ export default function PhotoLightbox({ photos, vendorName, locale = 'it' }: Pro
                 <button
                   type="button"
                   onClick={close}
-                  className="rounded-full border border-white/12 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#fbf4e8]/82 transition-colors hover:border-white/24 hover:text-[#fbf4e8] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#c9a661]"
+                  className="rounded-full border border-[#fbf4e8]/30 bg-[#fbf4e8] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#1f1812] shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition-colors hover:bg-white focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#e6c784]"
                   aria-label={locale === 'en' ? 'Close lightbox' : 'Chiudi lightbox'}
                 >
                   {locale === 'en' ? 'Close' : 'Chiudi'}
                 </button>
             </div>
 
-            <div className="relative flex-1 overflow-hidden rounded-[1.8rem] border border-white/10 bg-black/22">
+            <div className="relative flex-1 overflow-hidden rounded-[1.8rem] border border-white/12 bg-[rgba(0,0,0,0.28)]">
               {safePhotos.length > 1 && (
                 <>
                   <button
@@ -111,7 +111,7 @@ export default function PhotoLightbox({ photos, vendorName, locale = 'it' }: Pro
                       e.stopPropagation()
                       setActiveIndex(current => (current == null ? 0 : (current - 1 + safePhotos.length) % safePhotos.length))
                     }}
-                    className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/12 bg-black/22 px-4 py-3 text-sm text-[#fbf4e8] transition-colors hover:border-white/24 focus:outline focus:outline-gold"
+                    className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-[#fbf4e8]/30 bg-[#fbf4e8]/92 px-4 py-3 text-sm font-medium text-[#1f1812] shadow-[0_10px_30px_rgba(0,0,0,0.28)] transition-colors hover:bg-white focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#e6c784]"
                     aria-label={locale === 'en' ? 'Previous photo' : 'Foto precedente'}
                   >
                     {locale === 'en' ? 'Prev' : 'Prec'}
@@ -122,7 +122,7 @@ export default function PhotoLightbox({ photos, vendorName, locale = 'it' }: Pro
                       e.stopPropagation()
                       setActiveIndex(current => (current == null ? 0 : (current + 1) % safePhotos.length))
                     }}
-                    className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/12 bg-black/22 px-4 py-3 text-sm text-[#fbf4e8] transition-colors hover:border-white/24 focus:outline focus:outline-gold"
+                    className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-[#fbf4e8]/30 bg-[#fbf4e8]/92 px-4 py-3 text-sm font-medium text-[#1f1812] shadow-[0_10px_30px_rgba(0,0,0,0.28)] transition-colors hover:bg-white focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#e6c784]"
                     aria-label={locale === 'en' ? 'Next photo' : 'Foto successiva'}
                   >
                     {locale === 'en' ? 'Next' : 'Succ'}
@@ -148,7 +148,7 @@ export default function PhotoLightbox({ photos, vendorName, locale = 'it' }: Pro
                       e.stopPropagation()
                       setActiveIndex(index)
                     }}
-                    className={`h-2.5 w-2.5 rounded-full transition-colors ${photo === activePhoto ? 'bg-[#c9a661]' : 'bg-white/24 hover:bg-white/40'}`}
+                    className={`h-2.5 w-2.5 rounded-full transition-colors ${photo === activePhoto ? 'bg-[#e6c784]' : 'bg-white/28 hover:bg-white/48'}`}
                     aria-label={locale === 'en' ? `Photo ${index + 1}` : `Foto ${index + 1}`}
                   />
                 ))}

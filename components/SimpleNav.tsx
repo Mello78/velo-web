@@ -24,7 +24,7 @@ export default function SimpleNav({ locale, backHref, backLabel, rightLabel, rig
             <img src="/brand/logo-dark-full.svg" alt="VELO" className="h-7 w-auto" />
           </Link>
           <div className="flex shrink-0 items-center gap-3">
-            <LangToggle locale={locale} />
+            <LangToggle locale={locale} variant="light" />
             {rightLabel && rightHref && (
               <Link href={rightHref} className="hidden text-sm tracking-[0.08em] text-[#5d4e40] transition-colors hover:text-[#8a3e1e] sm:block">
                 {rightLabel}
