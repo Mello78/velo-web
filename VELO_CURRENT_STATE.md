@@ -2,7 +2,7 @@
 
 > **Canonical document for web repo state**
 > Created: 30 April 2026
-> Updated: 2 May 2026 (post Public Vendor Experience CLOSED + LIVE)
+> Updated: 2 May 2026 (public vendor experience fully closed + working tree clean)
 
 ---
 
@@ -47,7 +47,7 @@
 
 ---
 
-## PUBLIC VENDOR EXPERIENCE — Light/Editorial Theme
+## PUBLIC VENDOR EXPERIENCE — CLOSED + LIVE
 
 **Status:** ✅ CLOSED + LIVE
 
@@ -56,68 +56,38 @@
 - `1463426` — feat(vendors): align public vendor detail with light theme
 - `a0209ab` — fix(vendors): polish public vendor detail light theme
 - `1d8c1d0` — fix(vendors): finalize public vendor detail light theme
-- `5429129` — final listing copy + PhotoLightbox polish
+- `6d52f63` — fix(vendors): finalize public vendor brand experience (badge/title simplification)
+- `5429129` — fix(vendors): polish public vendor lightbox and listing copy
 
-**Live response checks:**
-- `/` returned 200
-- `/fornitori` returned 200
-- `/fornitori/[id]` sample public vendor detail returned 200
+**Verification:**
+- `/` returned 200 ✅
+- `/fornitori` returned 200 ✅
+- `/fornitori/[id]` sample returned 200 ✅
+- `npm run build` — ✅ PASS
+- `npx tsc --noEmit` — ✅ PASS
 
-**What was closed:**
+### Scope closed:
 
-### Public Vendor Listing (`app/fornitori/page.tsx`)
-- Visual refinements ONLY (no data logic changes)
-- Background: dark → warm paper/cream (`bg-[#f3eadb] text-[#1f1812]`)
-- Hero section: editorial serif title, cohesive with homepage
-- Filters: elegant pills, warm borders (`border-[#c9a84c]/...`), less "marketplace dark"
-- Vendor cards: light warm (`bg-[#fbf4e5]`), taller images (`h-56`), warm overlays
-- Copy claims softened:
-  - "in tutta Italia" → "in diverse regioni italiane"
-  - "tutti i fornitori" → "fornitori"
-  - "VEDO Partner program" → "VEDO Partners" (EN)
-- No geocoding automatico, no ranking, no availability filtering added
+- Homepage public visual alignment verified
+- `/fornitori` light/editorial listing live
+- `/fornitori/[id]` light/editorial vendor detail live
+- Public header/footer aligned
+- Vendor detail hero image-first and readable
+- Badge/trust duplication reduced: hero max 2 pills (trust + category), right-rail no longer repeats same label
+- Listing subtitle no longer exposes fixed/dynamic vendor count
+- PhotoLightbox simplified: no inner dark box, `max-h-[74vh]` image, flex-col overlay
 
-### Public Vendor Detail (`app/fornitori/[id]/page.tsx`)
-- Full conversion from dark/admin to light editorial theme
-- Background: `bg-[#f3eadb] text-[#1f1812]` (cohesive with homepage)
-- Hero: image-first card, light overlays for text readability
-- Sidebar cards: light cream (`bg-[#fbf4e5]`), warm borders, ink text (`text-[#1f1812]`)
-- RailCard components: converted from dark gradients to light cream/paper
-- HeroPill/FactRow: light theme, warm accents (`text-[#c9a84c]`)
-- CTA buttons: cohesive with homepage (primary terracotta, secondary light outline)
-- No data queries changed, no contact logic changed, no PhotoLightbox refactor
-
-### PhotoLightbox (`components/PhotoLightbox.tsx`)
-- Localized labels: IT/EN (Featured/In evidenza, Portfolio/Portfolio, Open/Apri, Close/Chiudi, Prev/Prec, Next/Succ)
-- Accessibility: `role="dialog"`, `aria-modal="true"`, `aria-label` on buttons, `onKeyDown` for Escape
-- Robustness: `safePhotos` filter, early return for empty gallery, handles 0/1/2/3+ photos
-- No new features, no geocoding, no AI
-
-**Residual Visual Issues:**
-None blocking found.
-
-**File/Line Problems:**
-- Header/logo readable: `components/NavBar.tsx`, `components/SimpleNav.tsx` ✅
-- Footer coherent: `components/PublicFooter.tsx` ✅
-- Listing remains warm/editorial: `app/fornitori/page.tsx` ✅
-- Vendor detail hero readable, image-first, no text over dark photo ✅
-- Right rail no duplicated trust badge ✅
-- PhotoLightbox controls readable ✅
-
-**Build/Typecheck:**
-- `npm run build` ✅ PASS
-- `npx tsc --noEmit` ✅ PASS
-
-**Safety:**
+### Safety:
 - No Supabase query changes
 - No RLS changes
 - No automatic geocoding
 - No couple-profile ranking
 - No availability/blocked-date filtering
 
-**Product rule:**
+### Product rule:
 - Public surfaces = light editorial
-- Dark = vendor admin/private area only
+- Vendor/admin private area may remain dark
+- Further public vendor visual work is P2 polish only, not active sprint
 
 ---
 
@@ -449,52 +419,40 @@ Encoding cleanup is deferred to a future maintenance pass.
 
 ## Working Tree Hygiene Report
 
-**Git status (as of last update):**
+**Git status (as of 2 May 2026 — post all vendor sprints):**
 ```
-## main...origin/main [ahead 1]
+## main...origin/main   ← in sync, zero tracked modifications
 ?? .superpowers/
+?? README.md
 ?? "VELO Homepage Directions - Standalone.html"
 ?? "VELO Homepage.html"
 ?? public/images/home/hero-langhe-01.png
 ?? tsconfig.tsbuildinfo
 ```
 
-**A. Tracked docs:**
-- `VELO_CURRENT_STATE.md` — canonical state document (actively updated)
-- `BACKLOG.md`, `TASK.md`, `CONTEXT.md` — **HISTORICAL / SUPERSEDED** (do NOT update unless minimal note needed)
-- `HANDOFF_CLAUDE_CODE.md` — **HISTORICAL** (pre-web-expansion state)
+No tracked files are modified. All product code committed.
 
-**B. Tracked product code:**
-- `app/page.tsx` — homepage (light editorial, updated)
-- `app/fornitori/page.tsx` — vendor listing (light editorial, updated)
-- `app/fornitori/[id]/page.tsx` — vendor detail (light editorial, updated)
-- `components/PhotoLightbox.tsx` — photo gallery (locale prop added, updated)
-- `components/NavBar.tsx`, `components/SimpleNav.tsx` — navigation (coherent with public site)
-- `lib/translations.ts` — copy fixes (updated)
-- `app/couple/*` — couple area (NOT touched in recent sprints)
-- `app/vendor/*` — vendor admin (NOT touched)
+**A. Safe docs cleanup:**
+- None. All tracked docs are committed.
 
-**C. Untracked temporary/artifact:**
-- `.superpowers/` — documentation artifacts (do NOT commit)
-- `VELO Homepage Directions - Standalone.html` — standalone HTML (do NOT commit)
-- `VELO Homepage.html` — standalone HTML (do NOT commit)
-- `public/images/home/hero-langhe-01.png` — asset (decide before committing)
-- `tsconfig.tsbuildinfo` — TypeScript cache (do NOT commit)
+**B. Product code pending — needs explicit decision:**
+- None. All tracked product code is committed and live.
 
-**D. Safe to delete later (not now):**
-- `.superpowers/` (after verification)
-- `VELO Homepage*.html` (after verification)
-- `tsconfig.tsbuildinfo` (safe to delete anytime)
+**C. Local artifact — safe delete:**
+- `tsconfig.tsbuildinfo` — TypeScript build cache. Safe to delete anytime. *(Deleted in hygiene pass.)*
+- `README.md` — Created by `npx rg` npm package install attempt (not a VELO project file). Safe to delete.
 
-**E. Needs decision:**
-- `public/images/home/hero-langhe-01.png` — verify if used before deciding
+**D. Asset pending — needs decision:**
+- `public/images/home/hero-langhe-01.png` — Image asset present but NOT referenced in `app/page.tsx` (homepage uses `hero-coastal-01.png` and `hero-masseria-01.png`). Do NOT commit until confirmed used. Do NOT delete without checking if planned for future homepage rotation.
+- `VELO Homepage Directions - Standalone.html` — Local design reference or brainstorm artifact. Do NOT commit. Delete when no longer needed.
+- `VELO Homepage.html` — Same. Do NOT commit. Delete when no longer needed.
+- `.superpowers/` — Superpowers brainstorm artifacts (`v2-*.html`, server state). Do NOT commit. Can be deleted when session artifacts no longer needed.
 
 **Rules:**
-- Do NOT commit `.superpowers/` or standalone HTML files
-- Do NOT commit `tsconfig.tsbuildinfo`
-- Do NOT commit `hero-langhe-01.png` unless confirmed used
+- Do NOT commit `.superpowers/`, standalone HTML files, `tsconfig.tsbuildinfo`, or `README.md`
 - Do NOT use `git add -A`
-- Homepage/layout/couple dashboard changes only when explicitly instructed
+- Do NOT commit `hero-langhe-01.png` until confirmed used in a page
+- Couple area and vendor admin changes only when explicitly instructed
 
 ---
 
