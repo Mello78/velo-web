@@ -2,7 +2,39 @@
 
 > **Canonical document for web repo state**
 > Created: 30 April 2026
-> Updated: 2 May 2026 (post Supabase RLS verification SAFE)
+> Updated: 2 May 2026 (post Smart Checklist Suggestions sprint CLOSED)
+
+---
+
+## SMART CHECKLIST SUGGESTIONS — Deterministic MVP
+
+**Status:** ✅ CLOSED + LIVE
+**Commit:** `d68d616` — feat: add deterministic checklist suggestions MVP
+
+### What is closed:
+
+- `buildChecklistSuggestions()`: deterministic, no AI, max 3 suggestions shown
+- Rules (priority order):
+  1. Missing `wedding_date` → `setup_wedding_date` (urgent)
+  2. Foreign couple + no doc task → `documents_review` (urgent)
+  3. Missing `ceremony_type` → `setup_ceremony_type` (soon)
+  4. Missing `budget` → `setup_budget` (soon)
+  5. `guests` count = 0 → `guests_start` (soon)
+- Dedup via `task_key`: suggestion hidden once task with same key exists
+- `SuggestionsSection` component: dashed-border cards, no emoji, premium editorial style
+- `handleAddSuggestion`: inserts with `source='user'`, `system_generated=false`, `task_key` set — edit/delete via existing `isUserTask()` guard
+- Couples query expanded: `wedding_date, budget, ceremony_type` now loaded
+- Lightweight guests count query added (`head: true`, no row fetch)
+- Copy IT/EN inline in component (checklist page uses local copy system, not `lib/translations.ts`)
+
+### Non-automatic:
+- Suggestions are never inserted without explicit user click
+- No vendor count check (data not readily available without extra query)
+
+### QA:
+- `npm run build` — ✅ PASS
+- `npx tsc --noEmit` — ✅ PASS
+- Push to main → Vercel autodeploy ✅
 
 ---
 
