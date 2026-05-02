@@ -2,7 +2,7 @@
 
 > **Canonical document for web repo state**
 > Created: 30 April 2026
-> Updated: 2 May 2026 (post Web Write Hardening sprint CLOSED + LIVE)
+> Updated: 2 May 2026 (post Supabase RLS verification SAFE)
 
 ---
 
@@ -68,7 +68,7 @@
 
 ### Non-blocking residue:
 - ~~Budget/guests update/delete filter by `id` only~~ — **CLOSED** by WEB WRITE HARDENING sprint
-- Full security depends on Supabase RLS — **policies da verificare in dashboard, non nel repo**
+- ~~Full security depends on Supabase RLS~~ — **SAFE** verified by Codex 5.5 elevated
 
 ---
 
@@ -121,13 +121,66 @@
 
 ### Non-blocking residue:
 - No SQL/migration/policy files in repo
-- RLS NOT verifiable from codebase
-- To verify in Supabase dashboard for:
+- RLS verified SAFE by Codex 5.5 elevated
+- No SQL changes applied
+- No SQL recommended at this time
+
+---
+
+## SUPABASE RLS DIAGNOSTIC / VERIFICATION
+
+**Status:** ✅ SAFE
+**Verification:** Codex 5.5 elevated
+
+### What was verified:
+- RLS enabled on:
+  - `couples`
   - `expenses`
   - `guests`
   - `tasks`
-  - `couples`
-- This does NOT block client-side hardening sprint, but remains future DB security task
+- Owner/admin/vendor policies sufficient for main risks
+- Privacy cross-user: **SAFE**
+- Admin regression risk: **SAFE**
+- Vendor chat regression risk: **SAFE**
+- No SQL applied
+- No SQL recommended at this time
+
+### Details:
+
+#### couples
+- Owner select/insert/update present
+- Admin read present
+- Vendor linked couple read present
+- Vendor chat couple names read present
+- No delete necessary
+- No `unique(user_id)` applied at this time
+
+#### expenses
+- Owner policy `auth.uid() = user_id` present
+- Budget privacy covered
+
+#### guests
+- Owner select/insert/update/delete present
+- Admin read present
+- Guests privacy covered
+
+#### tasks
+- Owner manage own tasks present
+- Admin read present
+- Vendor custom task policies present
+- Privacy covered
+- Product-integrity partial but acceptable:
+  - Owner can manage own tasks via DB policy
+  - Client limits edit/delete to `source='user'` && `system_generated !== true`
+  - NOT restricting DB update/delete now because toggle completed on system-generated tasks must remain functional
+
+### Future residues:
+1. **Task product-integrity:**
+   - Evaluate in future: trigger/policy refinement to prevent delete/edit of system-generated tasks via direct API without breaking toggle
+2. **Duplicate couples:**
+   - No `unique constraint` on `couples(user_id)`
+   - Web resolver (latest-row deterministic) avoids wrong-row selection
+   - Before adding unique constraint: need duplicate diagnostic and onboarding/dedupe verification
 
 ---
 
