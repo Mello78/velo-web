@@ -32,8 +32,8 @@ export const t = {
     regions: {
       label: 'Destination wedding',
       title: 'Dove volete sposarvi?',
-      desc: 'Fornitori selezionati nelle location più belle d\'Italia',
-      cta: 'Vedi tutti i fornitori →',
+      desc: 'Fornitori selezionati in diverse regioni italiane',
+      cta: 'Vedi fornitori →',
     },
     vendorCta: {
       badge: 'Per i professionisti del wedding',
@@ -63,7 +63,7 @@ export const t = {
       loading: 'Caricamento...',
     },
     vendorDetail: {
-      back: '← Tutti i fornitori',
+      back: '← Fornitori',
       backShort: '← Indietro',
       verified: 'Partner VELO',
       reviews: 'recensioni',
@@ -79,7 +79,7 @@ export const t = {
       awards: 'Riconoscimenti',
       contacts: 'Contatti & Social',
       whatsapp: '💬 Contatta su WhatsApp',
-      backToList: '← Torna a tutti i fornitori',
+      backToList: '← Torna ai fornitori',
       priceFrom: 'da',
       capacity: 'Capienza massima',
       guests: 'ospiti',
