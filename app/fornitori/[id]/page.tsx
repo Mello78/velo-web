@@ -302,84 +302,81 @@ export default async function VendorDetailPage({
 
         <div className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-10">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_360px] lg:items-end">
-            <section className="relative overflow-hidden rounded-[2rem] border border-[#e2d0bb] bg-[#fbf4e5] shadow-[0_30px_120px_rgba(49,35,24,0.12)]">
-              <div className="relative min-h-[540px] sm:min-h-[620px]">
-                {vendor.photo1_url ? (
-                  <Image
-                    src={vendor.photo1_url}
-                    alt={vendor.name}
-                    fill
-                    priority
-                    quality={88}
-                    sizes="(max-width: 1024px) 100vw, 65vw"
-                    className="object-cover object-center"
-                  />
-                ) : (
-                  <div className="flex h-full min-h-[540px] items-center justify-center bg-[linear-gradient(135deg,#f5eddc_0%,#e8d8c4_100%)] sm:min-h-[620px]">
-                    <span className="text-[6rem] font-light tracking-[0.2em] text-[#1f1812]/18">
-                      {vendor.cover_emoji || 'VELO'}
-                    </span>
+            <section className="relative overflow-hidden rounded-[2rem] border border-[#e2d0bb] bg-[#efe1ce] p-3 shadow-[0_30px_120px_rgba(49,35,24,0.12)] sm:p-4">
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,0.94fr)_minmax(360px,1.06fr)] lg:items-stretch">
+                <div className="order-2 flex min-h-[420px] flex-col justify-center rounded-[1.7rem] border border-[#e2d0bb] bg-[#fbf4e5] p-5 shadow-[0_18px_60px_rgba(49,35,24,0.08)] sm:p-7 lg:order-1 lg:min-h-[560px] lg:p-9">
+                  <div className="mb-4 flex flex-wrap gap-2.5">
+                    <HeroPill label={detailCopy.heroEyebrow} />
+                    <HeroPill label={trustEyebrow} />
+                    {vendor.category && <HeroPill label={vendor.category} />}
                   </div>
-                )}
 
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(49,35,24,0.02)_0%,rgba(49,35,24,0.08)_46%,rgba(49,35,24,0.24)_100%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_16%,rgba(255,255,255,0.20),transparent_26%),radial-gradient(circle_at_78%_18%,rgba(201,166,97,0.18),transparent_22%)]" />
+                  <h1 className="max-w-3xl text-[2.65rem] font-light leading-[0.94] tracking-[-0.035em] text-[#1f1812] sm:text-[3.85rem] lg:text-[4.35rem]">
+                    {vendor.name}
+                  </h1>
 
-                {vendor.logo_url && (
-                  <div className="absolute right-5 top-5 z-20 h-16 w-16 overflow-hidden rounded-[1.15rem] border border-[#fbf4e5]/85 bg-[#fbf4e5] shadow-[0_16px_46px_rgba(49,35,24,0.22)] sm:h-20 sm:w-20 sm:rounded-[1.4rem]">
-                    <img src={vendor.logo_url} alt={`${vendor.name} logo`} className="h-full w-full object-cover" />
-                  </div>
-                )}
+                  <p className="mt-4 max-w-2xl text-base leading-7 text-[#1f1812]/74 sm:text-[1.02rem]">
+                    {locationLabel}
+                    {coverageRegions.length > 1 ? ` - ${detailCopy.coverageExtra} ${coverageRegions.slice(1).join(', ')}` : ''}
+                  </p>
 
-                <div className="relative z-10 flex min-h-[540px] flex-col justify-end p-5 sm:min-h-[620px] sm:p-8 lg:p-10">
-                  <div className="max-w-[720px] rounded-[2rem] border border-[#e2d0bb] bg-[#fbf4e5]/96 p-5 shadow-[0_18px_60px_rgba(49,35,24,0.18)] sm:p-7">
-                    <div className="mb-4 flex flex-wrap gap-2.5">
-                      <HeroPill label={detailCopy.heroEyebrow} />
-                      <HeroPill label={trustEyebrow} />
-                      {vendor.category && <HeroPill label={vendor.category} />}
-                    </div>
-
-                    <h1 className="max-w-3xl text-[2.65rem] font-light leading-[0.94] tracking-[-0.035em] text-[#1f1812] sm:text-[3.85rem] lg:text-[4.45rem]">
-                      {vendor.name}
-                    </h1>
-
-                    <p className="mt-4 max-w-2xl text-base leading-7 text-[#1f1812]/74 sm:text-[1.02rem]">
-                      {locationLabel}
-                      {coverageRegions.length > 1 ? ` - ${detailCopy.coverageExtra} ${coverageRegions.slice(1).join(', ')}` : ''}
-                    </p>
-
-                    {heroDescription && (
+                  {heroDescription && (
                     <p className="mt-5 max-w-2xl text-sm leading-7 text-[#1f1812]/78 sm:text-[1rem]">
                       {heroDescription}
                     </p>
+                  )}
+
+                  <div className="mt-6 flex flex-wrap gap-2.5">
+                    {(vendor.review_count ?? 0) > 0 && vendor.rating && (
+                      <HeroPill label={`${vendor.rating} / 5 - ${vendor.review_count} ${tr.vendorDetail.reviews}`} />
                     )}
-
-                    <div className="mt-6 flex flex-wrap gap-2.5">
-                      {(vendor.review_count ?? 0) > 0 && vendor.rating && (
-                        <HeroPill label={`${vendor.rating} / 5 - ${vendor.review_count} ${tr.vendorDetail.reviews}`} />
-                      )}
-                      {priceLabel && <HeroPill label={priceLabel} />}
-                      {vendor.years_experience && <HeroPill label={`${vendor.years_experience} ${tr.vendorDetail.years}`} />}
-                      {vendor.max_guests && <HeroPill label={`${vendor.max_guests} ${tr.vendorDetail.guests}`} />}
-                    </div>
-
-                    <div className="mt-8 flex flex-wrap gap-3">
-                      <Link
-                        href="/couple"
-                        className="inline-flex items-center justify-center rounded-full bg-[#b85a2e] px-5 py-3 text-sm font-medium text-[#fbf4e5] transition-all hover:-translate-y-0.5 hover:bg-[#a54d25]"
-                      >
-                        {detailCopy.planningBtn}
-                      </Link>
-                      {contactLinks.length > 0 && (
-                        <a
-                          href="#contacts"
-                          className="inline-flex items-center justify-center rounded-full border border-[#b85a2e]/22 bg-[#fffaf4]/70 px-5 py-3 text-sm text-[#5d4e40] backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-[#b85a2e]/45 hover:text-[#8a3e1e]"
-                        >
-                          {contactJumpLabel}
-                        </a>
-                      )}
-                    </div>
+                    {priceLabel && <HeroPill label={priceLabel} />}
+                    {vendor.years_experience && <HeroPill label={`${vendor.years_experience} ${tr.vendorDetail.years}`} />}
+                    {vendor.max_guests && <HeroPill label={`${vendor.max_guests} ${tr.vendorDetail.guests}`} />}
                   </div>
+
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    <Link
+                      href="/couple"
+                      className="inline-flex items-center justify-center rounded-full bg-[#b85a2e] px-5 py-3 text-sm font-medium text-[#fbf4e5] transition-all hover:-translate-y-0.5 hover:bg-[#a54d25]"
+                    >
+                      {detailCopy.planningBtn}
+                    </Link>
+                    {contactLinks.length > 0 && (
+                      <a
+                        href="#contacts"
+                        className="inline-flex items-center justify-center rounded-full border border-[#b85a2e]/22 bg-[#fffaf4]/70 px-5 py-3 text-sm text-[#5d4e40] transition-all hover:-translate-y-0.5 hover:border-[#b85a2e]/45 hover:text-[#8a3e1e]"
+                      >
+                        {contactJumpLabel}
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                <div className="relative order-1 min-h-[330px] overflow-hidden rounded-[1.7rem] border border-[#fbf4e5]/80 bg-[linear-gradient(135deg,#f5eddc_0%,#e8d8c4_100%)] shadow-[0_22px_70px_rgba(49,35,24,0.16)] sm:min-h-[440px] lg:order-2 lg:min-h-[560px]">
+                  {vendor.photo1_url ? (
+                    <Image
+                      src={vendor.photo1_url}
+                      alt={vendor.name}
+                      fill
+                      priority
+                      quality={88}
+                      sizes="(max-width: 1024px) 100vw, 38vw"
+                      className="object-cover object-center"
+                    />
+                  ) : (
+                    <div className="flex h-full min-h-[330px] items-center justify-center sm:min-h-[440px] lg:min-h-[560px]">
+                      <span className="text-[5rem] font-light tracking-[0.2em] text-[#1f1812]/18">
+                        {vendor.cover_emoji || 'VELO'}
+                      </span>
+                    </div>
+                  )}
+
+                  {vendor.logo_url && (
+                    <div className="absolute right-5 top-5 z-10 h-16 w-16 overflow-hidden rounded-[1.15rem] border border-[#fbf4e5]/85 bg-[#fbf4e5] shadow-[0_16px_46px_rgba(49,35,24,0.22)] sm:h-20 sm:w-20 sm:rounded-[1.4rem]">
+                      <img src={vendor.logo_url} alt={`${vendor.name} logo`} className="h-full w-full object-cover" />
+                    </div>
+                  )}
                 </div>
               </div>
             </section>
