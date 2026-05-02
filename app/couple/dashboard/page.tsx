@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { COUNTRIES, type CountryDoc } from '../../../lib/countries'
-import { getCoupleLocale, getPreferredSiteLocale, persistCoupleLocale } from '../../../lib/couple-locale'
+import { getCoupleLocale, getPreferredSiteLocale, hasExplicitLocaleCookie, persistCoupleLocale } from '../../../lib/couple-locale'
 import { supabase } from '../../../lib/supabase'
 import { getT, type Locale } from '../../../lib/translations'
 import {
@@ -761,7 +761,10 @@ export default function DashboardPage() {
           'partner1, partner2, wedding_date, budget, wedding_city, wedding_region, ceremony_type, nationality, country_of_origin',
         )
         .eq('user_id', uid)
-        .single()
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+        .limit(1)
+        .maybeSingle()
 
       if (coupleRes.error || !coupleRes.data) {
         setFetchError(true)
@@ -770,7 +773,7 @@ export default function DashboardPage() {
       }
 
       const fallbackLocale = getPreferredSiteLocale()
-      const resolvedLocale = getCoupleLocale(coupleRes.data, fallbackLocale)
+      const resolvedLocale = hasExplicitLocaleCookie() ? fallbackLocale : getCoupleLocale(coupleRes.data, fallbackLocale)
       persistCoupleLocale(resolvedLocale)
       setLocale(resolvedLocale)
 
