@@ -303,8 +303,7 @@ export default async function VendorDetailPage({
         <div className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-10">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_360px] lg:items-end">
             <section className="relative overflow-hidden rounded-[2rem] border border-[#e2d0bb] bg-[#fbf4e5] shadow-[0_30px_120px_rgba(49,35,24,0.12)]">
-              <div className="p-3 sm:p-4">
-                <div className="relative aspect-[16/10] min-h-[260px] overflow-hidden rounded-[1.7rem] border border-[#fbf4e5]/80 bg-[linear-gradient(135deg,#f5eddc_0%,#e8d8c4_100%)] shadow-[0_22px_70px_rgba(49,35,24,0.14)] sm:aspect-[16/9] sm:min-h-[360px]">
+              <div className="relative aspect-[16/10] min-h-[340px] overflow-hidden border-b border-[#e2d0bb] bg-[linear-gradient(135deg,#f5eddc_0%,#e8d8c4_100%)] sm:aspect-[16/9] sm:min-h-[460px] lg:min-h-[500px]">
                   {vendor.photo1_url ? (
                     <Image
                       src={vendor.photo1_url}
@@ -316,7 +315,7 @@ export default async function VendorDetailPage({
                       className="object-cover object-center"
                     />
                   ) : (
-                    <div className="flex h-full min-h-[260px] items-center justify-center sm:min-h-[360px]">
+                    <div className="flex h-full min-h-[340px] items-center justify-center sm:min-h-[460px] lg:min-h-[500px]">
                       <span className="text-[5rem] font-light tracking-[0.2em] text-[#1f1812]/18">
                         {vendor.cover_emoji || 'VELO'}
                       </span>
@@ -328,9 +327,9 @@ export default async function VendorDetailPage({
                       <img src={vendor.logo_url} alt={`${vendor.name} logo`} className="h-full w-full object-cover" />
                     </div>
                   )}
-                </div>
+              </div>
 
-                <div className="px-2 py-7 sm:px-5 sm:py-9 lg:px-7">
+              <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-9">
                   <div className="flex flex-wrap gap-2.5">
                     <HeroPill label={detailCopy.heroEyebrow} />
                     <HeroPill label={trustEyebrow} />
@@ -377,7 +376,6 @@ export default async function VendorDetailPage({
                       </a>
                     )}
                   </div>
-                </div>
               </div>
             </section>
 
