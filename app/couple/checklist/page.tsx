@@ -73,6 +73,10 @@ interface Suggestion {
   phase: PhaseKey
 }
 
+function normalizeTaskTitle(value: string): string {
+  return value.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[.,;:!?]/g, '')
+}
+
 function buildChecklistSuggestions(
   ctx: CoupleCtx | null,
   guestsCount: number,
@@ -81,11 +85,27 @@ function buildChecklistSuggestions(
 ): Suggestion[] {
   if (!ctx) return []
   const isIT = locale === 'it'
-  const existingKeys = new Set(tasks.map(t => t.task_key))
+
+  // Primary dedupe: task_key
+  const existingKeys = new Set(tasks.map(t => t.task_key).filter(Boolean) as string[])
+
+  // Fallback dedupe: normalized title across all title variants
+  const existingTitles = new Set<string>()
+  tasks.forEach(t => {
+    if (t.title) existingTitles.add(normalizeTaskTitle(t.title))
+    if (t.title_it) existingTitles.add(normalizeTaskTitle(t.title_it))
+    if (t.title_en) existingTitles.add(normalizeTaskTitle(t.title_en))
+  })
+
+  const blocked = (key: string, titleIt: string, titleEn: string) =>
+    existingKeys.has(key) ||
+    existingTitles.has(normalizeTaskTitle(titleIt)) ||
+    existingTitles.has(normalizeTaskTitle(titleEn))
+
   const isForeign = ctx.nationality === 'foreign' || (ctx.country_of_origin != null && ctx.country_of_origin !== 'IT')
   const candidates: Suggestion[] = []
 
-  if (!ctx.wedding_date && !existingKeys.has('setup_wedding_date'))
+  if (!ctx.wedding_date && !blocked('setup_wedding_date', 'Imposta la data del matrimonio', 'Define your wedding date'))
     candidates.push({
       key: 'setup_wedding_date',
       title: isIT ? 'Imposta la data del matrimonio' : 'Define your wedding date',
@@ -93,7 +113,16 @@ function buildChecklistSuggestions(
       phase: 'urgent',
     })
 
-  if (isForeign && !existingKeys.has('documents_review'))
+  // documents_review: broader check — key, source, task_key substring, or any title keyword
+  const hasDocTask = tasks.some(t =>
+    t.source === 'documents' ||
+    (t.task_key != null && t.task_key.includes('document')) ||
+    normalizeTaskTitle(t.title ?? '').includes('document') ||
+    normalizeTaskTitle(t.title ?? '').includes('documento') ||
+    normalizeTaskTitle(t.title_it ?? '').includes('document') ||
+    normalizeTaskTitle(t.title_en ?? '').includes('document')
+  )
+  if (isForeign && !hasDocTask)
     candidates.push({
       key: 'documents_review',
       title: isIT ? 'Rivedi i documenti per la cerimonia' : 'Review the documents required for your ceremony',
@@ -101,7 +130,7 @@ function buildChecklistSuggestions(
       phase: 'urgent',
     })
 
-  if (!ctx.ceremony_type && !existingKeys.has('setup_ceremony_type'))
+  if (!ctx.ceremony_type && !blocked('setup_ceremony_type', 'Scegli il tipo di cerimonia', 'Choose your ceremony type'))
     candidates.push({
       key: 'setup_ceremony_type',
       title: isIT ? 'Scegli il tipo di cerimonia' : 'Choose your ceremony type',
@@ -109,7 +138,7 @@ function buildChecklistSuggestions(
       phase: 'soon',
     })
 
-  if (!ctx.budget && !existingKeys.has('setup_budget'))
+  if (!ctx.budget && !blocked('setup_budget', 'Imposta il budget indicativo', 'Set an estimated wedding budget'))
     candidates.push({
       key: 'setup_budget',
       title: isIT ? 'Imposta il budget indicativo' : 'Set an estimated wedding budget',
@@ -117,7 +146,7 @@ function buildChecklistSuggestions(
       phase: 'soon',
     })
 
-  if (guestsCount === 0 && !existingKeys.has('guests_start'))
+  if (guestsCount === 0 && !blocked('guests_start', 'Inizia la lista degli ospiti', 'Start your guest list'))
     candidates.push({
       key: 'guests_start',
       title: isIT ? 'Inizia la lista degli ospiti' : 'Start your guest list',

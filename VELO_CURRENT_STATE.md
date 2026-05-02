@@ -2,39 +2,44 @@
 
 > **Canonical document for web repo state**
 > Created: 30 April 2026
-> Updated: 2 May 2026 (post Smart Checklist Suggestions sprint CLOSED)
+> Updated: 2 May 2026 (post Smart Checklist Suggestions hardening)
 
 ---
 
 ## SMART CHECKLIST SUGGESTIONS — Deterministic MVP
 
-**Status:** ✅ CLOSED + LIVE
-**Commit:** `d68d616` — feat: add deterministic checklist suggestions MVP
+**Status:** ✅ CLOSED — live check pending
+**Commits:**
+- `d68d616` — feat: add deterministic checklist suggestions MVP
+- `<hardening>` — fix: harden checklist suggestion dedupe
 
 ### What is closed:
 
+- `normalizeTaskTitle()`: lowercase, trim, collapse spaces, strip basic punctuation
 - `buildChecklistSuggestions()`: deterministic, no AI, max 3 suggestions shown
+- Dedupe: primary via `task_key`, fallback via normalized title (checks `title`, `title_it`, `title_en` of every existing task)
+- `documents_review`: broader guard — hidden if any task has `source='documents'`, `task_key` containing 'document', or any title variant containing 'document'/'documento'
 - Rules (priority order):
   1. Missing `wedding_date` → `setup_wedding_date` (urgent)
-  2. Foreign couple + no doc task → `documents_review` (urgent)
+  2. Foreign couple + no doc-related task found → `documents_review` (urgent)
   3. Missing `ceremony_type` → `setup_ceremony_type` (soon)
   4. Missing `budget` → `setup_budget` (soon)
   5. `guests` count = 0 → `guests_start` (soon)
-- Dedup via `task_key`: suggestion hidden once task with same key exists
 - `SuggestionsSection` component: dashed-border cards, no emoji, premium editorial style
-- `handleAddSuggestion`: inserts with `source='user'`, `system_generated=false`, `task_key` set — edit/delete via existing `isUserTask()` guard
-- Couples query expanded: `wedding_date, budget, ceremony_type` now loaded
-- Lightweight guests count query added (`head: true`, no row fetch)
-- Copy IT/EN inline in component (checklist page uses local copy system, not `lib/translations.ts`)
+- `handleAddSuggestion`: insert-on-click only, `source='user'`, `system_generated=false`, `task_key` set
+- Couples query expanded: `wedding_date, budget, ceremony_type` loaded alongside locale fields
+- Lightweight guests count query: `head: true`, no row fetch
+- Copy IT/EN inline in component (checklist uses local copy system, not `lib/translations.ts`)
 
 ### Non-automatic:
-- Suggestions are never inserted without explicit user click
-- No vendor count check (data not readily available without extra query)
+- Suggestions never inserted without explicit user click
+- No vendor count check (no extra query for MVP)
+- No AI, no notifications, no automations
 
 ### QA:
 - `npm run build` — ✅ PASS
-- `npx tsc --noEmit` — ✅ PASS
-- Push to main → Vercel autodeploy ✅
+- `npx tsc --noEmit` — ✅ PASS (both sprints)
+- Live check: pending (Vercel autodeploy from main)
 
 ---
 
@@ -276,7 +281,7 @@
 | `app/couple/budget/page.tsx` | ✅ CRUD live | add/edit/delete expense, toggle confirmed |
 | `app/couple/guests/page.tsx` | ✅ RSVP + notes/dietary live | NOT email invites, NOT table planner |
 | `app/couple/vendors/page.tsx` | ✅ Read-only | Pipeline view, no edit |
-| `app/couple/checklist/page.tsx` | ✅ Add / edit / delete / toggle | user-created tasks only; no smart suggestions |
+| `app/couple/checklist/page.tsx` | ✅ Add / edit / delete / toggle + deterministic suggestions | user-created tasks only; suggestions are deterministic, no AI |
 | `app/couple/documents/page.tsx` | ✅ Read-only | No edit, guide only |
 
 **Rule:** App remains primary daily driver. Web is for practical desktop actions.
