@@ -53,7 +53,7 @@
 - Current couple row uniformly resolved across entire `/couple` area
 - Pattern: `user_id` + `created_at DESC, id DESC` + `limit(1)` + `maybeSingle()`
 - Consistent in CoupleShell → pages
-- NO risk of duplicate rows
+- Current couple row is resolved consistently across the /couple area using user_id + created_at desc + id desc + limit(1) + maybeSingle(). This avoids wrong-row selection on web, but duplicate DB rows can still exist and remain a data-integrity/RLS concern if present.
 
 #### NEXT_LOCALE sovereignty
 - Cookie `NEXT_LOCALE` always wins over `nationality`/`country_of_origin`
@@ -77,7 +77,9 @@
 ## WEB COUPLE COMPLETION — Profile + Checklist Light
 
 **Status:** ✅ CLOSED + LIVE
-**Commit:** `2053ab7` — final checklist microfix / profile + checklist light sprint
+**Commits:**
+- `2d8c8f0` — feature: profile style/size editable on web + checklist add/edit/delete
+- `2053ab7` — final checklist microfix / profile + checklist light sprint
 **Live check:** ✅ Verified on velowedding.it
 
 ### Profile (`app/couple/profile/page.tsx`)
