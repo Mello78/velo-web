@@ -716,12 +716,12 @@ export default function Home() {
                 },
                 {
                   label: locale === 'it' ? 'Location · Catering' : 'Venues · Catering',
-                  title: locale === 'it' ? 'Luoghi e tavole scelti per stile, misura e ospitalita.' : 'Places and tables chosen for style, scale, and hospitality.',
+                  title: locale === 'it' ? 'Luoghi e tavole scelti per stile, misura e ospitalità.' : 'Places and tables chosen for style, scale, and hospitality.',
                   region: 'Langhe · Venezia · Puglia',
                 },
                 {
                   label: locale === 'it' ? 'Planning · Musica' : 'Planning · Music',
-                  title: locale === 'it' ? 'Regia del giorno e ritmo dell esperienza.' : 'Direction of the day and rhythm of the experience.',
+                  title: locale === 'it' ? 'Regia del giorno e ritmo dell\'esperienza.' : 'Direction of the day and rhythm of the experience.',
                   region: 'Roma · Umbria · Sicilia',
                 },
               ].map((plate) => (
@@ -778,7 +778,7 @@ export default function Home() {
       <footer className="bg-[#2c2219] px-6 py-14 text-[#f3eadb] sm:px-10 sm:py-16 lg:px-16 lg:py-20">
         <div className="mx-auto flex max-w-[1360px] flex-col items-center justify-between gap-8 text-center md:flex-row md:text-left">
           <div className="flex items-center gap-4">
-            <img src="/favicon.png" alt="" className="h-8 w-auto opacity-80" />
+            <img src="/brand/logo-light-mark.svg" alt="VELO" className="h-8 w-auto opacity-80" />
             <div>
               <span className="text-2xl font-light tracking-[0.35em] text-[#f3eadb]" style={{ fontFamily: DISPLAY_FONT }}>VELO</span>
               <p className="text-[9px] uppercase tracking-[0.3em] text-[#b89a5b]" style={{ fontFamily: MONO_FONT }}>from yes to forever</p>
