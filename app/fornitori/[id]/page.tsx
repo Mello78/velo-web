@@ -322,24 +322,24 @@ export default async function VendorDetailPage({
                   </div>
                 )}
 
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(49,35,24,0.04)_0%,rgba(49,35,24,0.12)_45%,rgba(49,35,24,0.28)_100%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_16%,rgba(255,255,255,0.22),transparent_26%),radial-gradient(circle_at_78%_18%,rgba(201,166,97,0.22),transparent_22%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(49,35,24,0.02)_0%,rgba(49,35,24,0.08)_46%,rgba(49,35,24,0.24)_100%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_16%,rgba(255,255,255,0.20),transparent_26%),radial-gradient(circle_at_78%_18%,rgba(201,166,97,0.18),transparent_22%)]" />
 
                 {vendor.logo_url && (
-                  <div className="absolute right-5 top-5 z-10 h-16 w-16 overflow-hidden rounded-[1.15rem] border border-[#e2d0bb]/16 bg-[#fbf4e5]/18 shadow-lg backdrop-blur-sm sm:h-20 sm:w-20 sm:rounded-[1.4rem]">
+                  <div className="absolute right-5 top-5 z-20 h-16 w-16 overflow-hidden rounded-[1.15rem] border border-[#fbf4e5]/85 bg-[#fbf4e5] shadow-[0_16px_46px_rgba(49,35,24,0.22)] sm:h-20 sm:w-20 sm:rounded-[1.4rem]">
                     <img src={vendor.logo_url} alt={`${vendor.name} logo`} className="h-full w-full object-cover" />
                   </div>
                 )}
 
                 <div className="relative z-10 flex min-h-[540px] flex-col justify-end p-5 sm:min-h-[620px] sm:p-8 lg:p-10">
-                  <div className="max-w-3xl rounded-[2rem] border border-[#e2d0bb]/80 bg-[rgba(251,244,229,0.88)] p-5 shadow-[0_18px_60px_rgba(49,35,24,0.16)] backdrop-blur-md sm:p-7">
+                  <div className="max-w-[720px] rounded-[2rem] border border-[#e2d0bb] bg-[#fbf4e5]/96 p-5 shadow-[0_18px_60px_rgba(49,35,24,0.18)] sm:p-7">
                     <div className="mb-4 flex flex-wrap gap-2.5">
                       <HeroPill label={detailCopy.heroEyebrow} />
                       <HeroPill label={trustEyebrow} />
                       {vendor.category && <HeroPill label={vendor.category} />}
                     </div>
 
-                    <h1 className="max-w-3xl text-[2.45rem] font-light leading-[0.96] tracking-[-0.03em] text-[#1f1812] sm:text-[3.6rem] lg:text-[4.25rem]">
+                    <h1 className="max-w-3xl text-[2.65rem] font-light leading-[0.94] tracking-[-0.035em] text-[#1f1812] sm:text-[3.85rem] lg:text-[4.45rem]">
                       {vendor.name}
                     </h1>
 

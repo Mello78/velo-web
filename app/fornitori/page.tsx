@@ -140,7 +140,7 @@ export default function FornitoriPage() {
 
   if (loading) return (
     <main className="min-h-screen bg-[#f3eadb] text-[#1f1812]">
-      <SimpleNav locale={locale} backHref="/" backLabel={locale === 'en' ? 'Home' : 'Home'} rightLabel={tr.nav.forVendors} rightHref="/vendor" />
+      <SimpleNav locale={locale} backHref="/" backLabel={locale === 'en' ? '← Home' : '← Home'} rightLabel={tr.nav.forVendors} rightHref="/vendor" />
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-sm tracking-[0.18em] text-[#b85a2e]">{tr.fornitori.loading}</div>
       </div>
@@ -152,7 +152,7 @@ export default function FornitoriPage() {
       <SimpleNav
         locale={locale}
         backHref="/"
-        backLabel={locale === 'en' ? 'Home' : 'Home'}
+        backLabel={locale === 'en' ? '← Home' : '← Home'}
         rightLabel={tr.nav.forVendors}
         rightHref="/vendor"
       />
@@ -165,7 +165,7 @@ export default function FornitoriPage() {
               <div className="h-px w-12 bg-[#b85a2e]" />
               <p className="text-[11px] uppercase tracking-[0.36em] text-[#8a3e1e] sm:text-[12px]">{tr.fornitori.label}</p>
             </div>
-            <h1 className="font-light leading-[0.98]" style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(2.6rem, 5.2vw, 4.4rem)' }}>
+            <h1 className="font-light leading-[0.96] tracking-[-0.03em]" style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(2.9rem, 5.6vw, 4.8rem)' }}>
               {tr.fornitori.title}
             </h1>
             <p className="mt-5 max-w-[560px] text-base leading-relaxed text-[#5d4e40]">
@@ -173,19 +173,19 @@ export default function FornitoriPage() {
             </p>
           </div>
 
-          <div className="mb-8 rounded-[2rem] border border-[#dcc8b0] bg-[rgba(251,244,229,0.72)] p-4 shadow-[0_18px_50px_rgba(49,35,24,0.08)] backdrop-blur-sm sm:p-5">
-            <div className="relative">
+          <div className="mb-8 rounded-[2rem] border border-[#d9c3aa] bg-[#efe1ce]/86 p-3 shadow-[0_18px_50px_rgba(49,35,24,0.08)] backdrop-blur-sm sm:p-4">
+            <div className="flex flex-col gap-3 rounded-[1.55rem] border border-[#e2d0bb] bg-[#fbf4e5]/78 p-2 sm:flex-row sm:items-center">
               <input
                 type="text"
                 value={citySearch}
                 onChange={e => setCitySearch(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleCitySearch()}
                 placeholder={tr.fornitori.searchPlaceholder}
-                className="w-full rounded-[1.35rem] border border-[#dcc8b0] bg-[#fffaf4]/82 px-5 py-4 pr-32 text-[#1f1812] placeholder-[#8a7e6a] transition-colors focus:border-[#b85a2e] focus:outline-none"
+                className="min-h-[3.25rem] flex-1 rounded-[1.25rem] border border-transparent bg-transparent px-4 text-[#1f1812] placeholder-[#8a7e6a] transition-colors focus:border-[#b85a2e]/30 focus:bg-[#fffaf4]/60 focus:outline-none"
               />
               <button
                 onClick={handleCitySearch}
-                className="absolute right-2 top-2 rounded-[1rem] bg-[#b85a2e] px-4 py-2 text-xs font-semibold tracking-[0.12em] text-[#fbf4e5] transition-colors hover:bg-[#a54d25]"
+                className="inline-flex min-h-[3rem] items-center justify-center rounded-[1.15rem] bg-[#b85a2e] px-5 text-xs font-semibold tracking-[0.14em] text-[#fbf4e5] transition-colors hover:bg-[#a54d25] sm:min-w-[112px]"
               >
                 {tr.fornitori.searchBtn}
               </button>
@@ -208,8 +208,8 @@ export default function FornitoriPage() {
                 }}
                 className={`rounded-full border px-4 py-2 text-xs uppercase tracking-[0.14em] transition-colors ${
                   (activeRegion === region || (region === 'Tutte / All' && (activeRegion === 'Tutte' || activeRegion === 'All')))
-                    ? 'border-[#b85a2e] bg-[#b85a2e]/10 text-[#8a3e1e]'
-                    : 'border-[#dcc8b0] text-[#5d4e40] hover:border-[#b85a2e]/50 hover:text-[#1f1812]'
+                    ? 'border-[#b85a2e]/55 bg-[#f3dfcf] text-[#8a3e1e]'
+                    : 'border-[#d8c4ad] bg-[#fbf4e5]/42 text-[#5d4e40] hover:border-[#b85a2e]/42 hover:bg-[#fbf4e5]/72 hover:text-[#1f1812]'
                 }`}
               >
                 {region}
@@ -224,8 +224,8 @@ export default function FornitoriPage() {
                 onClick={() => setActiveCategory(category)}
                 className={`rounded-full border px-4 py-2 text-xs uppercase tracking-[0.14em] transition-colors ${
                   activeCategory === category
-                    ? 'border-[#b85a2e] bg-[#b85a2e]/10 text-[#8a3e1e]'
-                    : 'border-[#dcc8b0] text-[#5d4e40] hover:border-[#b85a2e]/50 hover:text-[#1f1812]'
+                    ? 'border-[#b85a2e]/55 bg-[#f3dfcf] text-[#8a3e1e]'
+                    : 'border-[#d8c4ad] bg-[#fbf4e5]/42 text-[#5d4e40] hover:border-[#b85a2e]/42 hover:bg-[#fbf4e5]/72 hover:text-[#1f1812]'
                 }`}
               >
                 {category}
@@ -262,7 +262,7 @@ export default function FornitoriPage() {
                 <div className="p-5 sm:p-6">
                   <div className="mb-4">
                     <p className="text-[11px] uppercase tracking-[0.2em] text-[#8a3e1e]">{vendor.category}</p>
-                    <h3 className="mt-2 text-[1.35rem] font-light leading-snug text-[#1f1812] group-hover:text-[#8a3e1e]" style={{ fontFamily: 'DM Serif Display, Georgia, serif' }}>
+                    <h3 className="mt-2 text-[1.48rem] font-light leading-snug text-[#1f1812] group-hover:text-[#8a3e1e]" style={{ fontFamily: 'DM Serif Display, Georgia, serif' }}>
                       {vendor.name}
                     </h3>
                     <p className="mt-2 text-sm leading-6 text-[#5d4e40]">{vendor.location}, {vendor.region}</p>

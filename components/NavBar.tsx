@@ -31,20 +31,20 @@ export default function NavBar({
       <div className="mx-auto max-w-[1380px] rounded-[2rem] border border-[#e2d0bb] bg-[rgba(251,244,229,0.78)] shadow-[0_18px_40px_rgba(49,35,24,0.12)] backdrop-blur-xl">
         <div className="mx-auto flex h-[74px] items-center justify-between px-5 sm:px-7">
             <Link href="/" className="flex items-center shrink-0">
-              <img src="/brand/logo-header-light.svg" alt="VELO" className="h-8 w-auto md:h-10" />
+              <img src="/brand/logo-dark-full.svg" alt="VELO" className="h-8 w-auto md:h-10" />
             </Link>
           <div className="hidden md:flex items-center gap-6">
             <Link href="/couple" className="text-[#2c2219] hover:text-[#8a3e1e] text-[12px] transition-colors tracking-[0.18em] uppercase">{couplesLabel}</Link>
             <Link href="/fornitori" className="text-[#6d5b4a] hover:text-[#8a3e1e] text-[12px] transition-colors tracking-[0.18em] uppercase">{vendorLabel}</Link>
             <Link href="/vendor" className="text-[#6d5b4a] hover:text-[#8a3e1e] text-[12px] transition-colors tracking-[0.18em] uppercase">{forVendorLabel}</Link>
             <div className="h-6 w-px bg-[#decdb7]" />
-            <LangToggle locale={locale} />
+            <LangToggle locale={locale} variant="light" />
             <Link href="/couple" className="bg-[#b85a2e] text-[#fbf4e5] text-[11px] font-semibold px-5 py-3 rounded-full hover:bg-[#a54d25] transition-colors tracking-[0.18em] uppercase whitespace-nowrap">
               {primaryCtaLabel}
             </Link>
           </div>
           <div className="flex items-center gap-3 md:hidden">
-            <LangToggle locale={locale} />
+            <LangToggle locale={locale} variant="light" />
             <button onClick={() => setOpen(!open)} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#dcccc0] text-[#6d5b4a] hover:text-[#8a3e1e] p-1 transition-colors">
               {open ? (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
