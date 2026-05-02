@@ -241,7 +241,7 @@ function getCopy(locale: string): Copy {
       browseText: 'Esplora i professionisti curati',
       browseHref: '/fornitori',
       destinationBadge: 'Supporto destination wedding',
-      destinationNote: 'Particolarmente utile per coppie straniere o per chi sta organizzando l Italia da lontano.',
+        destinationNote: 'Particolarmente utile per coppie straniere o per chi sta organizzando l\'Italia da lontano.',
         quickPoints: ['Documenti resi più chiari', 'La prossima azione, non solo ispirazione', 'Fornitori curati nel momento giusto'],
       proofLabel: 'Dentro la piattaforma coppia',
       proofTitle: 'Il matrimonio, guidato in una sola stanza calma.',
@@ -277,7 +277,7 @@ function getCopy(locale: string): Copy {
       label: 'Supporto destination wedding',
       title: "Sposarsi in Italia cambia davvero il planning.",
         sub: 'Documenti, logica del rito, tempi del Comune, lingua e sourcing regionale contano molto di più quando il matrimonio si svolge in Italia.',
-      callout: 'VELO nasce per questa realta, soprattutto quando la coppia organizza da lontano e ha bisogno di chiarezza prima ancora che di ispirazione.',
+        callout: 'VELO nasce per questa realtà, soprattutto quando la coppia organizza da lontano e ha bisogno di chiarezza prima ancora che di ispirazione.',
       pillars: [
         {
           number: '01',
@@ -292,7 +292,7 @@ function getCopy(locale: string): Copy {
         {
           number: '03',
           title: 'Supporto regionale',
-            copy: 'I professionisti selezionati in tutta Italia diventano più utili quando luogo, numero ospiti e sequenza del planning sono già più chiari.',
+            copy: 'I professionisti selezionati in diverse regioni italiane diventano più utili quando luogo, numero ospiti e sequenza del planning sono già più chiari.',
         },
       ],
     },
@@ -309,7 +309,7 @@ function getCopy(locale: string): Copy {
         },
         {
           eyebrow: 'Step 02',
-          title: 'Affronta la realta italiana',
+          title: 'Affronta la realtà italiana',
             copy: 'Documenti, tempistiche e requisiti del rito diventano più semplici quando qualcuno li traduce in modo comprensibile.',
         },
         {
@@ -328,7 +328,7 @@ vendors: {
         vendorCta: 'Programma Partner VELO',
         cardKicker: 'In diverse regioni',
         cardTitle: "Le presentazioni dei fornitori restano dentro il contesto della pianificazione.",
-        cardCopy: 'I professionisti accompagnano la coppia con supporto operativo, dal primo contatto fino alla conferma, quando il resto del matrimonio è già organizzato.',
+        cardCopy: 'I professionisti accompagnano la coppia con supporto operativo e priorità chiare lungo il percorso.',
       },
     close: {
       label: 'Inizia con chiarezza',
@@ -336,7 +336,7 @@ vendors: {
       sub: 'Partite dalla prossima azione giusta, capite meglio il percorso italiano, e tenete documenti, ospiti, budget e fornitori nello stesso spazio.',
       coupleCta: 'Inizia a pianificare',
       vendorCta: 'Area fornitori',
-      note: 'I professionisti del wedding hanno il loro ingresso nell area fornitori.',
+        note: 'I professionisti del wedding hanno il loro ingresso nell\'area fornitori.',
     },
     footer: {
       couples: 'Area Coppie',
