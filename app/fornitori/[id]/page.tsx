@@ -297,7 +297,7 @@ export default async function VendorDetailPage({
       />
 
       <section className="relative overflow-hidden pt-20">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(201,166,97,0.12),transparent_22%),radial-gradient(circle_at_82%_18%,rgba(201,166,97,0.18),transparent_24%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(201,166,97,0.18),transparent_22%),radial-gradient(circle_at_82%_18%,rgba(255,255,255,0.25),transparent_24%)]" />
 
         <div className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-10">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_360px] lg:items-end">
@@ -321,8 +321,8 @@ export default async function VendorDetailPage({
                   </div>
                 )}
 
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(49,35,24,0.08)_0%,rgba(49,35,24,0.28)_35%,rgba(49,35,24,0.62)_100%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_16%,rgba(255,255,255,0.18),transparent_26%),radial-gradient(circle_at_78%_18%,rgba(201,166,97,0.18),transparent_22%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(49,35,24,0.05)_0%,rgba(49,35,24,0.25)_35%,rgba(49,35,24,0.55)_100%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_16%,rgba(255,255,255,0.22),transparent_26%),radial-gradient(circle_at_78%_18%,rgba(201,166,97,0.22),transparent_22%)]" />
 
                 {vendor.logo_url && (
                   <div className="absolute right-5 top-5 z-10 h-16 w-16 overflow-hidden rounded-[1.15rem] border border-[#e2d0bb]/16 bg-[#fbf4e5]/18 shadow-lg backdrop-blur-sm sm:h-20 sm:w-20 sm:rounded-[1.4rem]">
@@ -530,7 +530,7 @@ export default async function VendorDetailPage({
               </Link>
             </RailCard>
 
-            <RailCard eyebrow="VELO" title={detailCopy.howTitle} body={detailCopy.howDisclaimer}>
+              <RailCard eyebrow="VELO" title={detailCopy.howTitle} body={detailCopy.howDisclaimer} className="border-[#e2d0bb]/12 bg-[#fbf4e5]" >
               <div className="space-y-3">
                 {detailCopy.howSteps.map((step, index) => (
                   <div key={index} className="flex items-start gap-3">
