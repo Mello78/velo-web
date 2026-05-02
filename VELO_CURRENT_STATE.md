@@ -2,7 +2,7 @@
 
 > **Canonical document for web repo state**
 > Created: 30 April 2026
-> Updated: 2 May 2026 (post Profile + Checklist Light sprint closed)
+> Updated: 2 May 2026 (post Web Write Hardening sprint closed)
 
 ---
 
@@ -67,10 +67,35 @@
 - Codex final verify: ✅ CLOSED
 
 ### Non-blocking residue:
-- Budget/guests update/delete filter by `id` only
-- Full security depends on Supabase RLS
-- To be reviewed in future (Privacy/RLS tightening)
-- Does NOT block this sprint
+- ~~Budget/guests update/delete filter by `id` only~~ — **CLOSED** by WEB WRITE HARDENING sprint
+- Full security depends on Supabase RLS — **policies da verificare in dashboard, non nel repo**
+
+---
+
+## WEB WRITE HARDENING — Couple Area
+
+**Status:** ✅ CLOSED
+**Commit:** `d160c0a`
+
+### What was hardened:
+- `expenses` UPDATE toggle/edit + DELETE: aggiunto `.eq('user_id', userId)` + null guard su userId
+- `guests` UPDATE rsvp/notes/dietary: aggiunto `.eq('user_id', userId)` + null guard su userId
+- `tasks` toggle/edit/delete: aggiunto `.eq('user_id', userId ?? '')`
+- `couples` UPDATE: aggiunto `.eq('user_id', session.user.id)` (session già disponibile nel handler)
+
+### Pattern applicato:
+- Tutte le write ora filtrano per **id + user_id** (doppio filtro)
+- Insert già corretti (user_id esplicito fin dal v1)
+- Tasks edit/delete già gated da `isUserTask()` a livello UI — la query ora lo ribadisce anche a DB level
+
+### Residui:
+- RLS Supabase non verificabile da repo (nessun file .sql) — da verificare in dashboard per `expenses`, `guests`, `tasks`, `couples`
+- `.eq('user_id', userId ?? '')` in tasks usa fallback stringa vuota (userId non dovrebbe mai essere null a render time, ma è difensivo)
+
+### QA:
+- `npx tsc --noEmit` — ✅ PASS
+- `npm run build` — ✅ PASS (17/17 pagine generate)
+- `git push origin main` — ✅ LIVE su Vercel
 
 ---
 
