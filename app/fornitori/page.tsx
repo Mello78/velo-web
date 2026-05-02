@@ -169,7 +169,7 @@ export default function FornitoriPage() {
               {tr.fornitori.title}
             </h1>
             <p className="mt-5 max-w-[560px] text-base leading-relaxed text-[#5d4e40]">
-              {displayed.length} {tr.fornitori.countSuffix}
+              {tr.fornitori.countSuffix}
             </p>
           </div>
 

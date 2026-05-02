@@ -77,84 +77,81 @@ export default function PhotoLightbox({ photos, vendorName, locale = 'it' }: Pro
           role="dialog"
           aria-modal="true"
           aria-label={locale === 'en' ? `Photo ${activePosition} of ${safePhotos.length} for ${vendorName}` : `Foto ${activePosition} di ${safePhotos.length} per ${vendorName}`}
-          className="fixed inset-0 z-50 bg-[rgba(18,14,11,0.92)] px-4 py-6 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex flex-col bg-[rgba(18,14,11,0.94)] px-4 py-5 backdrop-blur-sm"
           onClick={close}
           onKeyDown={e => e.key === 'Escape' && close()}
           tabIndex={-1}
         >
-          <div className="mx-auto flex h-full max-w-6xl flex-col">
-            <div className="flex items-center justify-between gap-4 pb-4">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.24em] text-[#e6c784]">
-                  {locale === 'en' ? 'Portfolio' : 'Portfolio'}
-                </p>
-                <p className="mt-2 text-sm text-[#fbf4e8]">
-                  {vendorName} - {activePosition} / {safePhotos.length}
-                </p>
-              </div>
+          <div className="mx-auto flex w-full max-w-5xl shrink-0 items-center justify-between gap-4 pb-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.24em] text-[#e6c784]">Portfolio</p>
+              <p className="mt-1 text-sm text-[#fbf4e8]">
+                {vendorName} · {activePosition} / {safePhotos.length}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={close}
+              className="rounded-full border border-[#fbf4e8]/30 bg-[#fbf4e8] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#1f1812] shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition-colors hover:bg-white focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#e6c784]"
+              aria-label={locale === 'en' ? 'Close lightbox' : 'Chiudi lightbox'}
+            >
+              {locale === 'en' ? 'Close' : 'Chiudi'}
+            </button>
+          </div>
+
+          <div
+            className="relative mx-auto flex min-h-0 w-full max-w-5xl flex-1 items-center justify-center"
+            onClick={e => e.stopPropagation()}
+          >
+            {safePhotos.length > 1 && (
+              <>
                 <button
                   type="button"
-                  onClick={close}
-                  className="rounded-full border border-[#fbf4e8]/30 bg-[#fbf4e8] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#1f1812] shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition-colors hover:bg-white focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#e6c784]"
-                  aria-label={locale === 'en' ? 'Close lightbox' : 'Chiudi lightbox'}
+                  onClick={e => {
+                    e.stopPropagation()
+                    setActiveIndex(current => (current == null ? 0 : (current - 1 + safePhotos.length) % safePhotos.length))
+                  }}
+                  className="absolute left-3 z-10 rounded-full border border-[#fbf4e8]/30 bg-[#fbf4e8]/92 px-4 py-3 text-sm font-medium text-[#1f1812] shadow-[0_10px_30px_rgba(0,0,0,0.28)] transition-colors hover:bg-white focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#e6c784]"
+                  aria-label={locale === 'en' ? 'Previous photo' : 'Foto precedente'}
                 >
-                  {locale === 'en' ? 'Close' : 'Chiudi'}
+                  {locale === 'en' ? 'Prev' : 'Prec'}
                 </button>
-            </div>
-
-            <div className="relative flex-1 overflow-hidden rounded-[1.8rem] border border-white/12 bg-[rgba(0,0,0,0.28)]">
-              {safePhotos.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation()
-                      setActiveIndex(current => (current == null ? 0 : (current - 1 + safePhotos.length) % safePhotos.length))
-                    }}
-                    className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-[#fbf4e8]/30 bg-[#fbf4e8]/92 px-4 py-3 text-sm font-medium text-[#1f1812] shadow-[0_10px_30px_rgba(0,0,0,0.28)] transition-colors hover:bg-white focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#e6c784]"
-                    aria-label={locale === 'en' ? 'Previous photo' : 'Foto precedente'}
-                  >
-                    {locale === 'en' ? 'Prev' : 'Prec'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation()
-                      setActiveIndex(current => (current == null ? 0 : (current + 1) % safePhotos.length))
-                    }}
-                    className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-[#fbf4e8]/30 bg-[#fbf4e8]/92 px-4 py-3 text-sm font-medium text-[#1f1812] shadow-[0_10px_30px_rgba(0,0,0,0.28)] transition-colors hover:bg-white focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#e6c784]"
-                    aria-label={locale === 'en' ? 'Next photo' : 'Foto successiva'}
-                  >
-                    {locale === 'en' ? 'Next' : 'Succ'}
-                  </button>
-                </>
-              )}
-
-              <img
-                src={activePhoto}
-                alt={vendorName}
-                className="h-full w-full object-contain"
-                onClick={e => e.stopPropagation()}
-              />
-            </div>
-
-            {safePhotos.length > 1 && (
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                {safePhotos.map((photo, index) => (
-                  <button
-                    key={photo}
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation()
-                      setActiveIndex(index)
-                    }}
-                    className={`h-2.5 w-2.5 rounded-full transition-colors ${photo === activePhoto ? 'bg-[#e6c784]' : 'bg-white/28 hover:bg-white/48'}`}
-                    aria-label={locale === 'en' ? `Photo ${index + 1}` : `Foto ${index + 1}`}
-                  />
-                ))}
-              </div>
+                <button
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation()
+                    setActiveIndex(current => (current == null ? 0 : (current + 1) % safePhotos.length))
+                  }}
+                  className="absolute right-3 z-10 rounded-full border border-[#fbf4e8]/30 bg-[#fbf4e8]/92 px-4 py-3 text-sm font-medium text-[#1f1812] shadow-[0_10px_30px_rgba(0,0,0,0.28)] transition-colors hover:bg-white focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#e6c784]"
+                  aria-label={locale === 'en' ? 'Next photo' : 'Foto successiva'}
+                >
+                  {locale === 'en' ? 'Next' : 'Succ'}
+                </button>
+              </>
             )}
+            <img
+              src={activePhoto}
+              alt={vendorName}
+              className="max-h-[74vh] max-w-full rounded-[0.75rem] object-contain shadow-[0_24px_80px_rgba(0,0,0,0.5)]"
+            />
           </div>
+
+          {safePhotos.length > 1 && (
+            <div className="mx-auto mt-4 flex w-full max-w-5xl shrink-0 flex-wrap items-center justify-center gap-2">
+              {safePhotos.map((photo, index) => (
+                <button
+                  key={photo}
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation()
+                    setActiveIndex(index)
+                  }}
+                  className={`h-2.5 w-2.5 rounded-full transition-colors ${photo === activePhoto ? 'bg-[#e6c784]' : 'bg-white/28 hover:bg-white/48'}`}
+                  aria-label={locale === 'en' ? `Photo ${index + 1}` : `Foto ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </>
