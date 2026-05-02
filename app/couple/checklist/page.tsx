@@ -651,7 +651,7 @@ export default function ChecklistPage() {
         title: addTitle.trim(),
         due_date: addDue || null,
         phase: addPhase,
-        completed: addPhase === 'done',
+        completed: false,
         urgent: addPhase === 'urgent',
         source: 'user',
         system_generated: false,
@@ -686,16 +686,24 @@ export default function ChecklistPage() {
 
   const handleSaveEdit = async (task: Task) => {
     if (!isUserTask(task)) { setEditingId(null); return }
-    if (!editTitle.trim()) return
+    const nextTitle = editTitle.trim()
+    if (!nextTitle) return
+
+    const patch: Record<string, unknown> = {}
+    if (nextTitle !== task.title) patch.title = nextTitle
+    if ((editDue || null) !== task.due_date) patch.due_date = editDue || null
+    if (editPhase !== normalizePhase(task.phase)) {
+      patch.phase = editPhase
+      patch.urgent = editPhase === 'urgent'
+    }
+
+    if (Object.keys(patch).length === 0) {
+      setEditingId(null)
+      return
+    }
+
     setEditSaving(true)
     setEditError(false)
-
-    const patch = {
-      title: editTitle.trim(),
-      due_date: editDue || null,
-      phase: editPhase,
-      urgent: editPhase === 'urgent',
-    }
 
     const { error } = await supabase
       .from('tasks')
