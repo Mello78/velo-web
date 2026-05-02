@@ -629,6 +629,7 @@ export default function ChecklistPage() {
       .from('tasks')
       .update({ completed: nextTask.completed, phase: nextTask.phase })
       .eq('id', task.id)
+      .eq('user_id', userId ?? '')
 
     if (error) {
       setTasks(prev => prev.map(t => (t.id === task.id ? task : t)))
@@ -709,6 +710,7 @@ export default function ChecklistPage() {
       .from('tasks')
       .update(patch)
       .eq('id', task.id)
+      .eq('user_id', userId ?? '')
 
     if (error) {
       setEditError(true)
@@ -730,6 +732,7 @@ export default function ChecklistPage() {
       .from('tasks')
       .delete()
       .eq('id', task.id)
+      .eq('user_id', userId ?? '')
 
     if (error) {
       setWriteError(true)

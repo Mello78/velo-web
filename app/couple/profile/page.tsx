@@ -175,6 +175,7 @@ export default function ProfilePage() {
       .from('couples')
       .update(patch)
       .eq('id', profile.id)
+      .eq('user_id', session.user.id)
 
     if (error) {
       setSaveState('error')

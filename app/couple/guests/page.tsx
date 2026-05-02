@@ -331,11 +331,13 @@ export default function GuestsPage() {
   const [fetchError, setFetchError] = useState(false)
   const [filterStatus, setFilterStatus] = useState<RsvpStatus | 'all'>('all')
   const [actionError, setActionError] = useState('')
+  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { setLoading(false); return }
+      setUserId(session.user.id)
 
       const coupleLocaleRes = await supabase
         .from('couples')
@@ -369,26 +371,29 @@ export default function GuestsPage() {
   }, [])
 
   const updateRsvp = async (id: string, status: RsvpStatus) => {
+    if (!userId) return
     const snapshot = guests
     setGuests(prev => prev.map(g => g.id === id ? { ...g, rsvp: status } : g))
     setActionError('')
-    const { error } = await supabase.from('guests').update({ rsvp: status }).eq('id', id)
+    const { error } = await supabase.from('guests').update({ rsvp: status }).eq('id', id).eq('user_id', userId)
     if (error) { setGuests(snapshot); setActionError(copy.updateError) }
   }
 
   const updateNotes = async (id: string, notes: string | null) => {
+    if (!userId) return
     const snapshot = guests
     setGuests(prev => prev.map(g => g.id === id ? { ...g, notes } : g))
     setActionError('')
-    const { error } = await supabase.from('guests').update({ notes }).eq('id', id)
+    const { error } = await supabase.from('guests').update({ notes }).eq('id', id).eq('user_id', userId)
     if (error) { setGuests(snapshot); setActionError(copy.updateError) }
   }
 
   const updateDietary = async (id: string, dietary: string | null) => {
+    if (!userId) return
     const snapshot = guests
     setGuests(prev => prev.map(g => g.id === id ? { ...g, dietary } : g))
     setActionError('')
-    const { error } = await supabase.from('guests').update({ dietary }).eq('id', id)
+    const { error } = await supabase.from('guests').update({ dietary }).eq('id', id).eq('user_id', userId)
     if (error) { setGuests(snapshot); setActionError(copy.updateError) }
   }
 

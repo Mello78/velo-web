@@ -354,12 +354,14 @@ export default function BudgetPage() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [actionError, setActionError] = useState('')
+  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { setFetchError(true); setLoading(false); return }
       const uid = session.user.id
+      setUserId(uid)
       const [expensesRes, coupleRes] = await Promise.all([
         supabase.from('expenses').select('id, title, amount, category, confirmed').eq('user_id', uid).order('created_at', { ascending: false }),
         supabase.from('couples').select('budget, nationality, country_of_origin').eq('user_id', uid).order('created_at', { ascending: false }).order('id', { ascending: false }).limit(1).maybeSingle(),
@@ -384,12 +386,13 @@ export default function BudgetPage() {
   }, [])
 
   const toggleConfirmed = async (id: string) => {
+    if (!userId) return
     const expense = expenses.find(e => e.id === id)
     if (!expense) return
     const newVal = !expense.confirmed
     setExpenses(prev => prev.map(e => e.id === id ? { ...e, confirmed: newVal } : e))
     setActionError('')
-    const { error } = await supabase.from('expenses').update({ confirmed: newVal }).eq('id', id)
+    const { error } = await supabase.from('expenses').update({ confirmed: newVal }).eq('id', id).eq('user_id', userId)
     if (error) {
       setExpenses(prev => prev.map(e => e.id === id ? { ...e, confirmed: !newVal } : e))
       setActionError(copy.toggleError)
@@ -397,22 +400,24 @@ export default function BudgetPage() {
   }
 
   const saveEdit = async (id: string, data: { title: string; amount: string; category: string }) => {
+    if (!userId) return
     const update = { title: data.title.trim(), amount: parseAmount(data.amount), category: data.category || null }
     const snapshot = expenses
     setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...update } : e))
     setEditingId(null)
     setActionError('')
-    const { error } = await supabase.from('expenses').update(update).eq('id', id)
+    const { error } = await supabase.from('expenses').update(update).eq('id', id).eq('user_id', userId)
     if (error) { setExpenses(snapshot); setActionError(copy.saveError) }
   }
 
   const deleteExpense = async (id: string) => {
+    if (!userId) return
     if (!window.confirm(copy.deleteConfirm)) return
     if (editingId === id) setEditingId(null)
     const snapshot = expenses
     setExpenses(prev => prev.filter(e => e.id !== id))
     setActionError('')
-    const { error } = await supabase.from('expenses').delete().eq('id', id)
+    const { error } = await supabase.from('expenses').delete().eq('id', id).eq('user_id', userId)
     if (error) { setExpenses(snapshot); setActionError(copy.deleteError) }
   }
 
