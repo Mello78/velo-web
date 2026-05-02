@@ -51,7 +51,7 @@ export const t = {
     fornitori: {
       label: 'Partner VELO',
       title: 'Partner selezionati per il tuo matrimonio',
-      countSuffix: 'partner selezionati dal team VELO in tutta Italia',
+      countSuffix: 'partner selezionati in diverse regioni italiane',
       searchPlaceholder: 'Cerca per nome o città...',
       regionAll: 'Tutte',
       categoryAll: 'Tutti',
@@ -379,7 +379,7 @@ export const t = {
     fornitori: {
       label: 'VELO Partners',
       title: 'Selected partners for your wedding',
-      countSuffix: 'partners selected by the VELO team across Italy',
+      countSuffix: 'partners selected in several Italian regions',
       searchPlaceholder: 'Search by name or city...',
       regionAll: 'All',
       categoryAll: 'All',
