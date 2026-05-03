@@ -417,6 +417,67 @@ Encoding cleanup is deferred to a future maintenance pass.
 
 ---
 
+## DOCUMENTS CORE JOURNEY — CLOSED LOCAL / MOBILE
+
+**Status:** ✅ CLOSED LOCAL / MOBILE
+
+**Commit:**
+- `ae3d70c` — mobile locale: add couple resolver + couple area polish
+
+**Push:** NOT pushed (mobile remote not configured / placeholder remote)
+
+**What was closed:**
+
+### Core engine (mobile + web)
+- `useDocumentsData()` hook: Supabase fallback + AsyncStorage cache/fallback
+- `ReligiousCeremonyGuide` bilingual: IT/EN via `vt.jsx`/`en.ts`
+- Ceremony-aware branches:
+  - Foreign civil
+  - Foreign religious
+  - Italian civil
+  - Italian religious
+  - Italian symbolic
+  - Missing/undecided
+- Italian simplified: civil/symbolic no longer implies mandatory Italian legal paperwork
+- Missing wedding date is non-blocking
+- Missing date guidance: choose ceremony/venue first, date can follow
+- Urgency warning:
+  - <60 days → critical
+  - 60–120 days → early
+  - Skipped for symbolic/undecided
+
+### Mobile (`app/(tabs)/documents.tsx`)
+- DB-first resolver: `supabase.from('couples').select(...).eq('user_id',...).maybeSingle()`
+- AsyncStorage fallback: `velo_nationality`, `velo_country_code`, `velo_ceremony_type` if Supabase empty
+- `ceremonyUnset` banner: gold, Ionicons + CTA "Update profile →"
+- `isForeign` dynamic from `useDocumentsData()` (was hard-coded `{true}`)
+- Journey steps localized: `d.civil_steps`, `d.symbolic_steps`, `d.progress_steps`
+- Note/nudge/reassurance cards in terra
+- `DIFFICULTY_COLOR.medium` corrected to terra
+
+### Web (`app/couple/documents/page.tsx`)
+- Documents engine reality fix: practical desktop surface
+- Journey fully localized: IT/EN via `lib/translations.ts`
+- `ReligiousCeremonyGuide` accepts `isForeign` prop
+- No edit, guide only
+- Web remains desktop support surface
+
+### QA
+- `npm run build` — ✅ PASS
+- `npx tsc --noEmit` — standalone may fail due to pre-existing Deno Edge Function/lib/api typing issues unrelated to modified Documents files
+- Codex verdict — ✅ CLOSED
+- Live check — ✅ PASS (web), mobile verified in simulator/session
+
+### Not touched:
+- Web public vendor experience
+- RLS
+- Migrations
+- Vendor/admin
+- Quote analyzer
+- Chat translation
+
+---
+
 ## Working Tree Hygiene Report
 
 **Git status (as of 2 May 2026 — post all vendor sprints):**
